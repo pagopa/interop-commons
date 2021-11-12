@@ -31,7 +31,7 @@ object Dependencies {
     lazy val slf4j      = namespace           %% "akka-slf4j"           % akkaVersion
   }
 
-  private[this] object FileDependencies {
+  private[this] object fileDependencies {
     lazy val awsNamespace = "software.amazon.awssdk"
     lazy val s3           = awsNamespace % "s3" % awsSdkVersion
 
