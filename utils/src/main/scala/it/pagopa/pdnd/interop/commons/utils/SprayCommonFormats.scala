@@ -11,6 +11,8 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.util.{Failure, Success, Try}
 
+/** Defines implicit Spray JSON formats definitions for common types used through PDND Interop platform
+  */
 object SprayCommonFormats {
 
   /** Defines the JsonFormat for <code>UUID</code> data type
@@ -79,6 +81,8 @@ object SprayCommonFormats {
       }
     }
 
+  /** Defines the JsonFormat for <code>URI</code> data type
+    */
   implicit val uriFormat: JsonFormat[URI] =
     new JsonFormat[URI] {
       override def write(obj: URI): JsValue = JsString(obj.toString)

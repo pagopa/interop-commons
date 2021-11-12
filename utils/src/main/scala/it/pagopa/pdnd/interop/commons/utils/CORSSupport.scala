@@ -15,12 +15,13 @@ import akka.http.scaladsl.server.{Directive0, Route}
   */
 trait CORSSupport {
 
-  /** Decorates the input route with the following CORS headers:<br>
+  /** Decorates the input route with the following CORS headers:<br><br>
     * <ul>
-    *   <li>Access-Control-Allow-Origin: *</li>
-    *   <li>Access-Control-Allow-Credentials: true</li>
-    *   <li>Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With</li>
+    *   <li><code>Access-Control-Allow-Origin: *</code></li>
+    *   <li><code>Access-Control-Allow-Credentials: true</code></li>
+    *   <li><code>Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With</code></li>
     * </ul>
+    * <br>
     * @param r - the route to decorate
     * @return - the decorated route
     */

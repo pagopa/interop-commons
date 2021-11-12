@@ -56,6 +56,6 @@ lazy val mailManager = project
   .dependsOn(utils, fileManager)
   .setupBuildInfo
 
-lazy val root = (project in file("."))
+lazy val commons = (project in file("."))
   .aggregate(utils, fileManager, mailManager)
   .settings(publish / skip := true, publishLocal / skip := true)

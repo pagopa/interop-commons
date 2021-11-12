@@ -13,15 +13,15 @@ import scala.util.{Failure, Try}
 trait FileManager {
 
   /** Stores the specified file in a unique location
-    * @param tokenId - the unique identifier of the location
-    * @param fileParts - file contents and its information as retrieved from an Akka HTTP call
+    * @param tokenId the unique identifier of the location
+    * @param fileParts file contents and its information as retrieved from an Akka HTTP call
     * @return the path where the file has been stored
     */
   def store(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
 
   /** Returns the stream of the file located at the specified path
     * @param filePath the path of the file to retrieve
-    * @return the [[ByteArrayOutputStream]] of the file
+    * @return <code>java.io.ByteArrayOutputStream</code> of the file
     */
   def get(filePath: StorageFilePath): Future[ByteArrayOutputStream]
 
@@ -34,14 +34,15 @@ trait FileManager {
 
 object FileManager {
 
-  /** returns an instance of the specific [[FileManager]]. Currently, the admittable implementations are:
+  /** Returns an instance of the specific [[FileManager]]. Currently, the admittable implementations are:
     *
     * <ul>
     *     <li><code>File</code> - in memory implementation</li>
     *     <li><code>BlobStorage</code> - Azure implementation</li>
     *     <li><code>S3</code> - S3 implementation</li>
     * </ul>
-    * @param fileManager - the identifier of the specific instance
+    * <br>
+    * @param fileManager the identifier of the specific instance
     * @return the specific instance
     */
   def getConcreteImplementation(fileManager: String): Try[FileManager] = {

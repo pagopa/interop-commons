@@ -10,9 +10,9 @@ import scala.annotation.tailrec
 object Digester {
 
   /** Returns an hash code digest of the file for the specified algorithm
-    * @param file
-    * @param algorithm
-    * @return
+    * @param file file to digest
+    * @param algorithm algorithm to apply
+    * @return digested file as string
     */
   def createHash(file: File, algorithm: String): String = {
     val md  = MessageDigest.getInstance(algorithm)
@@ -22,8 +22,8 @@ object Digester {
   }
 
   /** Returns the MD5 hash code digest of the file
-    * @param file
-    * @return
+    * @param file to digest
+    * @return MD5 digest of the input file
     */
   def createMD5Hash(file: File): String = {
     createHash(file, "MD5")

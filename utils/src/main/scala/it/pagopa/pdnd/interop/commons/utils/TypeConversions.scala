@@ -8,7 +8,10 @@ import java.util.{Base64, UUID}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
+/** Defined implicit type conversions for common classes used through PDND interop platform
+  */
 object TypeConversions {
+
   implicit class EitherOps[A](val either: Either[Throwable, A]) extends AnyVal {
     def toFuture: Future[A] = either.fold(e => Future.failed(e), a => Future.successful(a))
   }
@@ -32,15 +35,15 @@ object TypeConversions {
       UUID.fromString(str)
     }
     def toOffsetDateTime: Try[OffsetDateTime] = Try { OffsetDateTime.parse(str, dateFormatter) }
-    def toFutureUUID: Future[UUID]            = toUUID.toFuture
+    def toFutureUUID: Future[UUID]            = str.toUUID.toFuture
     def parseCommaSeparated: List[String]     = str.split(",").map(_.trim).toList.filterNot(entry => entry == "")
     def decodeBase64: Try[String] = Try {
       val decoded: Array[Byte] = Base64.getDecoder.decode(str.getBytes(StandardCharsets.UTF_8))
       new String(decoded, StandardCharsets.UTF_8)
     }
 
-    def toSha1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
-    def toMd5: String  = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))
+    def toBase64SHA1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
+    def toBase64MD5: String  = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))
   }
 
   implicit class StatusReplyOps[A](val statusReply: StatusReply[A]) extends AnyVal {

@@ -12,10 +12,10 @@ import scala.util.Try
 
 class MailerImpl extends Mailer {
 
-  private val mailer = Mailer(configuration.smtp.serverAddress, configuration.smtp.serverPort)
-    .auth(configuration.smtp.authenticated)
-    .as(configuration.smtp.user, configuration.smtp.password)
-    .startTls(configuration.smtp.withTls)()
+  private val mailer = Mailer(config.smtp.serverAddress, config.smtp.serverPort)
+    .auth(config.smtp.authenticated)
+    .as(config.smtp.user, config.smtp.password)
+    .startTls(config.smtp.withTls)()
 
   override def send(recipients: Seq[String], htmlBody: String): Future[Unit] = {
     sendMail(recipients, Multipart().html(htmlBody))
@@ -30,7 +30,7 @@ class MailerImpl extends Mailer {
     parsedEmails.flatMap { to =>
       mailer(
         Envelope
-          .from(configuration.senderAddress.addr)
+          .from(config.senderAddress.addr)
           .to(to: _*)
           .subject("Chiusura procedura accreditamento interoperabilità")
           .content(mailContent)
