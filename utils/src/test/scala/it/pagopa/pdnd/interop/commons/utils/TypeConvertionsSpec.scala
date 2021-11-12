@@ -13,7 +13,7 @@ import scala.util.{Failure, Success}
 class TypeConvertionsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
   "an OffsetDateTime" should {
-    "be convert to a String" in {
+    "be converted to a String" in {
       OffsetDateTime
         .of(2021, 1, 1, 10, 10, 10, 0, ZoneOffset.UTC)
         .asFormattedString shouldBe Success("2021-01-01T10:10:10Z")
