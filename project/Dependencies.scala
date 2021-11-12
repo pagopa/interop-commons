@@ -31,12 +31,14 @@ object Dependencies {
     lazy val slf4j      = namespace           %% "akka-slf4j"           % akkaVersion
   }
 
-  private[this] object fileDependencies {
-    lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val s3           = awsNamespace % "s3" % awsSdkVersion
-
+  private[this] object azure {
     lazy val azureNamespace = "com.azure"
     lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
+  }
+
+  private[this] object aws {
+    lazy val awsNamespace = "software.amazon.awssdk"
+    lazy val s3           = awsNamespace % "s3" % awsSdkVersion
   }
 
   private[this] object courier {
@@ -55,7 +57,7 @@ object Dependencies {
       )
 
     lazy val fileDependencies: Seq[ModuleID] =
-      Seq(FileDependencies.s3 % Compile, FileDependencies.storageBlob % Compile, commons.fileUpload % Compile)
+      Seq(aws.s3 % Compile, azure.storageBlob % Compile, commons.fileUpload % Compile)
 
     lazy val mailDependencies: Seq[ModuleID] =
       Seq(courier.mail % Compile)
