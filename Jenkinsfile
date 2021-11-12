@@ -44,7 +44,7 @@ pipeline {
         container('sbt-container') {
           unstash "pdnd_trust_store"
           script {
-            sbtAction 'publish'
+            sbtAction 'test publish'
           }
         }
       }
