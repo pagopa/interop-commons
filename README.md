@@ -18,7 +18,3 @@ The abovementioned modules are released as separated jar files, that you can imp
 Probably each PDND component shall need at least the `utils` module, since it implements nitty common utility features.
 
 Please mind that both `file-manager` and `mail-manager` depend on `utils` module, so importing any of these two in a component will automatically import `utils` as well.
-
-#### TODO
-
-Currently this library misses of unit tests.
