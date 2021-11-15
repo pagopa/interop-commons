@@ -63,15 +63,15 @@ class TypeConvertionsSpec extends AnyWordSpecLike with Matchers with ScalaFuture
     }
 
     "interpolate a string with variables" in {
-      "${friend}, come stai?" interpolate Map("friend" -> "Pippo") shouldBe "Pippo, come stai?"
+      "${friend}, how are you?" interpolate Map("friend" -> "John Doe") shouldBe "John Doe, how are you?"
     }
 
     "interpolate a string with missing variables" in {
-      "${friend}, come stai?" interpolate Map("friendOne" -> "Pippo") shouldBe "${friend}, come stai?"
+      "${friend}, how are you?" interpolate Map("friendOne" -> "John Doe") shouldBe "${friend}, how are you?"
     }
 
     "interpolate a string with empty map of variables" in {
-      "${friend}, come stai?" interpolate Map.empty shouldBe "${friend}, come stai?"
+      "${friend}, how are you?" interpolate Map.empty shouldBe "${friend}, how are you?"
     }
   }
 }
