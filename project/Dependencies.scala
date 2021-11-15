@@ -12,6 +12,11 @@ object Dependencies {
     lazy val fileUpload = "commons-fileupload" % "commons-fileupload" % commonsFileUploadVersion
   }
 
+  private[this] object apacheCommons {
+    lazy val namespace = "org.apache.commons"
+    lazy val text      = namespace % "commons-text" % apacheCommonsTextVersion
+  }
+
   private[this] object scalatest {
     lazy val namespace = "org.scalatest"
     lazy val core      = namespace %% "scalatest" % scalatestVersion
@@ -42,8 +47,9 @@ object Dependencies {
   }
 
   private[this] object courier {
-    lazy val namespace = "com.github.daddykotex"
-    lazy val mail      = namespace %% "courier" % courierVersion
+    lazy val namespace   = "com.github.daddykotex"
+    lazy val mail        = namespace                %% "courier"       % courierVersion
+    lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
   }
 
   object Jars {
@@ -60,13 +66,14 @@ object Dependencies {
       Seq(aws.s3 % Compile, azure.storageBlob % Compile, commons.fileUpload % Compile)
 
     lazy val mailDependencies: Seq[ModuleID] =
-      Seq(courier.mail % Compile)
+      Seq(courier.mail % Compile, courier.testMocking % Test)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       typesafe.config    % Compile,
       logback.classic    % Compile,
+      apacheCommons.text % Compile,
       scalatest.core     % Test
     )
   }
