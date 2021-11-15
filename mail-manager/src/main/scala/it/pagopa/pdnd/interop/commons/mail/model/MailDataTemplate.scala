@@ -27,6 +27,6 @@ final case class MailDataTemplate(
   * @param text string representing a text template
   * @param variables variables to be replaced in the template, empty by default
   */
-case class TextTemplate(text: String, variables: Map[String, String] = Map.empty) {
+final case class TextTemplate(text: String, variables: Map[String, String] = Map.empty) {
   def toText: String = text interpolate variables
 }
