@@ -2,7 +2,8 @@ package it.pagopa.pdnd.interop.commons.mail.service.impl
 
 import courier.Defaults._
 import courier._
-import it.pagopa.pdnd.interop.commons.mail.service.{MailData, MailerInstance, PDNDMailer}
+import it.pagopa.pdnd.interop.commons.mail.model.MailData
+import it.pagopa.pdnd.interop.commons.mail.service.{MailerInstance, PDNDMailer}
 
 import javax.mail.internet.InternetAddress
 import scala.concurrent.Future

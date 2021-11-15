@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.commons.mail
 
-import it.pagopa.pdnd.interop.commons.mail.service.{MailAttachment, MailDataTemplate, TextTemplate}
+import it.pagopa.pdnd.interop.commons.mail.model.{MailAttachment, MailData, MailDataTemplate, TextTemplate}
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -19,7 +20,7 @@ class MailSpec extends AnyWordSpecLike with Matchers {
       )
 
       template.toMailData should equal(
-        service.MailData(
+        MailData(
           recipients = Seq("mario@rossi.it"),
           subject = "this is a subject",
           body = "this is a wonderful body",

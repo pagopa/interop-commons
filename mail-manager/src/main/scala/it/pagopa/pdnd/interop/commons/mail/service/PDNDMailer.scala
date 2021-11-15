@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.commons.mail.service
 
 import courier.Mailer
+import it.pagopa.pdnd.interop.commons.mail.model.{MailData, MailDataTemplate}
 
 import javax.mail.internet.InternetAddress
 import scala.concurrent.Future
