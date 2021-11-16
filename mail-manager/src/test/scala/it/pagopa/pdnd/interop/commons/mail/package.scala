@@ -4,6 +4,8 @@ import courier.Mailer
 import it.pagopa.pdnd.interop.commons.mail.service.MailerInstance
 import org.jvnet.mock_javamail.MockTransport
 
+import java.io.File
+import java.nio.file.Files
 import java.util.Properties
 import javax.mail.Provider
 import javax.mail.internet.InternetAddress
@@ -30,4 +32,11 @@ package object mail {
     override val sender: InternetAddress = new InternetAddress("mock-sender@pdnd.pagopa.it")
   }
 
+  def getTestResourceData(resource: String): (Array[Byte], String) = {
+    val path     = getClass.getResource(resource).getPath
+    val filePath = new File(path).toPath
+    val content  = Files.readAllBytes(filePath)
+    val mimeType = Files.probeContentType(filePath)
+    (content, mimeType)
+  }
 }

@@ -9,7 +9,7 @@ import javax.mail.internet.InternetAddress
 import scala.concurrent.Future
 import scala.util.Try
 
-trait MailerImpl extends PDNDMailer { mailerInstance: MailerInstance =>
+trait DefaultPDNDMailer extends PDNDMailer { mailerInstance: MailerInstance =>
 
   override def send(mailData: MailData): Future[Unit] = {
     val mailContent = mailData.attachments match {
@@ -21,15 +21,11 @@ trait MailerImpl extends PDNDMailer { mailerInstance: MailerInstance =>
   }
 
   private def buildMultipart(mailData: MailData) = {
-    val attachments     = mailData.attachments.iterator
-    val multipartObject = Multipart()
-
-    while (attachments.hasNext) {
-      val file = attachments.next()
-      multipartObject.attach(file.file, file.name)
-    }
-
-    multipartObject.html(mailData.body)
+    mailData.attachments
+      .foldLeft(Multipart()) { (mailContent, attachment) =>
+        mailContent.attachBytes(attachment.bytes, attachment.name, attachment.mimetype)
+      }
+      .html(mailData.body)
   }
 
   private def sendMail(recipients: Seq[String], mailSubject: String, mailContent: Content) = {

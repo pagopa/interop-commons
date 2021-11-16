@@ -1,20 +1,19 @@
 package it.pagopa.pdnd.interop.commons.mail
 
 import it.pagopa.pdnd.interop.commons.mail.model.{MailAttachment, MailData, MailDataTemplate, TextTemplate}
-import it.pagopa.pdnd.interop.commons.mail.service.impl.MailerImpl
 import it.pagopa.pdnd.interop.commons.mail.service._
+import it.pagopa.pdnd.interop.commons.mail.service.impl.DefaultPDNDMailer
 import org.jvnet.mock_javamail.Mailbox
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.io.File
 import java.util.UUID
 import javax.mail.internet.MimeMultipart
 
 class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
-  val mailer: PDNDMailer = new MailerImpl with MockMailerConfiguration
+  val mailer: PDNDMailer = new DefaultPDNDMailer with MockMailerConfiguration
 
   "a MailSender" should {
     "send templated text email" in {
@@ -38,11 +37,13 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
     }
 
     "send text email with attachments" in {
+      val (tempFile, mimeType) = getTestResourceData("/Example.png")
+
       val mailData = MailData(
         recipients = Seq("legal@comune.bologna.it"),
         subject = "PDND Interop - Onboarding",
         body = "Attachment ahead",
-        attachments = Seq(MailAttachment(File.createTempFile("test", "temp"), Some("attachment1")))
+        attachments = Seq(MailAttachment("attachment", tempFile, mimeType))
       )
       mailer.send(mailData).futureValue
 

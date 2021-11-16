@@ -58,4 +58,4 @@ lazy val mailManager = project
 
 lazy val commons = (project in file("."))
   .aggregate(utils, fileManager, mailManager)
-  .settings(publish / skip := true, publishLocal / skip := true)
+  .settings(name := "pdnd-interop-commons", publish / skip := true, publishLocal / skip := true)
