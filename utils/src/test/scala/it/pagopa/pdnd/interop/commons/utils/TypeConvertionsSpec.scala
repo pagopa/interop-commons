@@ -61,5 +61,17 @@ class TypeConvertionsSpec extends AnyWordSpecLike with Matchers with ScalaFuture
     "decode string to UTF-8 base64" in {
       "UERORCBJbnTDqHLDsnAgUsOWY2tzIQ==".decodeBase64 shouldBe Success("PDND Intèròp RÖcks!")
     }
+
+    "interpolate a string with variables" in {
+      "${friend}, how are you?" interpolate Map("friend" -> "John Doe") shouldBe "John Doe, how are you?"
+    }
+
+    "interpolate a string with missing variables" in {
+      "${friend}, how are you?" interpolate Map("friendOne" -> "John Doe") shouldBe "${friend}, how are you?"
+    }
+
+    "interpolate a string with empty map of variables" in {
+      "${friend}, how are you?" interpolate Map.empty shouldBe "${friend}, how are you?"
+    }
   }
 }

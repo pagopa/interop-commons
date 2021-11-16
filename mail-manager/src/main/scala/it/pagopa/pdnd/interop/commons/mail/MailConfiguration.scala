@@ -44,5 +44,4 @@ object MailConfiguration {
         withTls = hoconConfig.getBoolean("pdnd-interop-commons.mail.smtp.with-tls")
       )
     )
-
 }

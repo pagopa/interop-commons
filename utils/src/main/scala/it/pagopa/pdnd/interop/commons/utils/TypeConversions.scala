@@ -7,6 +7,8 @@ import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
+import org.apache.commons.text.StringSubstitutor
+import scala.jdk.CollectionConverters.MapHasAsJava
 
 /** Defined implicit type conversions for common classes used through PDND interop platform
   */
@@ -44,6 +46,22 @@ object TypeConversions {
 
     def toBase64SHA1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
     def toBase64MD5: String  = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))
+
+    /** Replaces string variables in the format <code>${VARIABLE}</code>
+      * with the corresponding VARIABLE value as defined in <code>variables</code> input map.<br>
+      * E.g.: invoking the following:
+      * <br>
+      * <code>"hello ${there}".interpolate(Map("there" -> "friend"))</code>
+      * <br>will return:<br>
+      * <code>"hello friend"</code>
+      *
+      * @param variables map of variables to replace
+      * @return string with variables replaced
+      */
+    def interpolate(variables: Map[String, String]): String = {
+      val sub = new StringSubstitutor(variables.asJava)
+      sub.replace(str)
+    }
   }
 
   implicit class StatusReplyOps[A](val statusReply: StatusReply[A]) extends AnyVal {
