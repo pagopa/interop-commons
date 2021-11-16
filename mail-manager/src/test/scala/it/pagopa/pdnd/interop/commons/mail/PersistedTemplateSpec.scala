@@ -24,6 +24,32 @@ class PersistedTemplateSpec extends AnyWordSpecLike with Matchers with Persisted
       val templateStr = """{"yada":"yada"}"""
       toPersistedTemplate(templateStr) shouldBe a[Failure[_]]
     }
+
+    ", as base64, be converted to a proper persisted template" in {
+      val templateStr =
+        """
+          |{
+          |    "subject": "c3dlZGlzaCByb2NrcyAtIMOlIMOkIMO2",
+          |    "body": "cGRuZCBpbnRlcm9wIMOow6jDqMOow7LDssOyw6DDssOgw7LDoGHCp8O5",
+          |    "encoded": "true"
+          |}
+          |""".stripMargin
+      toPersistedTemplate(templateStr) shouldBe Success(
+        PersistedTemplate(subject = "swedish rocks - å ä ö", body = "pdnd interop èèèèòòòàòàòàa§ù")
+      )
+    }
+
+    ", as base64, fail if no encoding is in place" in {
+      val templateStr =
+        """
+          |{
+          |    "subject": "hello this must fail",
+          |    "body": "cGRuZCBpbnRlcm9wIMOow6jDqMOow7LDssOyw6DDssOgw7LDoGHCp8O5",
+          |    "encoded": true
+          |}
+          |""".stripMargin
+      toPersistedTemplate(templateStr) shouldBe a[Failure[_]]
+    }
   }
 
 }
