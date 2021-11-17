@@ -14,7 +14,7 @@ case class StorageAccountInfo(applicationId: String, applicationSecret: String, 
 /** Defines File manager configuration
   */
 object StorageConfiguration {
-  lazy val config: Config = ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference())
+  lazy val config: Config = ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
 
   /** Returns the file manager name as defined in configuration file.
     */

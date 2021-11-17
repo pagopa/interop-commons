@@ -28,7 +28,8 @@ case class SMTPConfiguration(
 /** Defines mail manager configuration
   */
 object MailConfiguration {
-  lazy val hoconConfig: Config = ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference())
+  lazy val hoconConfig: Config =
+    ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
 
   /** Returns currently mail-manager configuration data
     */
