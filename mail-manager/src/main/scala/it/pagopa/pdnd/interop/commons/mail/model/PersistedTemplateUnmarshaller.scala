@@ -24,8 +24,8 @@ trait PersistedTemplateUnmarshaller {
     jsonValue.convertTo[PersistedTemplate]
   }
 
-  private def actualTemplate(encoded: Boolean, template: PersistedTemplate): Try[PersistedTemplate] = {
-    if (encoded) {
+  private def actualTemplate(isEncoded: Boolean, template: PersistedTemplate): Try[PersistedTemplate] = {
+    if (isEncoded) {
       for {
         decodedSubject <- template.subject.decodeBase64
         decodedBody    <- template.body.decodeBase64
@@ -44,10 +44,9 @@ trait PersistedTemplateUnmarshaller {
       .get("encoded")
       .map(value =>
         value match {
-          case JsString("true") => true
-          case JsString("TRUE") => true
-          case JsBoolean(true)  => true
-          case _                => false
+          case JsString(value: String) => value.toLowerCase == "true"
+          case JsBoolean(true)         => true
+          case _                       => false
         }
       )
       .getOrElse(false)

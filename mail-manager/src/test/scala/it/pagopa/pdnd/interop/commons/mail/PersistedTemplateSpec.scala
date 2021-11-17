@@ -25,7 +25,7 @@ class PersistedTemplateSpec extends AnyWordSpecLike with Matchers with Persisted
       toPersistedTemplate(templateStr) shouldBe a[Failure[_]]
     }
 
-    ", as base64, be converted to a proper persisted template" in {
+    "be converted to a proper persisted template when base64 encoded" in {
       val templateStr =
         """
           |{
@@ -39,7 +39,7 @@ class PersistedTemplateSpec extends AnyWordSpecLike with Matchers with Persisted
       )
     }
 
-    ", as base64, fail if no encoding is in place" in {
+    "fail if no encoding is in place when base64 encoded" in {
       val templateStr =
         """
           |{
