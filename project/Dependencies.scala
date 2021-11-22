@@ -52,6 +52,22 @@ object Dependencies {
     lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
   }
 
+  private[this] object nimbus {
+    lazy val namespace = "com.nimbusds"
+    lazy val joseJwt   = namespace % "nimbus-jose-jwt" % nimbusVersion
+  }
+
+  private[this] object bouncycastle {
+    lazy val namespace = "org.bouncycastle"
+    lazy val provider  = namespace % "bcprov-jdk15on" % bouncycastleVersion
+    lazy val kix       = namespace % "bcpkix-jdk15on" % bouncycastleVersion
+  }
+
+  private[this] object cats {
+    lazy val namespace = "org.typelevel"
+    lazy val core      = namespace %% "cats-core" % catsVersion
+  }
+
   object Jars {
     lazy val akkaDependencies: Seq[ModuleID] =
       Seq(
@@ -71,9 +87,12 @@ object Dependencies {
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
-      typesafe.config    % Compile,
-      logback.classic    % Compile,
       apacheCommons.text % Compile,
+      bouncycastle.kix   % Compile,
+      cats.core          % Compile,
+      logback.classic    % Compile,
+      nimbus.joseJwt     % Compile,
+      typesafe.config    % Compile,
       scalatest.core     % Test
     )
   }
