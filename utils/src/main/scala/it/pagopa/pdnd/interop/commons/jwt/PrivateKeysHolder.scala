@@ -8,20 +8,25 @@ import scala.util.{Random, Try}
 
 trait PrivateKeysHolder {
 
-  val RSAPrivateKeys: Map[String, String]
-  val ECPrivateKeys: Map[String, String]
+  /** Private keyset for RSA signatures
+    */
+  val RSAPrivateKeyset: Map[KID, SerializedKey]
+
+  /** Private keyset for RSA signatures
+    */
+  val ECPrivateKeyset: Map[KID, SerializedKey]
 
   /** Returns a random private key picked from the available keyset according to the specified algorithm
     * @param algorithm JWS Algorithm type
     * @return JWK of the specific algorithm type
     */
   final def getPrivateKeyByAlgorithm(algorithm: JWSAlgorithm): Try[JWK] = {
-    val keys: Try[Map[String, String]] = Try {
+    val keys: Try[Map[KID, SerializedKey]] = Try {
       algorithm match {
-        case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => RSAPrivateKeys
-        case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => RSAPrivateKeys
-        case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => ECPrivateKeys
-        case JWSAlgorithm.EdDSA                                                                 => ECPrivateKeys
+        case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => RSAPrivateKeyset
+        case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => RSAPrivateKeyset
+        case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => ECPrivateKeyset
+        case JWSAlgorithm.EdDSA                                                                 => ECPrivateKeyset
       }
     }
 

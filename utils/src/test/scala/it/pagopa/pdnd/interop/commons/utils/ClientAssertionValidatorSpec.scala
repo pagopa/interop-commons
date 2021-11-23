@@ -25,8 +25,8 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
   val publicEcKey: String  = ecKey.toPublicJWK.toJSONString
 
   val validator = new DefaultClientAssertionValidator with PublicKeysHolder {
-    val RSAPublicKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-    val ECPublicKeys  = Map(ecKey.computeThumbprint().toJSONString -> ecKey.toPublicJWK.toJSONString)
+    val RSAPublicKeyset = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
+    val ECPublicKeyset  = Map(ecKey.computeThumbprint().toJSONString -> ecKey.toPublicJWK.toJSONString)
   }
 
   "a Client Assertion Validator" should {

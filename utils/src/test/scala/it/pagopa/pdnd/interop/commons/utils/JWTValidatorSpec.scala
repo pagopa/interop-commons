@@ -20,8 +20,8 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
   val publicEcKey: String  = ecKey.toPublicJWK.toJSONString
 
   val validator = new DefaultJWTValidator with PublicKeysHolder {
-    val RSAPublicKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-    val ECPublicKeys  = Map(ecKey.computeThumbprint().toJSONString -> ecKey.toPublicJWK.toJSONString)
+    val RSAPublicKeyset = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
+    val ECPublicKeyset  = Map(ecKey.computeThumbprint().toJSONString -> ecKey.toPublicJWK.toJSONString)
   }
 
   "a JWT token validation" should {

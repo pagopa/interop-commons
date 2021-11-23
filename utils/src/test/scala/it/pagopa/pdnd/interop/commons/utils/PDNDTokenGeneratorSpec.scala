@@ -17,8 +17,8 @@ class PDNDTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMockH
   val publicRsaKey: String = rsaKey.toPublicJWK.toJSONString
 
   val generator = new DefaultPDNDTokenGenerator with PrivateKeysHolder {
-    val RSAPrivateKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toJSONString)
-    val ECPrivateKeys  = Map.empty
+    val RSAPrivateKeyset = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toJSONString)
+    val ECPrivateKeyset  = Map.empty
   }
 
   "a PDNDTokenGenerator" should {

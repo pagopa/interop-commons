@@ -12,13 +12,13 @@ import scala.util.{Failure, Try}
   */
 trait PublicKeysHolder {
 
-  /** Public keys for RSA signatures
+  /** Public keyset for RSA signatures
     */
-  val RSAPublicKeys: Map[String, String]
+  val RSAPublicKeyset: Map[KID, SerializedKey]
 
-  /** Public keys for EC signatures
+  /** Public keyset for EC signatures
     */
-  val ECPublicKeys: Map[String, String]
+  val ECPublicKeyset: Map[KID, SerializedKey]
 
   /** Verifies if the JWT signature is valid
     * @param jwt token to verify
@@ -58,11 +58,11 @@ trait PublicKeysHolder {
 
   private def getPublicKeyVerifierByAlgorithm(algorithm: JWSAlgorithm, kid: String): Try[JWSVerifier] = {
     algorithm match {
-      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(RSAPublicKeys.get(kid))
-      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256 => rsaVerifier(RSAPublicKeys.get(kid))
+      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(RSAPublicKeyset.get(kid))
+      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256 => rsaVerifier(RSAPublicKeyset.get(kid))
       case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K =>
-        ecVerifier(ECPublicKeys.get(kid))
-      case JWSAlgorithm.EdDSA => ecVerifier(ECPublicKeys.get(kid))
+        ecVerifier(ECPublicKeyset.get(kid))
+      case JWSAlgorithm.EdDSA => ecVerifier(ECPublicKeyset.get(kid))
     }
   }
 
