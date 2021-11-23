@@ -4,56 +4,81 @@ import com.nimbusds.jose.crypto.{ECDSAVerifier, RSASSAVerifier}
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jose.{JWSAlgorithm, JWSVerifier}
 import com.nimbusds.jwt.SignedJWT
-import it.pagopa.pdnd.interop.commons.errors.InvalidJWTSign
+import it.pagopa.pdnd.interop.commons.errors.InvalidJWTSignature
 
 import scala.util.{Failure, Try}
 
+/** Contains the public keys required for validating PDND clients token
+  */
 trait PublicKeysHolder {
 
-  val RSApublicKeys: Try[Map[String, String]]
-  val ECPublicKeys: Try[Map[String, String]]
+  /** Public keys for RSA signatures
+    */
+  val RSAPublicKeys: Map[String, String]
 
-  def verify(jwt: SignedJWT): Try[SignedJWT] = {
+  /** Public keys for EC signatures
+    */
+  val ECPublicKeys: Map[String, String]
+
+  /** Verifies if the JWT signature is valid
+    * @param jwt token to verify
+    * @return <code>Successful(true)</code> if the signature is valid
+    */
+  final def verify(jwt: SignedJWT): Try[Boolean] = {
     for {
       algorithm   <- Try(jwt.getHeader.getAlgorithm)
       kid         <- Try(jwt.getHeader.getKeyID)
       verifier    <- getPublicKeyVerifierByAlgorithm(algorithm, kid)
-      verifiedJWT <- Either.cond(jwt.verify(verifier), jwt, InvalidJWTSign).toTry
+      verifiedJWT <- isSigned(verifier, jwt)
     } yield verifiedJWT
   }
 
-  def verifyWithVerifier(verifier: JWSVerifier, jwt: SignedJWT): Try[SignedJWT] = {
+  /** Verifies if the JWT signature is valid for the specified verifier.
+    *
+    * @param verifier instance doing the signature verification
+    * @param jwt token to verify
+    * @return <code>Successful(true)</code> if the signature is valid
+    */
+  final def isSigned(verifier: JWSVerifier, jwt: SignedJWT): Try[Boolean] = {
     for {
-      verifiedJWT <- Either.cond(jwt.verify(verifier), jwt, InvalidJWTSign).toTry
+      verifiedJWT <- Either.cond(jwt.verify(verifier), true, InvalidJWTSignature).toTry
     } yield verifiedJWT
+  }
+
+  /** Given an algorithm specification and a public key, it returns the corresponding verifier instance.
+    * @param algorithm algorithm type to use
+    * @param publicKey public key used for building a verifier on it
+    * @return the corresponding verifier
+    */
+  final def getVerifier(algorithm: JWSAlgorithm, publicKey: String): Try[JWSVerifier] = algorithm match {
+    case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(Option(publicKey))
+    case JWSAlgorithm.ES256                                           => ecVerifier(Option(publicKey))
+    case _                                                            => Failure(new RuntimeException("Invalid key algorithm"))
   }
 
   private def getPublicKeyVerifierByAlgorithm(algorithm: JWSAlgorithm, kid: String): Try[JWSVerifier] = {
     algorithm match {
-      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(RSApublicKeys.get(kid))
-      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256 => rsaVerifier(RSApublicKeys.get(kid))
+      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(RSAPublicKeys.get(kid))
+      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256 => rsaVerifier(RSAPublicKeys.get(kid))
       case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K =>
         ecVerifier(ECPublicKeys.get(kid))
       case JWSAlgorithm.EdDSA => ecVerifier(ECPublicKeys.get(kid))
     }
   }
 
-  def getVerifier(algorithm: JWSAlgorithm, publicKey: String): Try[JWSVerifier] = algorithm match {
-    case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(publicKey)
-    case JWSAlgorithm.ES256                                           => ecVerifier(publicKey)
-    case _                                                            => Failure(new RuntimeException("Invalid key algorithm"))
-  }
-
-  private def rsaVerifier(jwkKey: String): Try[RSASSAVerifier] =
+  private def rsaVerifier(jwkKey: Option[String]): Try[RSASSAVerifier] = {
     Try {
-      val jwk: JWK  = JWK.parse(jwkKey)
+      val keyVal    = jwkKey.get
+      val jwk: JWK  = JWK.parse(keyVal)
       val publicKey = jwk.toRSAKey
       new RSASSAVerifier(publicKey)
     }
+  }
 
-  private def ecVerifier(jwkKey: String): Try[ECDSAVerifier] =
+  private def ecVerifier(jwkKey: Option[String]): Try[ECDSAVerifier] =
     Try {
-      val jwk: JWK  = JWK.parse(jwkKey)
+      val keyVal    = jwkKey.get
+      val jwk: JWK  = JWK.parse(keyVal)
       val publicKey = jwk.toECKey
       new ECDSAVerifier(publicKey)
     }

@@ -7,11 +7,18 @@ import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 
-trait JWTValidation {
+/** Defines PDND client assertion validations
+  */
+trait ClientAssertionValidation {
 
   final val jwtBearerClientAssertionType: String = "urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
   final val clientCredentialsGrantType: String   = "client_credentials"
 
+  /** Verifies if the client assertion type and grant type are the ones expected for PDND
+    * @param clientAssertionType client assertion type
+    * @param grantType grant type used for this assertion
+    * @return
+    */
   def validateAccessTokenRequest(clientAssertionType: String, grantType: String): Try[Unit] = {
     val result: Validated[NonEmptyList[Throwable], Unit] =
       (validateClientAssertionType(clientAssertionType), validateGrantType(grantType)).mapN((_: Unit, _: Unit) => ())

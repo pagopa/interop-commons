@@ -1,40 +1,28 @@
 package it.pagopa.pdnd.interop.commons.jwt
 
-import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.{JWSAlgorithm, JWSSigner}
+import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer, RSASSASigner}
 import com.nimbusds.jose.jwk.JWK
 
 import scala.util.{Random, Try}
 
 trait PrivateKeysHolder {
 
-  val rsaPrivateKeys: Try[Map[String, String]]
-  val ecPrivateKeys: Try[Map[String, String]]
+  val RSAPrivateKeys: Map[String, String]
+  val ECPrivateKeys: Map[String, String]
 
-  /*
-  //   TODO: Start
-//   TODO: this part is static and initialized at the start up
-//   TODO - use a def instead of a val, but this approach generate to many calls to the vault
-//   TODO - use a refreshing cache, more complex
-
-  val rsaPrivateKey: Try[Map[String, String]] = {
-    val path = VaultService.extractKeyPath("rsa", "private")
-    path.map(vaultService.getSecret)
-  }
-
-  val ecPrivateKey: Try[Map[String, String]] = {
-    val path = VaultService.extractKeyPath("ec", "private")
-    path.map(vaultService.getSecret)
-  }
-  //  TODO:End
-   */
-
-  def getPrivateKeyByAlgorithm(algorithm: JWSAlgorithm): Try[JWK] = {
-    val keys: Try[Map[String, String]] = algorithm match {
-      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => rsaPrivateKeys
-      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => rsaPrivateKeys
-      case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => ecPrivateKeys
-      case JWSAlgorithm.EdDSA                                                                 => ecPrivateKeys
-
+  /** Returns a random private key picked from the available keyset according to the specified algorithm
+    * @param algorithm JWS Algorithm type
+    * @return JWK of the specific algorithm type
+    */
+  final def getPrivateKeyByAlgorithm(algorithm: JWSAlgorithm): Try[JWK] = {
+    val keys: Try[Map[String, String]] = Try {
+      algorithm match {
+        case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => RSAPrivateKeys
+        case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => RSAPrivateKeys
+        case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => ECPrivateKeys
+        case JWSAlgorithm.EdDSA                                                                 => ECPrivateKeys
+      }
     }
 
     val randomKey: Try[(String, String)] = keys.flatMap(ks =>
@@ -47,11 +35,26 @@ trait PrivateKeysHolder {
     )
 
     randomKey.flatMap { case (k, v) =>
-      readPrivateKeyFromString(v)
+      Try { JWK.parse(v) }
     }
   }
 
-  private def readPrivateKeyFromString(keyString: String): Try[JWK] = Try {
-    JWK.parse(keyString)
+  /** Returns a <code>JWSSigner</code> for the specified algorithm and key
+    * @param algorithm the specified algorithm
+    * @param key the JWK used for building the <code>JWSSigner</code> on.
+    * @return JWSSigner for the specified key and algorithm
+    */
+  final def getSigner(algorithm: JWSAlgorithm, key: JWK): Try[JWSSigner] = {
+    algorithm match {
+      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => rsa(key)
+      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => rsa(key)
+      case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => ec(key)
+      case JWSAlgorithm.EdDSA                                                                 => octet(key)
+    }
   }
+
+  private def rsa(jwk: JWK): Try[JWSSigner]   = Try(new RSASSASigner(jwk.toRSAKey))
+  private def ec(jwk: JWK): Try[JWSSigner]    = Try(new ECDSASigner(jwk.toECKey))
+  private def octet(jwk: JWK): Try[JWSSigner] = Try(new Ed25519Signer(jwk.toOctetKeyPair))
+
 }
