@@ -84,14 +84,15 @@ object Dependencies {
     lazy val mailDependencies: Seq[ModuleID] =
       Seq(courier.mail % Compile, courier.testMocking % Test)
 
+    lazy val jwtDependencies: Seq[ModuleID] =
+      Seq(bouncycastle.kix % Compile, nimbus.joseJwt % Compile)
+
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       apacheCommons.text % Compile,
-      bouncycastle.kix   % Compile,
       cats.core          % Compile,
       logback.classic    % Compile,
-      nimbus.joseJwt     % Compile,
       typesafe.config    % Compile,
       scalatest.core     % Test
     )
