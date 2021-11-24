@@ -63,7 +63,8 @@ lazy val vaultManager = project
   .settings(
     name := "pdnd-interop-commons-vault-manager",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.vaultDependencies
+    libraryDependencies ++= Dependencies.Jars.vaultDependencies,
+    Test / fork := true
   )
   .dependsOn(utils)
   .setupBuildInfo
