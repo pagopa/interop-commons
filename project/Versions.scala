@@ -16,4 +16,5 @@ object Versions {
   lazy val s3Persistence            = "1.1.74"
   lazy val scalatestVersion         = "3.2.10"
   lazy val typesafeConfigVersion    = "1.4.1"
+  lazy val vaultDriverVersion       = "5.1.0"
 }
