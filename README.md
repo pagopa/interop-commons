@@ -10,7 +10,7 @@ This implements some modules:
 - `utils` - a module for common operations as type conversions;
 - `file-manager` - a module for file management operations;
 - `mail-manager` - a module for e-mail operations;
-- `vault` - a module for read only accesses to Vault instances;
+- `vault-manager` - a module for read only accesses to Vault instances;
 
 ---
 
