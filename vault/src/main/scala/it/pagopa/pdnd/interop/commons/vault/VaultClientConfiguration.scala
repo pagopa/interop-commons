@@ -17,7 +17,7 @@ object VaultClientConfiguration {
     VaultConfig(
       address = hoconConfig.getString("pdnd-interop-commons.vault.address"),
       token = hoconConfig.getString("pdnd-interop-commons.vault.token"),
-      sslEnabled = hoconConfig.getBoolean("pdnd-interop-commons.vault.withSSL")
+      sslEnabled = hoconConfig.getBoolean("pdnd-interop-commons.vault.sslEnabled")
     )
 
 }
