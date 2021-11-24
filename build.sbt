@@ -5,14 +5,14 @@ ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
 ThisBuild / version := ComputeVersion.version
 
-lazy val fileManagerModuleName  = "file-manager"
-lazy val mailManagerModuleName  = "mail-manager"
-lazy val vaultManagerModuleName = "vault-manager"
-lazy val utilsModuleName        = "utils"
+lazy val fileManagerModuleName = "file-manager"
+lazy val mailManagerModuleName = "mail-manager"
+lazy val vaultModuleName       = "vault"
+lazy val utilsModuleName       = "utils"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
-cleanFiles += baseDirectory.value / vaultManagerModuleName / "target"
+cleanFiles += baseDirectory.value / vaultModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
@@ -58,10 +58,10 @@ lazy val mailManager = project
   .dependsOn(utils, fileManager)
   .setupBuildInfo
 
-lazy val vaultManager = project
-  .in(file(vaultManagerModuleName))
+lazy val vault = project
+  .in(file(vaultModuleName))
   .settings(
-    name := "pdnd-interop-commons-vault-manager",
+    name := "pdnd-interop-commons-vault",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.vaultDependencies,
     Test / fork := true
@@ -70,5 +70,5 @@ lazy val vaultManager = project
   .setupBuildInfo
 
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, vaultManager)
+  .aggregate(utils, fileManager, mailManager, vault)
   .settings(name := "pdnd-interop-commons", publish / skip := true, publishLocal / skip := true)
