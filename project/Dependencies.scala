@@ -57,12 +57,6 @@ object Dependencies {
     lazy val joseJwt   = namespace % "nimbus-jose-jwt" % nimbusVersion
   }
 
-  private[this] object bouncycastle {
-    lazy val namespace = "org.bouncycastle"
-    lazy val provider  = namespace % "bcprov-jdk15on" % bouncycastleVersion
-    lazy val kix       = namespace % "bcpkix-jdk15on" % bouncycastleVersion
-  }
-
   private[this] object cats {
     lazy val namespace = "org.typelevel"
     lazy val core      = namespace %% "cats-core" % catsVersion
@@ -85,7 +79,7 @@ object Dependencies {
       Seq(courier.mail % Compile, courier.testMocking % Test)
 
     lazy val jwtDependencies: Seq[ModuleID] =
-      Seq(bouncycastle.kix % Compile, nimbus.joseJwt % Compile)
+      Seq(nimbus.joseJwt % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy

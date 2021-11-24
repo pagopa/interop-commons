@@ -5,7 +5,6 @@ object Versions {
   lazy val apacheCommonsTextVersion = "1.9"
   lazy val awsSdkVersion            = "2.17.72"
   lazy val azureStorageBlobVersion  = "12.14.1"
-  lazy val bouncycastleVersion      = "1.69"
   lazy val catsVersion              = "2.6.1"
   lazy val commonsFileUploadVersion = "1.4"
   lazy val courierVersion           = "3.0.1"
