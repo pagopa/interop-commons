@@ -29,7 +29,7 @@ class VaultServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfter
   var vaultService: VaultService = _
 
   override def beforeAll() = {
-    //we need to instatiate this before all since we need that Docker container is running to get actual port
+    //we need to instantiate this before all since we need that Docker container is running to get actual port
     vaultService = new DefaultVaultService with VaultClientInstance {
       override val client: Vault = {
         val config = new VaultConfig()
