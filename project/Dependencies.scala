@@ -52,6 +52,17 @@ object Dependencies {
     lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
   }
 
+  private[this] object vault {
+    lazy val namespace = "com.bettercloud"
+    lazy val driver    = namespace % "vault-java-driver" % vaultDriverVersion
+  }
+
+  private[this] object testContainers {
+    lazy val namespace = "com.dimafeng"
+    lazy val scalatest = namespace %% "testcontainers-scala-scalatest" % testContainersScalaVersion
+    lazy val vault     = namespace %% "testcontainers-scala-vault"     % testContainersScalaVersion
+  }
+
   object Jars {
     lazy val akkaDependencies: Seq[ModuleID] =
       Seq(
@@ -67,6 +78,9 @@ object Dependencies {
 
     lazy val mailDependencies: Seq[ModuleID] =
       Seq(courier.mail % Compile, courier.testMocking % Test)
+
+    lazy val vaultDependencies: Seq[ModuleID] =
+      Seq(vault.driver % Compile, testContainers.scalatest % Test, testContainers.vault % Test)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
