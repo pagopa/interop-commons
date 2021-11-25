@@ -9,7 +9,7 @@ trait DefaultVaultService extends VaultService { clientInstance: VaultClientInst
 
   override def read(path: String): Map[String, String] = {
     val data: LogicalResponse = client.logical().read(path)
-    data.getData.asScala.toMap.view.toMap
+    data.getData.asScala.toMap
   }
 
 }
