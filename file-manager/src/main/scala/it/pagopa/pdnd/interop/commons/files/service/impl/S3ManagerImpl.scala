@@ -52,11 +52,11 @@ final class S3ManagerImpl extends FileManager {
 
   override def copy(
     filePathToCopy: String
-  )(locationId: String, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
+  )(locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
 
     Try {
       val destinationS3Key =
-        createS3Key(locationId, contentType = contentType, fileName = fileName)
+        createS3Key(locationId.toString, contentType = contentType, fileName = fileName)
 
       val copyObjRequest = CopyObjectRequest.builder
         .destinationKey(destinationS3Key)

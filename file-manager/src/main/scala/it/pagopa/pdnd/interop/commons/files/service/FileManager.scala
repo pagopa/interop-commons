@@ -27,7 +27,7 @@ trait FileManager {
     * @param fileName name of the copied file
     * @return the path where the file has been
     */
-  def copy(filePathToCopy: String)(locationId: String, contentType: String, fileName: String): Future[StorageFilePath]
+  def copy(filePathToCopy: String)(locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath]
 
   /** Returns the stream of the file located at the specified path
     * @param filePath the path of the file to retrieve

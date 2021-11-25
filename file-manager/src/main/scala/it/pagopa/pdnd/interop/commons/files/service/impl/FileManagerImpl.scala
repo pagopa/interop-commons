@@ -42,9 +42,9 @@ final class FileManagerImpl extends FileManager {
 
   override def copy(
     filePathToCopy: String
-  )(locationId: String, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
+  )(locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
     Try {
-      val destination = createPath(locationId, contentType, fileName)
+      val destination = createPath(locationId.toString, contentType, fileName)
       val _           = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
 
       destination
