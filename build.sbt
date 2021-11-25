@@ -8,11 +8,13 @@ ThisBuild / version := ComputeVersion.version
 lazy val fileManagerModuleName = "file-manager"
 lazy val mailManagerModuleName = "mail-manager"
 lazy val jwtModuleName         = "jwt"
+lazy val vaultModuleName       = "vault"
 lazy val utilsModuleName       = "utils"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
 cleanFiles += baseDirectory.value / jwtModuleName / "target"
+cleanFiles += baseDirectory.value / vaultModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
@@ -68,6 +70,17 @@ lazy val mailManager = project
   .dependsOn(utils, fileManager)
   .setupBuildInfo
 
+lazy val vault = project
+  .in(file(vaultModuleName))
+  .settings(
+    name := "pdnd-interop-commons-vault",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.vaultDependencies,
+    Test / fork := true
+  )
+  .dependsOn(utils)
+  .setupBuildInfo
+
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, jwtModule)
+  .aggregate(utils, fileManager, mailManager, vault, jwtModule)
   .settings(name := "pdnd-interop-commons", publish / skip := true, publishLocal / skip := true)
