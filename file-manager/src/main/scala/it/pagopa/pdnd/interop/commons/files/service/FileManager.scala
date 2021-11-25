@@ -19,6 +19,16 @@ trait FileManager {
     */
   def store(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
 
+  /** Copies the specified file in the defined location
+    *
+    * @param filePathToCopy path of the file to copy
+    * @param locationId unique identifier of the location
+    * @param contentType copied file content type
+    * @param fileName name of the copied file
+    * @return the path where the file has been
+    */
+  def copy(filePathToCopy: String)(locationId: String, contentType: String, fileName: String): Future[StorageFilePath]
+
   /** Returns the stream of the file located at the specified path
     * @param filePath the path of the file to retrieve
     * @return <code>java.io.ByteArrayOutputStream</code> of the file

@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.commons.files.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.pdnd.interop.commons.files.service.{FileManager, StorageFilePath}
+
 import java.io.{ByteArrayOutputStream, File, FileInputStream, InputStream}
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
@@ -36,6 +37,18 @@ final class FileManagerImpl extends FileManager {
     Try {
       val file: File = Paths.get(filePath).toFile
       file.delete()
+    }
+  }
+
+  override def copy(
+    filePathToCopy: String
+  )(locationId: String, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
+    Try {
+      val destination = createPath(locationId, contentType, fileName)
+      val _           = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
+
+      destination
+
     }
   }
 
