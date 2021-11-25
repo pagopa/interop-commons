@@ -50,6 +50,27 @@ final class S3ManagerImpl extends FileManager {
     }
   }
 
+  override def copy(
+    filePathToCopy: String
+  )(locationId: String, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
+
+    Try {
+      val destinationS3Key =
+        createS3Key(locationId, contentType = contentType, fileName = fileName)
+
+      val copyObjRequest = CopyObjectRequest.builder
+        .destinationKey(destinationS3Key)
+        .sourceKey(filePathToCopy)
+        .sourceBucket(storageAccountInfo.container)
+        .destinationBucket(storageAccountInfo.container)
+        .build
+
+      val _ = s3Client.copyObject(copyObjRequest)
+
+      destinationS3Key
+    }
+  }
+
   private def createS3Key(tokenId: String, contentType: String, fileName: String): String =
     s"parties/docs/$tokenId/${contentType}/$fileName"
 

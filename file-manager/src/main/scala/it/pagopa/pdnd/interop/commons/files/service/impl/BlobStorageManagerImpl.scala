@@ -40,6 +40,20 @@ final class BlobStorageManagerImpl extends FileManager {
     }
   }
 
+  override def copy(
+    filePathToCopy: String
+  )(locationId: String, contentType: String, fileName: String): Future[StorageFilePath] = {
+    Future.fromTry {
+      Try {
+        val destination            = createBlobKey(locationId, contentType = contentType, fileName = fileName)
+        val blobContainerClient    = azureBlobClient.getBlobContainerClient(storageAccountInfo.container)
+        val blobClient: BlobClient = blobContainerClient.getBlobClient(destination)
+        blobClient.copyFromUrl(filePathToCopy)
+        destination
+      }
+    }
+  }
+
   private def createBlobKey(tokenId: String, contentType: String, fileName: String): String =
     s"parties/docs/$tokenId/${contentType}/$fileName"
 
