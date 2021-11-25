@@ -24,6 +24,9 @@ object TypeConversions {
 
   implicit class OptionOps[A](val option: Option[A]) extends AnyVal {
     def toFuture(e: Throwable): Future[A] = option.fold[Future[A]](Future.failed(e))(Future.successful)
+    def toTry(e: Throwable): Try[A]       = option.fold[Try[A]](Failure(e))(t => Success(t))
+    def toTry(msg: String): Try[A] =
+      option.map(Success(_)).getOrElse(Failure(new NoSuchElementException(msg)))
   }
 
   implicit class OffsetDateTimeOps(val dt: OffsetDateTime) extends AnyVal {

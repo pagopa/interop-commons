@@ -52,6 +52,16 @@ object Dependencies {
     lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
   }
 
+  private[this] object nimbus {
+    lazy val namespace = "com.nimbusds"
+    lazy val joseJwt   = namespace % "nimbus-jose-jwt" % nimbusVersion
+  }
+
+  private[this] object cats {
+    lazy val namespace = "org.typelevel"
+    lazy val core      = namespace %% "cats-core" % catsVersion
+  }
+
   private[this] object vault {
     lazy val namespace = "com.bettercloud"
     lazy val driver    = namespace % "vault-java-driver" % vaultDriverVersion
@@ -82,12 +92,16 @@ object Dependencies {
     lazy val vaultDependencies: Seq[ModuleID] =
       Seq(vault.driver % Compile, testContainers.scalatest % Test, testContainers.vault % Test)
 
+    lazy val jwtDependencies: Seq[ModuleID] =
+      Seq(nimbus.joseJwt % Compile)
+
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
-      typesafe.config    % Compile,
-      logback.classic    % Compile,
       apacheCommons.text % Compile,
+      cats.core          % Compile,
+      logback.classic    % Compile,
+      typesafe.config    % Compile,
       scalatest.core     % Test
     )
   }
