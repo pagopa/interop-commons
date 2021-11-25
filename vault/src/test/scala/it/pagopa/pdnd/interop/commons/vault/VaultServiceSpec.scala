@@ -2,8 +2,8 @@ package it.pagopa.pdnd.interop.commons.vault
 
 import com.bettercloud.vault.{Vault, VaultConfig}
 import com.dimafeng.testcontainers.{ForAllTestContainer, VaultContainer}
-import it.pagopa.pdnd.interop.commons.vault.service.{VaultClientInstance, VaultService}
 import it.pagopa.pdnd.interop.commons.vault.service.impl.DefaultVaultService
+import it.pagopa.pdnd.interop.commons.vault.service.{VaultClientInstance, VaultService}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
