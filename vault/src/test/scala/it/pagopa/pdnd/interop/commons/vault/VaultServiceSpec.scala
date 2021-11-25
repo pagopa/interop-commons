@@ -7,11 +7,15 @@ import it.pagopa.pdnd.interop.commons.vault.service.{VaultClientInstance, VaultS
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.testcontainers.containers.Network
 
 class VaultServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterAll with ForAllTestContainer {
 
   override val container: VaultContainer =
     new VaultContainer(dockerImageNameOverride = Some("vault:1.9.0"), vaultToken = Some("test-token"))
+
+  val network: Network = Network.SHARED
+  container.vaultContainer.withNetwork(network)
 
   container.vaultContainer.withSecretInVault(
     "secret/mock/path/vault",
