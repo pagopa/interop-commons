@@ -33,13 +33,14 @@ trait PublicKeysHolder {
   }
 
   private[this] def getPublicKeyVerifierByAlgorithm(algorithm: JWSAlgorithm, kid: String): Try[JWSVerifier] = {
+    def keyNotFound(kid: String) = PublicKeyNotFound(s"Public key not found for kid $kid")
     algorithm match {
       case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 | JWSAlgorithm.PS256 | JWSAlgorithm.PS384 |
           JWSAlgorithm.PS256 =>
-        RSAPublicKeyset.get(kid).toTry(PublicKeyNotFound).flatMap(rsaVerifier)
+        RSAPublicKeyset.get(kid).toTry(keyNotFound(kid)).flatMap(rsaVerifier)
       case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K | JWSAlgorithm.EdDSA =>
-        ECPublicKeyset.get(kid).toTry(PublicKeyNotFound).flatMap(ecVerifier)
-      case _ => Failure(PublicKeyNotFound("Algorithm not supported"))
+        ECPublicKeyset.get(kid).toTry(keyNotFound(kid)).flatMap(ecVerifier)
+      case _ => Failure(PublicKeyNotFound(s"Algorithm ${algorithm.getName} not supported"))
     }
   }
 

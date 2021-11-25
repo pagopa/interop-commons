@@ -2,7 +2,7 @@ package it.pagopa.pdnd.interop.commons.jwt.service.impl
 
 import com.nimbusds.jose.{JWSAlgorithm, JWSVerifier}
 import com.nimbusds.jwt.SignedJWT
-import it.pagopa.pdnd.interop.commons.jwt.errors.{InvalidJWTSignature, PublicKeyNotFound}
+import it.pagopa.pdnd.interop.commons.jwt.errors.{InvalidJWTSignature, JWSSignerNotAvailable, PublicKeyNotFound}
 import it.pagopa.pdnd.interop.commons.jwt.service.ClientAssertionValidator
 import it.pagopa.pdnd.interop.commons.jwt.validations.ClientAssertionValidation
 import it.pagopa.pdnd.interop.commons.jwt.{ecVerifier, rsaVerifier}
@@ -30,7 +30,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
       publicKey            <- clientKeys.get(kid).toTry(PublicKeyNotFound(s"Client $clientId public key not found for kid $kid"))
       verifier             <- getVerifier(jwt.getHeader.getAlgorithm, publicKey)
       _ = logger.info("Verify client signature with specific verifier")
-      _ <- isSigned(verifier, jwt)
+      _ <- Either.cond(jwt.verify(verifier), true, InvalidJWTSignature).toTry
       _ = logger.info("Client signature verified")
     } yield ()
 
@@ -54,12 +54,6 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
       kid <- Try(jwt.getHeader.getKeyID)
     } yield (jwt, kid, clientId)
 
-  final def isSigned(verifier: JWSVerifier, jwt: SignedJWT): Try[Unit] = {
-    for {
-      _ <- Either.cond(jwt.verify(verifier), true, InvalidJWTSignature).toTry
-    } yield ()
-  }
-
   /* Given an algorithm specification and a public key, it returns the corresponding verifier instance.
    * @param algorithm algorithm type to use
    * @param publicKey public key used for building a verifier on it
@@ -68,7 +62,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
   private[this] def getVerifier(algorithm: JWSAlgorithm, publicKey: String): Try[JWSVerifier] = algorithm match {
     case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(publicKey)
     case JWSAlgorithm.ES256                                           => ecVerifier(publicKey)
-    case _                                                            => Failure(new RuntimeException("Invalid key algorithm"))
+    case _                                                            => Failure(JWSSignerNotAvailable(s"Algorithm ${algorithm.getName} not supported"))
   }
 }
 

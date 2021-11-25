@@ -48,11 +48,7 @@ trait ClientAssertionValidation {
   }
 
   private def validateGrantType(grantType: String): ValidatedNel[Throwable, Unit] = {
-    val validation = Either.cond(
-      grantType == clientCredentialsGrantType,
-      (),
-      InvalidGrantType(s"Grant type is not client credentials: $grantType")
-    )
+    val validation = Either.cond(grantType == clientCredentialsGrantType, (), InvalidGrantType(grantType))
 
     validation match {
       case Left(throwable) => throwable.invalidNel[Unit]
