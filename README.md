@@ -11,6 +11,7 @@ This implements some modules:
 - `file-manager` - a module for file management operations;
 - `mail-manager` - a module for e-mail operations;
 - `vault` - a module for read only accesses to Vault instances;
+- `jwt` - a module for PDND tokens managemet;
 
 ---
 
