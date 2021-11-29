@@ -3,6 +3,11 @@ package it.pagopa.pdnd.interop.commons.utils
 import akka.http.scaladsl.server.Directives.Authenticator
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions.TryOps
+import it.pagopa.pdnd.interop.commons.utils.errors.MissingBearer
+
+import scala.concurrent.Future
+import scala.util.Try
 
 /** Mixes in Akka utilities
   */
@@ -25,6 +30,10 @@ trait AkkaUtils {
   object PassThroughAuthenticator extends Authenticator[Seq[(String, String)]] {
     override def apply(credentials: Credentials): Option[Seq[(String, String)]] = Some(Seq.empty)
   }
+
+  def getBearer(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(BEARER).toRight(MissingBearer).toTry
+  def getFutureBearer(contexts: Seq[(String, String)]): Future[String] = getBearer(contexts).toFuture
+
 }
 
 /** Exposes Akka utilities

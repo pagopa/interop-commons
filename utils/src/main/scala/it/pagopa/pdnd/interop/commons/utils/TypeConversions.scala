@@ -1,16 +1,14 @@
 package it.pagopa.pdnd.interop.commons.utils
 
 import akka.pattern.StatusReply
-import it.pagopa.pdnd.interop.commons.utils.errors.MissingBearer
+import org.apache.commons.text.StringSubstitutor
 
 import java.nio.charset.StandardCharsets
 import java.time.OffsetDateTime
 import java.util.{Base64, UUID}
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-import org.apache.commons.text.StringSubstitutor
-
 import scala.jdk.CollectionConverters.MapHasAsJava
+import scala.util.{Failure, Success, Try}
 
 /** Defined implicit type conversions for common classes used through PDND interop platform
   */
@@ -75,11 +73,6 @@ object TypeConversions {
 
     def toTry: Try[A] =
       if (statusReply.isSuccess) Success(statusReply.getValue) else Failure(statusReply.getError)
-  }
-
-  implicit class ContextsOps(val contexts: Seq[(String, String)]) extends AnyVal {
-    def getBearer: Try[String]          = contexts.toMap.get(BEARER).toRight(MissingBearer).toTry
-    def getFutureBearer: Future[String] = getBearer.toFuture
   }
 
 }
