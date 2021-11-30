@@ -4,7 +4,7 @@ import akka.pattern.StatusReply
 import org.apache.commons.text.StringSubstitutor
 
 import java.nio.charset.StandardCharsets
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.{Base64, UUID}
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.MapHasAsJava
@@ -30,6 +30,7 @@ object TypeConversions {
   }
 
   implicit class OffsetDateTimeOps(val dt: OffsetDateTime) extends AnyVal {
+    def toMillis: Long = dt.toInstant.toEpochMilli
     def asFormattedString: Try[String] = Try {
       dt.format(dateFormatter)
     }
@@ -73,6 +74,10 @@ object TypeConversions {
 
     def toTry: Try[A] =
       if (statusReply.isSuccess) Success(statusReply.getValue) else Failure(statusReply.getError)
+  }
+
+  implicit class LongOps(val l: Long) extends AnyVal {
+    def toOffsetDateTime: Try[OffsetDateTime] = Try(OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneOffset.UTC))
   }
 
 }
