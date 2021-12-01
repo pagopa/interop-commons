@@ -10,13 +10,19 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class TypeConvertionsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
+class TypeConversionsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
   "an OffsetDateTime" should {
     "be converted to a String" in {
       OffsetDateTime
         .of(2021, 1, 1, 10, 10, 10, 0, ZoneOffset.UTC)
         .asFormattedString shouldBe Success("2021-01-01T10:10:10Z")
+    }
+
+    "be converted to a Long" in {
+      OffsetDateTime
+        .of(2021, 1, 1, 10, 10, 10, 0, ZoneOffset.UTC)
+        .toMillis shouldBe 1609495810000L
     }
   }
 
@@ -73,5 +79,16 @@ class TypeConvertionsSpec extends AnyWordSpecLike with Matchers with ScalaFuture
     "interpolate a string with empty map of variables" in {
       "${friend}, how are you?" interpolate Map.empty shouldBe "${friend}, how are you?"
     }
+  }
+
+  "a Long" should {
+    "be converted to an OffsetDateTime" in {
+      1609495810000L.toOffsetDateTime shouldBe
+        Success(
+          OffsetDateTime
+            .of(2021, 1, 1, 10, 10, 10, 0, ZoneOffset.UTC)
+        )
+    }
+
   }
 }
