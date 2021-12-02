@@ -1,4 +1,4 @@
-package io.pagopa.pdnd.interop.commons.openapi
+package it.pagopa.pdnd.interop.commons.utils
 
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.StringOps
 
