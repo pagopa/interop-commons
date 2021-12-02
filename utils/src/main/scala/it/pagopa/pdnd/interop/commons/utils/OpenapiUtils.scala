@@ -7,7 +7,7 @@ trait OpenapiUtils {
     if (params == "[]") List.empty else params.parseCommaSeparated
   }
 
-  def verifyParametersByCondition(params: List[String]): String => Boolean = { s =>
+  def verifyParametersByCondition[A](params: List[A]): A => Boolean = { s =>
     params.isEmpty || params.contains(s)
   }
 }
