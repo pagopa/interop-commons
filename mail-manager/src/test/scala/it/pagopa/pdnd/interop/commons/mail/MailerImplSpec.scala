@@ -1,8 +1,9 @@
 package it.pagopa.pdnd.interop.commons.mail
 
-import it.pagopa.pdnd.interop.commons.mail.model.{MailAttachment, MailData, MailDataTemplate, TextTemplate}
+import it.pagopa.pdnd.interop.commons.mail.model.{MailAttachment, MailData, MailDataTemplate}
 import it.pagopa.pdnd.interop.commons.mail.service._
 import it.pagopa.pdnd.interop.commons.mail.service.impl.DefaultPDNDMailer
+import it.pagopa.pdnd.interop.commons.utils.model.TextTemplate
 import org.jvnet.mock_javamail.Mailbox
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers

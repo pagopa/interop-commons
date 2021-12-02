@@ -73,6 +73,23 @@ object Dependencies {
     lazy val vault     = namespace %% "testcontainers-scala-vault"     % testContainersScalaVersion
   }
 
+  private[this] object pdfbox {
+    lazy val namespace = "org.apache.pdfbox"
+    lazy val lib       = namespace % "pdfbox" % pdfBoxVersion
+  }
+
+  private[this] object pdfcompare {
+    lazy val namespace = "de.redsix"
+    lazy val lib       = namespace % "pdfcompare" % pdfCompareVersion
+  }
+
+  private[this] object openhtmltopdf {
+    lazy val namespace = "com.openhtmltopdf"
+    lazy val core      = namespace % "openhtmltopdf-core"   % openhtmltopdfVersion
+    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox" % openhtmltopdfVersion
+    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"  % openhtmltopdfVersion
+  }
+
   object Jars {
     lazy val akkaDependencies: Seq[ModuleID] =
       Seq(
@@ -84,7 +101,16 @@ object Dependencies {
       )
 
     lazy val fileDependencies: Seq[ModuleID] =
-      Seq(aws.s3 % Compile, azure.storageBlob % Compile, commons.fileUpload % Compile)
+      Seq(
+        aws.s3               % Compile,
+        azure.storageBlob    % Compile,
+        commons.fileUpload   % Compile,
+        openhtmltopdf.core   % Compile,
+        openhtmltopdf.pdfbox % Compile,
+        openhtmltopdf.slf4j  % Compile,
+        pdfbox.lib           % Compile,
+        pdfcompare.lib       % Test
+      )
 
     lazy val mailDependencies: Seq[ModuleID] =
       Seq(courier.mail % Compile, courier.testMocking % Test)

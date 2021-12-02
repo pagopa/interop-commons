@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.commons.mail
 
-import it.pagopa.pdnd.interop.commons.mail.model.{MailAttachment, MailData, MailDataTemplate, TextTemplate}
+import it.pagopa.pdnd.interop.commons.mail.model.{MailAttachment, MailData, MailDataTemplate}
+import it.pagopa.pdnd.interop.commons.utils.model.TextTemplate
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

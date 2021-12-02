@@ -1,5 +1,4 @@
-package it.pagopa.pdnd.interop.commons.mail.model
-
+package it.pagopa.pdnd.interop.commons.utils.model
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.StringOps
 
 /** Defines a customizable text template through strings interpolation.<br>
