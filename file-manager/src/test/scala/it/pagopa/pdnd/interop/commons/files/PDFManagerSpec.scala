@@ -44,7 +44,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
         )
 
       val generatedPDF: File = File.createTempFile("byte-array-output", "pdf")
-      Files.write(generatedPDF.toPath, PDFManager.getPDFArray(pdfTemplate, data).get)
+      Files.write(generatedPDF.toPath, PDFManager.getPDFAsByteArray(pdfTemplate, data).get)
 
       val result: CompareResult = new PdfComparator(expectedPDF, generatedPDF).compare()
       result.isEqual shouldBe true
