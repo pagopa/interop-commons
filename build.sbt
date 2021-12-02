@@ -7,15 +7,17 @@ ThisBuild / version := ComputeVersion.version
 
 lazy val fileManagerModuleName = "file-manager"
 lazy val mailManagerModuleName = "mail-manager"
-lazy val jwtModuleName         = "jwt"
-lazy val vaultModuleName       = "vault"
-lazy val utilsModuleName       = "utils"
+lazy val jwtModuleName = "jwt"
+lazy val vaultModuleName = "vault"
+lazy val utilsModuleName = "utils"
+lazy val openapiModuleName = "openapi"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
 cleanFiles += baseDirectory.value / jwtModuleName / "target"
 cleanFiles += baseDirectory.value / vaultModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
+cleanFiles += baseDirectory.value / openapiModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
   scalacOptions := Seq(),
@@ -81,6 +83,16 @@ lazy val vault = project
   .dependsOn(utils)
   .setupBuildInfo
 
+lazy val openapi = project
+  .in(file(openapiModuleName))
+  .settings(
+    name := "pdnd-interop-commons-openapi",
+    sharedSettings
+  )
+  .dependsOn(utils)
+  .setupBuildInfo
+
+
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, vault, jwtModule)
+  .aggregate(utils, fileManager, mailManager, vault, jwtModule, openapi)
   .settings(name := "pdnd-interop-commons", publish / skip := true, publishLocal / skip := true)
