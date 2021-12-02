@@ -19,6 +19,7 @@ cleanFiles += baseDirectory.value / utilsModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
   scalacOptions := Seq(),
+  scalafmtOnCompile := true,
   libraryDependencies ++= Dependencies.Jars.commonDependencies,
   credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
   updateOptions := updateOptions.value.withGigahorse(false),

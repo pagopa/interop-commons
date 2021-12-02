@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.commons.mail.model
 
 import it.pagopa.pdnd.interop.commons.mail.model
+import it.pagopa.pdnd.interop.commons.utils.model.TextTemplate
 
 /** Models data required for sending e-mails with text templates instead of <code>String</code>s.<br>
   * This may be useful for clients that needs to dynamically customize either mail subject or body.
