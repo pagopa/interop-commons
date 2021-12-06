@@ -15,7 +15,7 @@ final class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
-  override def store(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
+  override def store(containerPath: String)(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
     Future.fromTry {
       Try {
         val destPath = createPath(tokenId.toString, fileParts._1.getContentType.toString(), fileParts._1.getFileName)
@@ -24,7 +24,7 @@ final class FileManagerImpl extends FileManager {
       }
     }
 
-  def get(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
+  override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
     Try {
       val inputStream: InputStream            = new FileInputStream(filePath)
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
@@ -33,7 +33,7 @@ final class FileManagerImpl extends FileManager {
     }
   }
 
-  override def delete(filePath: String): Future[Boolean] = Future.fromTry {
+  override def delete(containerPath: String)(filePath: String): Future[Boolean] = Future.fromTry {
     Try {
       val file: File = Paths.get(filePath).toFile
       file.delete()
@@ -41,16 +41,17 @@ final class FileManagerImpl extends FileManager {
   }
 
   override def copy(
-    filePathToCopy: String
-  )(locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
-    Try {
-      val destination = createPath(locationId.toString, contentType, fileName)
-      val _           = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
+    containerPath: String
+  )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] =
+    Future.fromTry {
+      Try {
+        val destination = createPath(locationId.toString, contentType, fileName)
+        val _           = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
 
-      destination
+        destination
 
+      }
     }
-  }
 
   private def createPath(tokenId: String, contentType: String, fileName: String): String = {
 

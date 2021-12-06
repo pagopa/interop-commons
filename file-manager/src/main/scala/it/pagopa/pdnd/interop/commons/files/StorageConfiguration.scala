@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
   * @param endpoint third party storage location (e.g.: AWS S3 endpoint)
   * @param container third party storage container (e.g.: AWS S3 bucket name)
   */
-case class StorageAccountInfo(applicationId: String, applicationSecret: String, endpoint: String, container: String)
+case class StorageAccountInfo(applicationId: String, applicationSecret: String, endpoint: String)
 
 /** Defines File manager configuration
   */
@@ -26,7 +26,6 @@ object StorageConfiguration {
     StorageAccountInfo(
       applicationId = config.getString("pdnd-interop-commons.storage.application.id"),
       applicationSecret = config.getString("pdnd-interop-commons.storage.application.secret"),
-      endpoint = config.getString("pdnd-interop-commons.storage.endpoint"),
-      container = config.getString("pdnd-interop-commons.storage.container")
+      endpoint = config.getString("pdnd-interop-commons.storage.endpoint")
     )
 }

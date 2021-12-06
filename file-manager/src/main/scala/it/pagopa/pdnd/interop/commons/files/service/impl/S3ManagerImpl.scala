@@ -30,54 +30,56 @@ final class S3ManagerImpl extends FileManager {
     s3
   }
 
-  override def store(id: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] = Future.fromTry {
+  override def store(containerPath: String)(id: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
+    Future.fromTry {
 
-    Try {
-      val s3Key = createS3Key(
-        id.toString,
-        contentType = fileParts._1.getContentType.toString(),
-        fileName = fileParts._1.getFileName
-      )
-      val objectRequest =
-        PutObjectRequest.builder
-          .bucket(storageAccountInfo.container)
-          .key(s3Key)
-          .build
+      Try {
+        val s3Key = createS3Key(
+          id.toString,
+          contentType = fileParts._1.getContentType.toString(),
+          fileName = fileParts._1.getFileName
+        )
+        val objectRequest =
+          PutObjectRequest.builder
+            .bucket(containerPath)
+            .key(s3Key)
+            .build
 
-      val _ = s3Client.putObject(objectRequest, RequestBody.fromFile(Paths.get(fileParts._2.getPath)))
+        val _ = s3Client.putObject(objectRequest, RequestBody.fromFile(Paths.get(fileParts._2.getPath)))
 
-      s3Key
+        s3Key
+      }
     }
-  }
 
   override def copy(
-    filePathToCopy: String
-  )(locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] = Future.fromTry {
+    container: String
+  )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] =
+    Future.fromTry {
 
-    Try {
-      val destinationS3Key =
-        createS3Key(locationId.toString, contentType = contentType, fileName = fileName)
+      Try {
+        val destinationS3Key =
+          createS3Key(locationId.toString, contentType = contentType, fileName = fileName)
 
-      val copyObjRequest = CopyObjectRequest.builder
-        .destinationKey(destinationS3Key)
-        .sourceKey(filePathToCopy)
-        .sourceBucket(storageAccountInfo.container)
-        .destinationBucket(storageAccountInfo.container)
-        .build
+        val copyObjRequest = CopyObjectRequest.builder
+          .destinationKey(destinationS3Key)
+          .sourceKey(filePathToCopy)
+          .sourceBucket(container)
+          .destinationBucket(container)
+          .build
 
-      val _ = s3Client.copyObject(copyObjRequest)
+        val _ = s3Client.copyObject(copyObjRequest)
 
-      destinationS3Key
+        destinationS3Key
+      }
     }
-  }
 
   private def createS3Key(tokenId: String, contentType: String, fileName: String): String =
     s"parties/docs/$tokenId/${contentType}/$fileName"
 
-  override def get(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
+  override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
     Try {
       val getObjectRequest: GetObjectRequest =
-        GetObjectRequest.builder.bucket(storageAccountInfo.container).key(filePath).build
+        GetObjectRequest.builder.bucket(containerPath).key(filePath).build
       val s3Object: ResponseBytes[GetObjectResponse] = s3Client.getObject(getObjectRequest, ResponseTransformer.toBytes)
       val inputStream: InputStream                   = s3Object.asInputStream()
       val outputStream: ByteArrayOutputStream        = new ByteArrayOutputStream()
@@ -86,11 +88,11 @@ final class S3ManagerImpl extends FileManager {
     }
   }
 
-  override def delete(path: String): Future[Boolean] = {
+  override def delete(containerPath: String)(path: String): Future[Boolean] = {
     Try {
       s3Client.deleteObject(
         DeleteObjectRequest.builder
-          .bucket(storageAccountInfo.container)
+          .bucket(containerPath)
           .key(path)
           .build()
       )

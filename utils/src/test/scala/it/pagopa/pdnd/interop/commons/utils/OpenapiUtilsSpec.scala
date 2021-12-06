@@ -8,13 +8,13 @@ class OpenapiUtilsSpec extends AnyWordSpecLike with Matchers {
   "Parsing a string representing a list of params" should {
     "retrieve an empty list if input string is []" in {
       val paramsTxt = "[]"
-      val params = OpenapiUtils.parseArrayParameters(paramsTxt)
+      val params    = OpenapiUtils.parseArrayParameters(paramsTxt)
       params shouldBe List.empty
     }
 
     "retrieve a non empty list if input string represent a comma separated list" in {
       val paramsTxt = "a,b,c"
-      val params = OpenapiUtils.parseArrayParameters(paramsTxt)
+      val params    = OpenapiUtils.parseArrayParameters(paramsTxt)
       params shouldBe List("a", "b", "c")
     }
 
@@ -39,8 +39,6 @@ class OpenapiUtilsSpec extends AnyWordSpecLike with Matchers {
       result shouldBe false
     }
 
-
   }
-
 
 }

@@ -13,33 +13,39 @@ import scala.util.{Failure, Try}
 trait FileManager {
 
   /** Stores the specified file in a unique location
+    * @param containerPath storage destination container name
     * @param tokenId the unique identifier of the location
     * @param fileParts file contents and its information as retrieved from an Akka HTTP call
     * @return the path where the file has been stored
     */
-  def store(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
+  def store(containerPath: String)(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
 
   /** Copies the specified file in the defined location
     *
+    * @param containerPath storage destination container name
     * @param filePathToCopy path of the file to copy
     * @param locationId unique identifier of the location
     * @param contentType copied file content type
     * @param fileName name of the copied file
     * @return the path where the file has been
     */
-  def copy(filePathToCopy: String)(locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath]
+  def copy(
+    containerPath: String
+  )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath]
 
   /** Returns the stream of the file located at the specified path
+    * @param containerPath storage destination container name
     * @param filePath the path of the file to retrieve
     * @return <code>java.io.ByteArrayOutputStream</code> of the file
     */
-  def get(filePath: StorageFilePath): Future[ByteArrayOutputStream]
+  def get(containerPath: String)(filePath: StorageFilePath): Future[ByteArrayOutputStream]
 
   /** Deletes the file located at the specified path
+    * @param containerPath storage destination container name
     * @param filePath the of the file to delete
     * @return true if the deletion happens properly, false otherwise.
     */
-  def delete(filePath: StorageFilePath): Future[Boolean]
+  def delete(containerPath: String)(filePath: StorageFilePath): Future[Boolean]
 }
 
 object FileManager {
