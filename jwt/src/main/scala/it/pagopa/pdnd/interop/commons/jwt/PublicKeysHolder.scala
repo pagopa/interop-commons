@@ -13,7 +13,19 @@ trait PublicKeysHolder {
 
   /** Public keyset for JWT signatures
     */
-  val publicKeyset: Map[KID, SerializedKey]
+  /*
+
+ _________  ________  ________  ________
+|\___   ___\\   __  \|\   ___ \|\   __  \
+\|___ \  \_\ \  \|\  \ \  \_|\ \ \  \|\  \
+     \ \  \ \ \  \\\  \ \  \ \\ \ \  \\\  \
+      \ \  \ \ \  \\\  \ \  \_\\ \ \  \\\  \
+       \ \__\ \ \_______\ \_______\ \_______\
+        \|__|  \|_______|\|_______|\|_______|
+
+     TODO REMOVE THIS VAR!
+   */
+  private[jwt] var publicKeyset: Map[KID, SerializedKey]
 
   /* Verifies if the JWT signature is valid
    * @param jwt token to verify
@@ -47,10 +59,12 @@ trait PublicKeysHolder {
   }
 
   private def readFromWellKnown(kid: String): Try[SerializedKey] = {
-    for {
+    val serializedKey = for {
       keyset <- JWTConfiguration.jwtReader.loadKeyset()
       newKey <- keyset.get(kid).toTry(PublicKeyNotFound(s"Public key not found for kid $kid"))
-      _ = publicKeyset + (kid -> newKey)
     } yield newKey
+
+    serializedKey.foreach(newKey => publicKeyset = publicKeyset + (kid -> newKey))
+    serializedKey
   }
 }
