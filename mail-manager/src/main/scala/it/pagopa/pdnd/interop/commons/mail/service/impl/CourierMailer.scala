@@ -13,6 +13,7 @@ object CourierMailerConfiguration {
 
   lazy val mailerConfig = Mailer(config.smtp.serverAddress, config.smtp.serverPort)
     .auth(config.smtp.authenticated)
+    .ssl(config.smtp.ssl)
     .as(config.smtp.user, config.smtp.password)
     .startTls(config.smtp.withTls)()
 

@@ -22,7 +22,8 @@ case class SMTPConfiguration(
   serverAddress: String,
   serverPort: Integer,
   authenticated: Boolean,
-  withTls: Boolean
+  withTls: Boolean,
+  ssl: Boolean
 )
 
 /** Defines mail manager configuration
@@ -42,7 +43,8 @@ object MailConfiguration {
         serverAddress = hoconConfig.getString("pdnd-interop-commons.mail.smtp.server"),
         serverPort = hoconConfig.getInt("pdnd-interop-commons.mail.smtp.port"),
         authenticated = hoconConfig.getBoolean("pdnd-interop-commons.mail.smtp.authenticated"),
-        withTls = hoconConfig.getBoolean("pdnd-interop-commons.mail.smtp.with-tls")
+        withTls = hoconConfig.getBoolean("pdnd-interop-commons.mail.smtp.with-tls"),
+        ssl = hoconConfig.getBoolean("pdnd-interop-commons.mail.smtp.ssl")
       )
     )
 }
