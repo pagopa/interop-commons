@@ -5,6 +5,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import java.net.URL
 import scala.util.Try
 
+/** Defines the configuration parameters for JWT module
+  */
 final object JWTConfiguration {
   lazy val config: Config = ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
 
