@@ -61,7 +61,7 @@ final class BlobStorageManagerImpl extends FileManager {
       val blobClient: BlockBlobClient         = blobContainerClient.getBlobClient(filePath).getBlockBlobClient
       val dataSize: Int                       = blobClient.getProperties.getBlobSize.toInt
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream(dataSize)
-      val _                                   = blobClient.downloadStream(outputStream)
+      val _                                   = blobClient.download(outputStream)
       outputStream
     }
   }
