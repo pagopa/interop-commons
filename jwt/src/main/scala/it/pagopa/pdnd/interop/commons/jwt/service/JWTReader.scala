@@ -44,29 +44,29 @@ trait JWTReader {
     * If not valid bearer is provided, it propagates an <code>AuthenticationFailedRejection</code>
     * @return contexts as sequence of pairs
     */
-  def contextsJWTValidator: Directive1[Seq[(String, String)]] = {
+  def oAuth2JWTValidatorAsContexts: Directive1[Seq[(String, String)]] = {
     def bearerAsContexts(bearer: String) =
       for {
         _ <- getClaims(bearer)
       } yield Seq(BEARER -> bearer)
 
-    validationDirective(bearerAsContexts)
+    authenticationDirective(bearerAsContexts)
   }
 
   /** Returns a directive containing the JWT claims set
     * If not valid bearer is provided, it propagates an <code>AuthenticationFailedRejection</code>
     * @return JWT claims set
     */
-  def claimsJWTValidator: Directive1[JWTClaimsSet] = {
-    validationDirective(getClaims)
+  def oAuth2JWTValidatorAsClaimsSet: Directive1[JWTClaimsSet] = {
+    authenticationDirective(getClaims)
   }
 
-  private def validationDirective[T](validation: String => Try[T]): Directive1[T] =
+  private def authenticationDirective[T](validation: String => Try[T]): Directive1[T] =
     optionalHeaderValueByName("Authorization").flatMap {
       case Some(header) =>
         header.split(" ").toList match {
           case "Bearer" :: payload :: Nil =>
-            validation.andThen(validationAsDirective)(payload)
+            validation.andThen(authenticationDirective)(payload)
           case _ =>
             reject(MalformedHeaderRejection("Authorization", "Illegal header key."))
         }
@@ -74,7 +74,7 @@ trait JWTReader {
         reject(AuthenticationFailedRejection(CredentialsMissing, HttpChallenge("Bearer", None)))
     }
 
-  private def validationAsDirective[T]: Try[T] => Directive1[T] = { validation =>
+  private def authenticationDirective[T]: Try[T] => Directive1[T] = { validation =>
     validation match {
       case Success(result) => provide(result)
       case Failure(_) =>
