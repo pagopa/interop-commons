@@ -34,6 +34,7 @@ object Dependencies {
     lazy val httpJson   = namespace           %% "akka-http-spray-json" % akkaHttpVersion
     lazy val httpJson4s = "de.heikoseeberger" %% "akka-http-json4s"     % akkaHttpJson4sVersion
     lazy val slf4j      = namespace           %% "akka-slf4j"           % akkaVersion
+    lazy val stream     = namespace           %% "akka-stream"          % akkaVersion
   }
 
   private[this] object azure {
@@ -97,6 +98,7 @@ object Dependencies {
         akka.httpJson   % Compile,
         akka.httpJson4s % Compile,
         akka.slf4j      % Compile,
+        akka.stream     % Compile,
         akka.actorTyped % Compile
       )
 
