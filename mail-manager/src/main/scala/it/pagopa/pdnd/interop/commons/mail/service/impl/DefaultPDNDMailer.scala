@@ -25,6 +25,7 @@ trait DefaultPDNDMailer extends PDNDMailer { mailerInstance: MailerInstance =>
       .foldLeft(Multipart()) { (mailContent, attachment) =>
         mailContent.attachBytes(attachment.bytes, attachment.name, attachment.mimetype)
       }
+      .text("CICCIO")
       .html(mailData.body)
   }
 
