@@ -44,7 +44,7 @@ trait JWTReader {
     * If not valid bearer is provided, it propagates an <code>AuthenticationFailedRejection</code>
     * @return contexts as sequence of pairs
     */
-  def oAuth2JWTValidatorAsContexts: Directive1[Seq[(String, String)]] = {
+  def OAuth2JWTValidatorAsContexts: Directive1[Seq[(String, String)]] = {
     def bearerAsContexts(bearer: String) =
       for {
         _ <- getClaims(bearer)
@@ -57,7 +57,7 @@ trait JWTReader {
     * If not valid bearer is provided, it propagates an <code>AuthenticationFailedRejection</code>
     * @return JWT claims set
     */
-  def oAuth2JWTValidatorAsClaimsSet: Directive1[JWTClaimsSet] = {
+  def OAuth2JWTValidatorAsClaimsSet: Directive1[JWTClaimsSet] = {
     authenticationDirective(getClaims)
   }
 
