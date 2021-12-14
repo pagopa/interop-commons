@@ -53,6 +53,11 @@ object Dependencies {
     lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
   }
 
+  private[this] object jsoup {
+    lazy val namespace = "org.jsoup"
+    lazy val jsoup     = namespace % "jsoup" % jsoupVersion
+  }
+
   private[this] object nimbus {
     lazy val namespace = "com.nimbusds"
     lazy val joseJwt   = namespace % "nimbus-jose-jwt" % nimbusVersion
@@ -107,6 +112,7 @@ object Dependencies {
         aws.s3               % Compile,
         azure.storageBlob    % Compile,
         commons.fileUpload   % Compile,
+        jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,
         openhtmltopdf.pdfbox % Compile,
         openhtmltopdf.slf4j  % Compile,
