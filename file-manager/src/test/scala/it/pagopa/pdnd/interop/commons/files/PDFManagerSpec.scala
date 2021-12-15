@@ -23,7 +23,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
         Map(
           "institutionName" -> "Comune di Milano",
           "institution"     -> "Scighera enterprise",
-          "users"           -> "Donatone Braghetti<BR/>"
+          "users"           -> "Donatone Braghetti"
         )
 
       val generatedPDF: File = File.createTempFile("output", "pdf")
@@ -40,7 +40,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
         Map(
           "institutionName" -> "Comune di Milano",
           "institution"     -> "Scighera enterprise",
-          "users"           -> "Donatone Braghetti<BR/>"
+          "users"           -> "Donatone Braghetti"
         )
 
       val generatedPDF: File = File.createTempFile("byte-array-output", "pdf")

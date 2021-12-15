@@ -3,6 +3,8 @@ package it.pagopa.pdnd.interop.commons.files.service
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import it.pagopa.pdnd.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
+import org.jsoup.Jsoup
+import org.jsoup.helper.W3CDom
 
 import java.io.{File, FileOutputStream, OutputStream}
 import java.nio.file.Path
@@ -23,9 +25,11 @@ trait PDFManager {
   def getPDF[O <: OutputStream, T](htmlTemplate: String, customData: Map[String, String])(streamOp: O => T) = { o: O =>
     Using(o) { stream =>
       val compiledHTML = TextTemplate(htmlTemplate, customData).toText
+      val doc          = Jsoup.parse(compiledHTML, "UTF-8")
+      val dom          = W3CDom.convert(doc)
       val builder      = new PdfRendererBuilder
       builder.useFastMode
-      builder.withHtmlContent(compiledHTML, null)
+      builder.withW3cDocument(dom, null)
       builder.toStream(stream)
       builder.run()
       streamOp(stream)
