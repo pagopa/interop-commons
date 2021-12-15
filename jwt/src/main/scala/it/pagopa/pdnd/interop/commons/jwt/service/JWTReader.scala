@@ -13,7 +13,8 @@ import scala.util.{Failure, Success, Try}
   */
 trait JWTReader {
 
-  private[this] lazy val BEARER = "bearer"
+  private[this] lazy val BEARER  = "bearer"
+  private[this] lazy val SUBJECT = "subject"
 
   /** Returns the claims contained in the JWT bore as <code>Authorization</code> HTTP header <code>bearer</code>.
     * @param bearer attribute representing the bore authorization header
@@ -47,8 +48,9 @@ trait JWTReader {
   def OAuth2JWTValidatorAsContexts: Directive1[Seq[(String, String)]] = {
     def bearerAsContexts(bearer: String) =
       for {
-        _ <- getClaims(bearer)
-      } yield Seq(BEARER -> bearer)
+        claims <- getClaims(bearer)
+        subject = claims.getSubject
+      } yield Seq(BEARER -> bearer, SUBJECT -> subject)
 
     authenticationDirective(bearerAsContexts)
   }
