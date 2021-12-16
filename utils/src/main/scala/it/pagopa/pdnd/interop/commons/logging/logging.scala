@@ -1,3 +1,5 @@
+package it.pagopa.pdnd.interop.commons
+
 import com.typesafe.scalalogging.CanLog
 
 package object logging {

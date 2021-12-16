@@ -1,4 +1,4 @@
-package logging
+package it.pagopa.pdnd.interop.commons.logging
 
 import ch.qos.logback.classic.PatternLayout
 import ch.qos.logback.classic.spi.ILoggingEvent
