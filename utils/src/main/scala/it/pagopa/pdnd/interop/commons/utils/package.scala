@@ -9,5 +9,5 @@ package object utils {
   private[utils] lazy val md5: MessageDigest               = MessageDigest.getInstance("MD5")
   lazy val BEARER                                          = "bearer"
   lazy val UID                                             = "uid"
-  lazy val CORRELATION_ID                                  = "X-Correlation-Id"
+  lazy val CORRELATION_ID_HEADER                           = "X-Correlation-Id"
 }
