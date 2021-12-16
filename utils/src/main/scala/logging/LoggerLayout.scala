@@ -1,4 +1,4 @@
-package it.pagopa.pdnd.interop.commons.utils
+package logging
 
 import ch.qos.logback.classic.PatternLayout
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -10,8 +10,7 @@ import ch.qos.logback.core.util.CachingDateFormatter
 final class LoggerLayout extends PatternLayout {
 
   val cachingDateFormatter = new CachingDateFormatter("yyyy-MM-dd HH:mm:ss.SSS")
-
-  final val EMPTY_SPACE = " "
+  final val EMPTY_SPACE    = " "
 
   override def doLayout(event: ILoggingEvent): String = {
     val sbuf = new StringBuffer(128)

@@ -2,19 +2,17 @@ package it.pagopa.pdnd.interop.commons.jwt.service
 
 import akka.http.scaladsl.model.headers.HttpChallenge
 import akka.http.scaladsl.server.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
-import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, provide, reject}
+import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.getBearer
+import it.pagopa.pdnd.interop.commons.utils.{BEARER, UID}
 
 import scala.util.{Failure, Success, Try}
 
 /** Gets bearer token claims coming from the client
   */
 trait JWTReader {
-
-  private[this] lazy val BEARER  = "bearer"
-  private[this] lazy val SUBJECT = "subject"
 
   /** Returns the claims contained in the JWT bore as <code>Authorization</code> HTTP header <code>bearer</code>.
     * @param bearer attribute representing the bore authorization header
@@ -49,8 +47,8 @@ trait JWTReader {
     def bearerAsContexts(bearer: String) =
       for {
         claims <- getClaims(bearer)
-        subject = claims.getSubject
-      } yield Seq(BEARER -> bearer, SUBJECT -> subject)
+        uid    <- Try { claims.getStringClaim(UID) }
+      } yield Seq(BEARER -> bearer, UID -> Option(uid).getOrElse(""))
 
     authenticationDirective(bearerAsContexts)
   }

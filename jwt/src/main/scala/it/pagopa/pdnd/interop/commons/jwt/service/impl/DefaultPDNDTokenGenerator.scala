@@ -38,7 +38,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)
       signedPDNDJWT   <- signToken(pdndJWT, tokenSigner)
       serializedToken <- Try { signedPDNDJWT.serialize() }
-      _ = logger.info("Token generated")
+      _ = logger.debug("Token generated")
     } yield serializedToken
 
   private def jwtFromSeed(seed: TokenSeed): Try[SignedJWT] = Try {

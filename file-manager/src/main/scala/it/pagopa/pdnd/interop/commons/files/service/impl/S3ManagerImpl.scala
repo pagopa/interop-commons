@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.commons.files.service.impl
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.pdnd.interop.commons.files.StorageConfiguration.storageAccountInfo
 import it.pagopa.pdnd.interop.commons.files.service.{FileManager, StorageFilePath}
+import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.sync.{RequestBody, ResponseTransformer}
@@ -17,6 +18,8 @@ import scala.concurrent.Future
 import scala.util.Try
 
 final class S3ManagerImpl extends FileManager {
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   lazy val s3Client: S3Client = {
     val awsCredentials =
@@ -39,6 +42,7 @@ final class S3ManagerImpl extends FileManager {
           contentType = fileParts._1.getContentType.toString(),
           fileName = fileParts._1.getFileName
         )
+        logger.debug("Storing file id {} at path {}", id.toString, s3Key)
         val objectRequest =
           PutObjectRequest.builder
             .bucket(containerPath)
@@ -46,7 +50,7 @@ final class S3ManagerImpl extends FileManager {
             .build
 
         val _ = s3Client.putObject(objectRequest, RequestBody.fromFile(Paths.get(fileParts._2.getPath)))
-
+        logger.debug("File {} stored", id.toString)
         s3Key
       }
     }
@@ -55,7 +59,7 @@ final class S3ManagerImpl extends FileManager {
     container: String
   )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] =
     Future.fromTry {
-
+      logger.debug("Copying file {}", filePathToCopy)
       Try {
         val destinationS3Key =
           createS3Key(locationId.toString, contentType = contentType, fileName = fileName)
@@ -68,6 +72,7 @@ final class S3ManagerImpl extends FileManager {
           .build
 
         val _ = s3Client.copyObject(copyObjRequest)
+        logger.debug("File {} copied", filePathToCopy)
 
         destinationS3Key
       }
@@ -78,6 +83,7 @@ final class S3ManagerImpl extends FileManager {
 
   override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
     Try {
+      logger.debug("Getting file {} from container {}", filePath, containerPath)
       val getObjectRequest: GetObjectRequest =
         GetObjectRequest.builder.bucket(containerPath).key(filePath).build
       val s3Object: ResponseBytes[GetObjectResponse] = s3Client.getObject(getObjectRequest, ResponseTransformer.toBytes)
@@ -90,6 +96,7 @@ final class S3ManagerImpl extends FileManager {
 
   override def delete(containerPath: String)(path: String): Future[Boolean] = {
     Try {
+      logger.debug("Deleting file {} from container {}", path, containerPath)
       s3Client.deleteObject(
         DeleteObjectRequest.builder
           .bucket(containerPath)

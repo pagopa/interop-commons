@@ -5,6 +5,7 @@ import it.pagopa.pdnd.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.jsoup.Jsoup
 import org.jsoup.helper.W3CDom
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{File, FileOutputStream, OutputStream}
 import java.nio.file.Path
@@ -13,6 +14,8 @@ import scala.util.{Try, Using}
 /** Manages PDF creation from HTML templates
   */
 trait PDFManager {
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   /** Defines a PDF to be streamed to a specific resource
     * @param htmlTemplate HTML template to be rendered as PDF
@@ -24,6 +27,7 @@ trait PDFManager {
     */
   def getPDF[O <: OutputStream, T](htmlTemplate: String, customData: Map[String, String])(streamOp: O => T) = { o: O =>
     Using(o) { stream =>
+      logger.debug("Getting PDF for HTML template...")
       val compiledHTML = TextTemplate(htmlTemplate, customData).toText
       val doc          = Jsoup.parse(compiledHTML, "UTF-8")
       val dom          = W3CDom.convert(doc)
@@ -32,6 +36,7 @@ trait PDFManager {
       builder.withW3cDocument(dom, null)
       builder.toStream(stream)
       builder.run()
+      logger.debug("PDF stream properly retrieved")
       streamOp(stream)
     }
   }

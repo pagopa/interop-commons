@@ -18,9 +18,9 @@ trait DefaultJWTReader extends JWTReader {
   override def getClaims(bearer: String): Try[JWTClaimsSet] = {
     for {
       jwt <- Try(SignedJWT.parse(bearer))
-      _ = logger.info("Verify bearer")
+      _ = logger.debug("Verify bearer")
       _ <- publicKeysHolder.verify(jwt)
-      _ = logger.info("Bearer verified")
+      _ = logger.debug("Bearer verified")
     } yield jwt.getJWTClaimsSet
   }
 

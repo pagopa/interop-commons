@@ -5,6 +5,7 @@ import com.azure.storage.blob.specialized.BlockBlobClient
 import com.azure.storage.blob.{BlobClient, BlobServiceClient, BlobServiceClientBuilder}
 import it.pagopa.pdnd.interop.commons.files.StorageConfiguration.storageAccountInfo
 import it.pagopa.pdnd.interop.commons.files.service.{FileManager, StorageFilePath}
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.util.UUID
@@ -12,6 +13,8 @@ import scala.concurrent.Future
 import scala.util.Try
 
 final class BlobStorageManagerImpl extends FileManager {
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   lazy val azureBlobClient = {
     val accountName: String    = storageAccountInfo.applicationId
@@ -32,11 +35,11 @@ final class BlobStorageManagerImpl extends FileManager {
           contentType = fileParts._1.getContentType.toString(),
           fileName = fileParts._1.getFileName
         )
-
+        logger.debug("Storing file id {} at path {}", id.toString, blobKey)
         val blobContainerClient    = azureBlobClient.getBlobContainerClient(containerPath)
         val blobClient: BlobClient = blobContainerClient.getBlobClient(blobKey)
         blobClient.uploadFromFile(fileParts._2.getPath)
-
+        logger.debug("File {} stored", id.toString)
         blobKey
       }
     }
@@ -46,10 +49,12 @@ final class BlobStorageManagerImpl extends FileManager {
   )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] = {
     Future.fromTry {
       Try {
+        logger.debug("Copying file {}", filePathToCopy)
         val destination            = createBlobKey(locationId.toString, contentType = contentType, fileName = fileName)
         val blobContainerClient    = azureBlobClient.getBlobContainerClient(containerPath)
         val blobClient: BlobClient = blobContainerClient.getBlobClient(destination)
         blobClient.copyFromUrl(filePathToCopy)
+        logger.debug("File {} copied", filePathToCopy)
         destination
       }
     }
@@ -57,6 +62,7 @@ final class BlobStorageManagerImpl extends FileManager {
 
   override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
     Try {
+      logger.debug("Getting file {} from container {}", filePath, containerPath)
       val blobContainerClient                 = azureBlobClient.getBlobContainerClient(containerPath)
       val blobClient: BlockBlobClient         = blobContainerClient.getBlobClient(filePath).getBlockBlobClient
       val dataSize: Int                       = blobClient.getProperties.getBlobSize.toInt
@@ -68,6 +74,7 @@ final class BlobStorageManagerImpl extends FileManager {
 
   override def delete(containerPath: String)(filePath: String): Future[Boolean] = {
     Try {
+      logger.debug("Deleting file {} from container {}", filePath, containerPath)
       val blobContainerClient         = azureBlobClient.getBlobContainerClient(containerPath)
       val blobClient: BlockBlobClient = blobContainerClient.getBlobClient(filePath).getBlockBlobClient
       blobClient.delete
