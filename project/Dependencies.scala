@@ -96,6 +96,10 @@ object Dependencies {
     lazy val slf4j     = namespace % "openhtmltopdf-slf4j"  % openhtmltopdfVersion
   }
 
+  private[this] object lightbend {
+    lazy val logging = "com.typesafe.scala-logging" %% "scala-logging" % lightbendLoggingVersion
+  }
+
   object Jars {
     lazy val akkaDependencies: Seq[ModuleID] =
       Seq(
@@ -136,6 +140,7 @@ object Dependencies {
       cats.core          % Compile,
       logback.classic    % Compile,
       typesafe.config    % Compile,
+      lightbend.logging  % Compile,
       scalatest.core     % Test
     )
   }

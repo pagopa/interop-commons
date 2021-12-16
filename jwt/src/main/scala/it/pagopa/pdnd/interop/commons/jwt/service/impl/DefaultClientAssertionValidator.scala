@@ -29,9 +29,9 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
       (jwt, kid, clientId) <- extractJwtInfo(clientAssertion, clientAssertionType, grantType, clientUUID)
       publicKey            <- clientKeys.get(kid).toTry(PublicKeyNotFound(s"Client $clientId public key not found for kid $kid"))
       verifier             <- getVerifier(jwt.getHeader.getAlgorithm, publicKey)
-      _ = logger.info("Verify client signature with specific verifier")
+      _ = logger.debug("Verify client signature with specific verifier")
       _ <- Either.cond(jwt.verify(verifier), true, InvalidJWTSignature).toTry
-      _ = logger.info("Client signature verified")
+      _ = logger.debug("Client signature verified")
     } yield ()
 
   private def extractJwtInfo(
