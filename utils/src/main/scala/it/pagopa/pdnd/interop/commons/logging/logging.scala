@@ -7,10 +7,10 @@ package object logging {
   /** Defines log message decoration for PDND
     */
   implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
-    @inline private def optToLog(opt: Option[String]): String = opt.map(field => s"[$field] ").getOrElse("")
+    @inline private def optToLog(opt: Option[String]): String = opt.getOrElse("")
 
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
-      s"${optToLog(fields.userId)}${optToLog(fields.correlationId)}- $originalMsg"
+      s"[${optToLog(fields.userId)}] [${optToLog(fields.correlationId)}] - $originalMsg"
     }
   }
 }
