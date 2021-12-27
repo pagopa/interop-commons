@@ -100,6 +100,11 @@ object Dependencies {
     lazy val logging = "com.typesafe.scala-logging" %% "scala-logging" % lightbendLoggingVersion
   }
 
+  private[this] object atlassian {
+    lazy val namespace        = "com.atlassian.oai"
+    lazy val swaggerValidator = namespace % "swagger-request-validator-core" % swaggerValidatorVersion
+  }
+
   object Jars {
     lazy val akkaDependencies: Seq[ModuleID] =
       Seq(
@@ -135,13 +140,14 @@ object Dependencies {
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
-      "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
-      apacheCommons.text % Compile,
-      cats.core          % Compile,
-      logback.classic    % Compile,
-      typesafe.config    % Compile,
-      lightbend.logging  % Compile,
-      scalatest.core     % Test
+      "javax.annotation"         % "javax.annotation-api" % "1.3.2" % "compile",
+      apacheCommons.text         % Compile,
+      atlassian.swaggerValidator % Compile,
+      cats.core                  % Compile,
+      logback.classic            % Compile,
+      typesafe.config            % Compile,
+      lightbend.logging          % Compile,
+      scalatest.core             % Test
     )
   }
 }
