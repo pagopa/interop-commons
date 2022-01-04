@@ -31,7 +31,8 @@ trait AkkaUtils {
     override def apply(credentials: Credentials): Option[Seq[(String, String)]] = Some(Seq.empty)
   }
 
-  def getBearer(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(BEARER).toRight(MissingBearer).toTry
+  def getBearer(contexts: Seq[(String, String)]): Try[String] =
+    contexts.toMap.get(BEARER).toRight(MissingBearer).toTry
   def getFutureBearer(contexts: Seq[(String, String)]): Future[String] = getBearer(contexts).toFuture
 
 }

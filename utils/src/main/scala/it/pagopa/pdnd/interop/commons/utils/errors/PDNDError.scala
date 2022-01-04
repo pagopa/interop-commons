@@ -1,7 +1,16 @@
 package it.pagopa.pdnd.interop.commons.utils.errors
 
 /** Base model of PDND Interop errors
-  * @param message - text message to be thrown
+  * @param t - throwable message
   * @param code - unique code of the error
   */
-abstract case class PDNDError(message: String, code: String) extends Throwable(message)
+trait PDNDError {
+  t: Throwable =>
+  val code: String
+}
+
+/** Models the structure of PDND component business errors
+  * @param code - unique code of the error
+  * @param msg - message to be thrown
+  */
+abstract class ComponentError(val code: String, val msg: String) extends Throwable(msg) with PDNDError
