@@ -13,4 +13,6 @@ trait PDNDError {
   * @param code - unique code of the error
   * @param msg - message to be thrown
   */
-abstract class ComponentError(val code: String, val msg: String) extends Throwable(msg) with PDNDError
+abstract class ComponentError(val code: String, val msg: String, val errors: Seq[ComponentError] = Seq.empty)
+    extends Throwable(msg)
+    with PDNDError
