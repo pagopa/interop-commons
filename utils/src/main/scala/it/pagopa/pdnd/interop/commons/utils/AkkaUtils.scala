@@ -4,7 +4,7 @@ import akka.http.scaladsl.server.Directives.Authenticator
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.TryOps
-import it.pagopa.pdnd.interop.commons.utils.errors.MissingBearer
+import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.MissingBearer
 
 import scala.concurrent.Future
 import scala.util.Try
