@@ -2,6 +2,8 @@ package it.pagopa.pdnd.interop.commons.jwt
 
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.jdk.CollectionConverters.ListHasAsScala
+
 /** Defines the configuration parameters for JWT module
   */
 final object JWTConfiguration {
@@ -16,4 +18,5 @@ final object JWTConfiguration {
       readTimeout = config.getInt("pdnd-interop-commons.jwt.public-keys.read-timeout"),
       sizeLimit = config.getInt("pdnd-interop-commons.jwt.public-keys.size-limit")
     )
+
 }

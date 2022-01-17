@@ -11,6 +11,8 @@ import scala.util.{Failure, Success}
 
 class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper {
 
+  object DefaultClientAssertionValidator extends DefaultClientAssertionValidator
+
   val VALID_ASSERTION_TYPE: String = "urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
   val CLIENT_CREDENTIALS: String   = "client_credentials"
 
