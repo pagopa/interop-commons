@@ -2,11 +2,15 @@ package it.pagopa.pdnd.interop.commons.jwt
 
 import com.nimbusds.jose.jwk.{Curve, JWK}
 import com.nimbusds.jose.jwk.gen.{ECKeyGenerator, RSAKeyGenerator}
-import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
+import com.nimbusds.jose.proc.SecurityContext
+import com.nimbusds.jwt.JWTClaimNames
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
+import it.pagopa.pdnd.interop.commons.jwt.service.impl.{DefaultJWTReader, getClaimsVerifier}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.util.UUID
+import java.time.{OffsetDateTime, ZoneOffset}
+import java.util.{Date, UUID}
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
@@ -75,6 +79,175 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
 
       val jwt =
         createMockJWT(new ECKeyGenerator(Curve.P_256).generate, issuerUUID, clientUUID, List("test"), "EC")
+
+      validator.getClaims(jwt) shouldBe a[Failure[_]]
+    }
+
+    "fail validation when jwt is expired" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val audiences = List(UUID.randomUUID().toString)
+
+      val rsaKid         = rsaKey.computeThumbprint().toJSONString
+      val privateRsaKey  = rsaKey.toJSONString
+      val expirationTime = Date.from(OffsetDateTime.of(2021, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
+      val jwt            = makeJWT(issuer, clientId.toString, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+
+      validator.getClaims(jwt) shouldBe a[Failure[_]]
+    }
+
+    "properly validate a jwt for a known audience" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID().toString
+      val audiences = List("aud1")
+
+      val rsaKid         = rsaKey.computeThumbprint().toJSONString
+      val privateRsaKey  = rsaKey.toJSONString
+      val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
+      val jwt            = makeJWT(issuer, clientId, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(audiences = Set("aud1"))
+      }
+
+      validator.getClaims(jwt) shouldBe a[Success[_]]
+    }
+
+    "fail validation for an unknown audience" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID().toString
+      val audiences = List("aud2")
+
+      val rsaKid         = rsaKey.computeThumbprint().toJSONString
+      val privateRsaKey  = rsaKey.toJSONString
+      val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
+      val jwt            = makeJWT(issuer, clientId, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(audiences = Set("aud1"))
+      }
+
+      validator.getClaims(jwt) shouldBe a[Failure[_]]
+    }
+
+    "properly validate a jwt with exact match claims" in {
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+
+      val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(exactMatchClaims = Map(JWTClaimNames.ISSUER -> issuer, JWTClaimNames.SUBJECT -> clientId))
+      }
+
+      validator.getClaims(jwt) shouldBe a[Success[_]]
+    }
+
+    "fail validation when exact match claims mismatch" in {
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+
+      val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(exactMatchClaims =
+            Map(JWTClaimNames.ISSUER -> UUID.randomUUID().toString, JWTClaimNames.SUBJECT -> clientId)
+          )
+      }
+
+      validator.getClaims(jwt) shouldBe a[Failure[_]]
+    }
+
+    "properly validate a jwt with required claims" in {
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+
+      val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(requiredClaims = Set(JWTClaimNames.ISSUER))
+      }
+
+      validator.getClaims(jwt) shouldBe a[Success[_]]
+    }
+
+    "fail validation when a required claim is not passed" in {
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+
+      val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(requiredClaims = Set("nonce"))
+
+      }
+
+      validator.getClaims(jwt) shouldBe a[Failure[_]]
+    }
+
+    "properly validate a jwt when prohibited claims are not passed" in {
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+
+      val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(prohibitedClaims = Set("nonce"))
+      }
+
+      validator.getClaims(jwt) shouldBe a[Success[_]]
+    }
+
+    "fail validation when prohibited claims are passed" in {
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+
+      val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
+
+      val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
+        var publicKeyset = Map(
+          rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
+          ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
+        )
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(prohibitedClaims = Set(JWTClaimNames.ISSUER))
+
+      }
 
       validator.getClaims(jwt) shouldBe a[Failure[_]]
     }
