@@ -2,8 +2,6 @@ package it.pagopa.pdnd.interop.commons.jwt
 
 import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.jdk.CollectionConverters.ListHasAsScala
-
 /** Defines the configuration parameters for JWT module
   */
 final object JWTConfiguration {

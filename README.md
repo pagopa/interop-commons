@@ -120,4 +120,3 @@ Where:
 | **SIZE_LIMIT**            | Integer, default 0 | The read size limit, in bytes. If zero no limit.              |
 | **CONNECTION_TIMEOUT**            | Integer, default 0 | The URL connection timeout, in milliseconds. If zero no (infinite) timeout.              |
 | **READ_TIMEOUT**            | Integer, default 0 | The URL read timeout, in milliseconds. If zero no (infinite) timeout.              |
-| **AUDIENCES**            | Array of String | The list of audiences expected to be check           |

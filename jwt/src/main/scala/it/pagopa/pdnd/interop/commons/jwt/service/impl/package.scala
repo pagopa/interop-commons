@@ -10,15 +10,22 @@ package object impl {
 
   def getClaimsVerifier(
     audiences: Set[String] = Set.empty,
-    exactMatchClaims: Option[JWTClaimsSet] = None,
+    exactMatchClaims: Map[String, String] = Map.empty,
     requiredClaims: Set[String] = Set.empty,
     prohibitedClaims: Set[String] = Set.empty
   ): DefaultJWTClaimsVerifier[SecurityContext] = {
+
     new DefaultJWTClaimsVerifier[SecurityContext](
       Option(audiences).filter(_.nonEmpty).map(_.asJava).orNull,
-      exactMatchClaims.orNull,
+      Option(exactMatchClaims).filter(_.nonEmpty).map(createJWTClaimsSet).orNull,
       Option(requiredClaims).filter(_.nonEmpty).map(_.asJava).orNull,
       Option(prohibitedClaims).filter(_.nonEmpty).map(_.asJava).orNull
     )
+  }
+
+  private def createJWTClaimsSet(claims: Map[String, String]): JWTClaimsSet = {
+    val builder: JWTClaimsSet.Builder = new JWTClaimsSet.Builder()
+    claims.foreach { case (k, v) => builder.claim(k, v) }
+    builder.build()
   }
 }
