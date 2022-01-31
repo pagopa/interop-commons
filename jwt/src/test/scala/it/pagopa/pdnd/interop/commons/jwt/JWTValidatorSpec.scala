@@ -47,7 +47,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
     "properly validate a jwt RSA signed with the corresponding private key" in {
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID().toString
-      val jwt        = createMockJWT(rsaKey, issuerUUID, clientUUID, "test", "RSA")
+      val jwt        = createMockJWT(rsaKey, issuerUUID, clientUUID, List("test"), "RSA")
 
       val validatedJWT = validator.getClaims(jwt)
 
@@ -60,7 +60,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID().toString
 
-      val jwt = createMockJWT(ecKey, issuerUUID, clientUUID, "test", "EC")
+      val jwt = createMockJWT(ecKey, issuerUUID, clientUUID, List("test"), "EC")
 
       val validatedJWT = validator.getClaims(jwt)
 
@@ -74,7 +74,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val clientUUID = UUID.randomUUID().toString
 
       val jwt =
-        createMockJWT(new ECKeyGenerator(Curve.P_256).generate, issuerUUID, clientUUID, "test", "EC")
+        createMockJWT(new ECKeyGenerator(Curve.P_256).generate, issuerUUID, clientUUID, List("test"), "EC")
 
       validator.getClaims(jwt) shouldBe a[Failure[_]]
     }

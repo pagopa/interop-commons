@@ -2,11 +2,14 @@ package it.pagopa.pdnd.interop.commons.jwt
 
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.gen.{ECKeyGenerator, RSAKeyGenerator}
-import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultClientAssertionValidator
+import com.nimbusds.jose.proc.SecurityContext
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
+import it.pagopa.pdnd.interop.commons.jwt.service.impl.{DefaultClientAssertionValidator, getClaimsVerifier}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.util.UUID
+import java.time.{OffsetDateTime, ZoneOffset}
+import java.util.{Date, UUID}
 import scala.util.{Failure, Success}
 
 class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper {
@@ -28,7 +31,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
 
-      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, "test", "RSA")
+      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val validation = DefaultClientAssertionValidator
         .validate(
@@ -45,7 +48,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
 
-      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, "test", "RSA")
+      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val validation = DefaultClientAssertionValidator
         .validate(
@@ -64,7 +67,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
 
-      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, "test", "RSA")
+      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val validation = DefaultClientAssertionValidator
         .validate(
@@ -82,7 +85,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
 
-      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, "test", "RSA")
+      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val validation = DefaultClientAssertionValidator
         .validate(
@@ -90,6 +93,55 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           clientAssertionType = VALID_ASSERTION_TYPE,
           grantType = "auth_code",
           clientUUID = Some(clientUUID),
+          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
+        )
+
+      validation shouldBe a[Failure[_]]
+    }
+
+    "fail validation when assertion is expired" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val audiences = List(UUID.randomUUID().toString)
+
+      val rsaKid         = rsaKey.computeThumbprint().toJSONString
+      val privateRsaKey  = rsaKey.toJSONString
+      val expirationTime = Date.from(OffsetDateTime.of(2021, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
+      val assertion      = makeJWT(issuer, clientId.toString, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+
+      val validation = DefaultClientAssertionValidator
+        .validate(
+          clientAssertion = assertion,
+          clientAssertionType = VALID_ASSERTION_TYPE,
+          grantType = CLIENT_CREDENTIALS,
+          clientUUID = Some(clientId),
+          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
+        )
+
+      validation shouldBe a[Failure[_]]
+    }
+
+    "fail validation when audience is unknown" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val audiences = List(UUID.randomUUID().toString)
+
+      val rsaKid         = rsaKey.computeThumbprint().toJSONString
+      val privateRsaKey  = rsaKey.toJSONString
+      val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
+      val assertion      = makeJWT(issuer, clientId.toString, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+
+      object CustomClientAssertionValidator extends DefaultClientAssertionValidator {
+        override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
+          getClaimsVerifier(audiences = Set("aud1"))
+      }
+
+      val validation = CustomClientAssertionValidator
+        .validate(
+          clientAssertion = assertion,
+          clientAssertionType = VALID_ASSERTION_TYPE,
+          grantType = CLIENT_CREDENTIALS,
+          clientUUID = Some(clientId),
           clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
         )
 
