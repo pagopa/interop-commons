@@ -4,7 +4,7 @@ import akka.http.scaladsl.server.Directives.Authenticator
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.TryOps
-import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingUid}
+import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingUserId}
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -35,7 +35,7 @@ trait AkkaUtils {
     contexts.toMap.get(BEARER).toRight(MissingBearer).toTry
   def getFutureBearer(contexts: Seq[(String, String)]): Future[String] = getBearer(contexts).toFuture
 
-  def getUid(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(UID).toRight(MissingUid).toTry
+  def getUid(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(UID).toRight(MissingUserId).toTry
   def getUidFuture(contexts: Seq[(String, String)]): Future[String] = getUid(contexts).toFuture
 
 }

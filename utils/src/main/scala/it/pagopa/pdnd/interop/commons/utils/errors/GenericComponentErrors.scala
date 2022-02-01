@@ -9,7 +9,7 @@ object GenericComponentErrors {
   final case class ResourceNotFoundError(resourceId: String)
       extends ComponentError("9997", s"Resource $resourceId not found")
 
-  final case object MissingUid extends ComponentError("9996", "Uid has not been passed")
+  final case object MissingUserId extends ComponentError("9996", "Uid has not been passed")
 
   final case class ValidationRequestError(errorMessage: String) extends ComponentError("9000", errorMessage)
 

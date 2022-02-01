@@ -11,6 +11,7 @@ import it.pagopa.pdnd.interop.commons.utils.AkkaUtils._
 import scala.util.{Failure, Success}
 import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors
 import org.scalatest.concurrent.ScalaFutures
+import it.pagopa.pdnd.interop.commons.utils.errors.ComponentError
 
 class AkkaUtilsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
@@ -54,16 +55,19 @@ class AkkaUtilsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
     }
 
     "return a 9996 error if doesn't contain uid" in {
-      val contexts: Seq[(String, String)] = List((BEARER, "doone"))
-      getUid(contexts) shouldBe Failure(GenericComponentErrors.MissingUid)
-      getUidFuture(contexts).failed.futureValue shouldBe GenericComponentErrors.MissingUid
-
+      val contexts: Seq[(String, String)] = List(("something_else", "doone"))
+      getUid(contexts) should matchPattern { case Failure(x: ComponentError) if x.code == "9996" => }
+      getUidFuture(contexts).failed.futureValue should matchPattern {
+        case x: ComponentError if x.code == "9996" =>
+      }
     }
 
     "return a 9999 error if doesn't contain bearer" in {
-      val contexts: Seq[(String, String)] = List((UID, "WhereIsYoghi?"))
-      getBearer(contexts) shouldBe Failure(GenericComponentErrors.MissingBearer)
-      getFutureBearer(contexts).failed.futureValue shouldBe GenericComponentErrors.MissingBearer
+      val contexts: Seq[(String, String)] = List(("something_else", "WhereIsYoghi?"))
+      getBearer(contexts) should matchPattern { case Failure(x: ComponentError) if x.code == "9999" => }
+      getFutureBearer(contexts).failed.futureValue should matchPattern {
+        case x: ComponentError if x.code == "9999" =>
+      }
     }
   }
 
