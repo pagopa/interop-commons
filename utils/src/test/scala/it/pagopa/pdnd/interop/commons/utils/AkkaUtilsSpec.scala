@@ -8,11 +8,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import it.pagopa.pdnd.interop.commons.utils.{BEARER, UID}
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils._
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-import scala.concurrent.Future
 import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors
-import scala.concurrent.Await
 import org.scalatest.concurrent.ScalaFutures
 
 class AkkaUtilsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
