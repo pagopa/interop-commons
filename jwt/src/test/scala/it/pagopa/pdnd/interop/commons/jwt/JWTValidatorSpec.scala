@@ -28,6 +28,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
       ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
     )
+    override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] = getClaimsVerifier()
   }
 
   "a JWT token validation" should {

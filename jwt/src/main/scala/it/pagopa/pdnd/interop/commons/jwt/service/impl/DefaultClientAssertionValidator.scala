@@ -20,7 +20,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] = getClaimsVerifier()
+  protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
   override def validate(
     clientAssertion: String,

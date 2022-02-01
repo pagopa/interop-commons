@@ -14,7 +14,7 @@ trait DefaultJWTReader extends JWTReader {
 
   publicKeysHolder: PublicKeysHolder =>
 
-  protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] = getClaimsVerifier()
+  protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
   override def getClaims(bearer: String): Try[JWTClaimsSet] = {
     for {
