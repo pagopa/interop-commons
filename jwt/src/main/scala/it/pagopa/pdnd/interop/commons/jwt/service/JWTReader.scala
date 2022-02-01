@@ -92,12 +92,10 @@ trait JWTReader {
     }
   }
 
-  private def authenticationDirective[T](contextInfo: String): Try[T] => Directive1[T] = { validation =>
-    validation match {
-      case Success(result) => provide(result)
-      case Failure(_) =>
-        logger.error(s"$contextInfo - Invalid authentication provided")
-        reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
-    }
+  private def authenticationDirective[T](contextInfo: String): Try[T] => Directive1[T] = {
+    case Success(result) => provide(result)
+    case Failure(_) =>
+      logger.error(s"$contextInfo - Invalid authentication provided")
+      reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
   }
 }

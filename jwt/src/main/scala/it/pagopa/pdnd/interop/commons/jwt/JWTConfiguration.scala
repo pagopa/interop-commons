@@ -16,4 +16,5 @@ final object JWTConfiguration {
       readTimeout = config.getInt("pdnd-interop-commons.jwt.public-keys.read-timeout"),
       sizeLimit = config.getInt("pdnd-interop-commons.jwt.public-keys.size-limit")
     )
+
 }

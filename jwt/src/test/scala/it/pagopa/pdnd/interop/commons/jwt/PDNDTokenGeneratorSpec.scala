@@ -27,7 +27,7 @@ class PDNDTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMockH
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
 
-      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, "test", "RSA")
+      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val pdndToken = generator
         .generate(

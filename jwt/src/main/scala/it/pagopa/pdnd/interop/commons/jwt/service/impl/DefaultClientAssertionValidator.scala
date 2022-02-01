@@ -1,7 +1,9 @@
 package it.pagopa.pdnd.interop.commons.jwt.service.impl
 
+import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jose.{JWSAlgorithm, JWSVerifier}
 import com.nimbusds.jwt.SignedJWT
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import it.pagopa.pdnd.interop.commons.jwt.errors.{InvalidJWTSignature, JWSSignerNotAvailable, PublicKeyNotFound}
 import it.pagopa.pdnd.interop.commons.jwt.service.ClientAssertionValidator
 import it.pagopa.pdnd.interop.commons.jwt.validations.ClientAssertionValidation
@@ -17,6 +19,8 @@ import scala.util.{Failure, Try}
 trait DefaultClientAssertionValidator extends ClientAssertionValidator with ClientAssertionValidation {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
   override def validate(
     clientAssertion: String,
@@ -41,8 +45,9 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
     clientId: Option[UUID]
   ): Try[(SignedJWT, String, String)] =
     for {
-      _       <- validateAccessTokenRequest(clientAssertionType, grantType)
       jwt     <- Try(SignedJWT.parse(clientAssertion))
+      _       <- Try(claimsVerifier.verify(jwt.getJWTClaimsSet, null))
+      _       <- validateAccessTokenRequest(clientAssertionType, grantType)
       subject <- Try(jwt.getJWTClaimsSet.getSubject)
       clientId <- Either
         .cond(
@@ -65,6 +70,3 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator with Clie
     case _                                                            => Failure(JWSSignerNotAvailable(s"Algorithm ${algorithm.getName} not supported"))
   }
 }
-
-// Selfless trait pattern
-object DefaultClientAssertionValidator extends DefaultClientAssertionValidator
