@@ -122,7 +122,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       validation shouldBe a[Failure[_]]
     }
 
-    "validate an client assertion for a known audience" in {
+    "validate a client assertion for a known audience" in {
       val issuer    = UUID.randomUUID().toString
       val clientId  = UUID.randomUUID()
       val audiences = List("aud1")
@@ -171,7 +171,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       validation shouldBe a[Failure[_]]
     }
 
-    "validate an client assertion using exact match claims" in {
+    "validate a client assertion using exact match claims" in {
       val issuer   = UUID.randomUUID().toString
       val clientId = UUID.randomUUID()
 
@@ -219,7 +219,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       validation shouldBe a[Failure[_]]
     }
 
-    "validate an client assertion using required claims" in {
+    "validate a client assertion using required claims" in {
       val issuer   = UUID.randomUUID().toString
       val clientId = UUID.randomUUID()
 
@@ -263,7 +263,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       validation shouldBe a[Failure[_]]
     }
 
-    "validate an client assertion when prohibited claims are not passed" in {
+    "validate a client assertion when prohibited claims are not passed" in {
       val issuer   = UUID.randomUUID().toString
       val clientId = UUID.randomUUID()
 
