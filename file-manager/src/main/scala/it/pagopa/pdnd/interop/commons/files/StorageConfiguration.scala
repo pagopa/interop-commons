@@ -7,9 +7,9 @@ import com.typesafe.config.{Config, ConfigFactory}
   * @param applicationId application identifier as defined on third party storage (e.g.: AWS CLIENT)
   * @param applicationSecret application password as defined on third party storage (e.g.: AWS PASSWORD)
   * @param endpoint third party storage location (e.g.: AWS S3 endpoint)
-  * @param container third party storage container (e.g.: AWS S3 bucket name)
+  * @param path storage path (e.g.: AWS S3 prefix)
   */
-case class StorageAccountInfo(applicationId: String, applicationSecret: String, endpoint: String)
+case class StorageAccountInfo(applicationId: String, applicationSecret: String, endpoint: String, path: String)
 
 /** Defines File manager configuration
   */
@@ -22,10 +22,11 @@ object StorageConfiguration {
 
   /** Returns storage account configuration data
     */
-  val storageAccountInfo =
+  val storageAccountInfo: StorageAccountInfo =
     StorageAccountInfo(
       applicationId = config.getString("pdnd-interop-commons.storage.application.id"),
       applicationSecret = config.getString("pdnd-interop-commons.storage.application.secret"),
-      endpoint = config.getString("pdnd-interop-commons.storage.endpoint")
+      endpoint = config.getString("pdnd-interop-commons.storage.endpoint"),
+      path = config.getString("pdnd-interop-commons.storage.path")
     )
 }

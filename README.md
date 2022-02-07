@@ -22,11 +22,12 @@ Probably each PDND component shall need at least the `utils` module, since it im
 ### File Manager Module
 This is the HOCON configuration object for the module:
 
-```json
+```
 pdnd-interop-commons {
   storage {
     type = ${STORAGE_TYPE}
     endpoint = ${STORAGE_ENDPOINT}
+    path = ${STORAGE_PATH}
     application {
       id = ${STORAGE_APPLICATION_ID}
       secret = ${STORAGE_APPLICATION_SECRET}
@@ -37,18 +38,19 @@ pdnd-interop-commons {
 
 Where:
 
-| Variable name | Variable type | Notes |
-| ------------- | ------------- | ----- |
-| **STORAGE_TYPE** | String | Admittable values are: `File`, `S3`, `BlobStorage` |
-| **STORAGE_CONTAINER** | String | Defines the container holding the data (e.g.: S3 bucket name) |
-| **STORAGE_ENDPOINT** | String | Defines the remote endpoint to connect to |
-| **STORAGE_APPLICATION_ID** | String | Defines the user credential to access the remote endpoint |
-| **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint |
+| Variable name                  | Variable type | Notes                                                                    |
+|--------------------------------| ------------- |--------------------------------------------------------------------------|
+| **STORAGE_TYPE**               | String | Admittable values are: `File`, `S3`, `BlobStorage`                       |
+| **STORAGE_CONTAINER**          | String | Defines the container holding the data (e.g.: S3 bucket name)            |
+| **STORAGE_PATH**               | String | Defines the path holding the data within the container (e.g.: S3 prefix) |
+| **STORAGE_ENDPOINT**           | String | Defines the remote endpoint to connect to                                |
+| **STORAGE_APPLICATION_ID**     | String | Defines the user credential to access the remote endpoint                |
+| **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint                  |
 
 ### Mail Manager Module
 This is the HOCON configuration object for the module:
 
-```json
+```
  pdnd-interop-commons {
    mail {
      sender = ${MAIL_SENDER_ADDRESS}
@@ -78,7 +80,7 @@ Where:
 ### Vault Module
 This is the HOCON configuration object for the module:
 
-```json
+```
 pdnd-interop-commons {
   vault {
     address = ${VAULT_ADDR}
@@ -99,7 +101,7 @@ Where:
 ### JWT Module
 This is the HOCON configuration object for the module:
 
-```json
+```
 pdnd-interop-commons {
   jwt {
     public-keys {
