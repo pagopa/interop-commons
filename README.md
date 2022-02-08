@@ -27,7 +27,6 @@ pdnd-interop-commons {
   storage {
     type = ${STORAGE_TYPE}
     endpoint = ${STORAGE_ENDPOINT}
-    path = ${STORAGE_PATH}
     application {
       id = ${STORAGE_APPLICATION_ID}
       secret = ${STORAGE_APPLICATION_SECRET}
