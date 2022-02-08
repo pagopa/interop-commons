@@ -41,8 +41,6 @@ Where:
 | Variable name                  | Variable type | Notes                                                                    |
 |--------------------------------| ------------- |--------------------------------------------------------------------------|
 | **STORAGE_TYPE**               | String | Admittable values are: `File`, `S3`, `BlobStorage`                       |
-| **STORAGE_CONTAINER**          | String | Defines the container holding the data (e.g.: S3 bucket name)            |
-| **STORAGE_PATH**               | String | Defines the path holding the data within the container (e.g.: S3 prefix) |
 | **STORAGE_ENDPOINT**           | String | Defines the remote endpoint to connect to                                |
 | **STORAGE_APPLICATION_ID**     | String | Defines the user credential to access the remote endpoint                |
 | **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint                  |
