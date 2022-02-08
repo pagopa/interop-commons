@@ -11,17 +11,17 @@ import scala.jdk.CollectionConverters.SeqHasAsJava
 
 trait JWTMockHelper {
 
-  def createMockJWT(key: JWK, issuer: String, clientId: String, audiences: List[String], algorithm: String): String = {
+  def createMockJWT(key: JWK, issuer: String, clientId: String, audience: List[String], algorithm: String): String = {
     val rsaKid         = key.computeThumbprint().toJSONString
     val privateRsaKey  = key.toJSONString
     val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
-    makeJWT(issuer, clientId, audiences, expirationTime, algorithm, rsaKid, privateRsaKey)
+    makeJWT(issuer, clientId, audience, expirationTime, algorithm, rsaKid, privateRsaKey)
   }
 
   def makeJWT(
     issuer: String,
     clientId: String,
-    audiences: List[String],
+    audience: List[String],
     expirationTime: Date,
     algo: String,
     kid: String,
@@ -37,7 +37,7 @@ trait JWTMockHelper {
       .issuer(issuer)
       .subject(clientId)
       .jwtID(UUID.randomUUID.toString)
-      .audience(audiences.asJava)
+      .audience(audience.asJava)
       .expirationTime(expirationTime)
       .issueTime(now)
       .notBeforeTime(now)

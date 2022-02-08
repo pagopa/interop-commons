@@ -9,14 +9,14 @@ import scala.jdk.CollectionConverters.SetHasAsJava
 package object impl {
 
   def getClaimsVerifier(
-    audiences: Set[String] = Set.empty,
+    audience: Set[String] = Set.empty,
     exactMatchClaims: Map[String, String] = Map.empty,
     requiredClaims: Set[String] = Set.empty,
     prohibitedClaims: Set[String] = Set.empty
   ): DefaultJWTClaimsVerifier[SecurityContext] = {
 
     new DefaultJWTClaimsVerifier[SecurityContext](
-      Option(audiences).filter(_.nonEmpty).map(_.asJava).orNull,
+      Option(audience).filter(_.nonEmpty).map(_.asJava).orNull,
       Option(exactMatchClaims).filter(_.nonEmpty).map(createJWTClaimsSet).orNull,
       Option(requiredClaims).filter(_.nonEmpty).map(_.asJava).orNull,
       Option(prohibitedClaims).filter(_.nonEmpty).map(_.asJava).orNull
