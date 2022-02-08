@@ -15,10 +15,13 @@ final class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
-  override def store(containerPath: String)(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
+  override def store(
+    containerPath: String,
+    path: String
+  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
     Future.fromTry {
       Try {
-        val destPath = createPath(tokenId.toString, fileParts._1.getContentType.toString(), fileParts._1.getFileName)
+        val destPath = createPath(resourceId.toString, path, fileParts._1.getFileName)
 
         moveRenameFile(fileParts._2.getPath, destPath).toString
       }
@@ -28,7 +31,8 @@ final class FileManagerImpl extends FileManager {
     Try {
       val inputStream: InputStream            = new FileInputStream(filePath)
       val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
-      val _                                   = inputStream.transferTo(outputStream)
+
+      inputStream.transferTo(outputStream)
       outputStream
     }
   }
@@ -41,25 +45,25 @@ final class FileManagerImpl extends FileManager {
   }
 
   override def copy(
-    containerPath: String
-  )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath] =
+    containerPath: String,
+    path: String
+  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] =
     Future.fromTry {
       Try {
-        val destination = createPath(locationId.toString, contentType, fileName)
-        val _           = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
+        val destination = createPath(resourceId = resourceId.toString, path = path, fileName = fileName)
+        Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
 
         destination
 
       }
     }
 
-  private def createPath(tokenId: String, contentType: String, fileName: String): String = {
+  private def createPath(resourceId: String, path: String, fileName: String): String = {
 
-    val docsPath: Path =
-      Paths.get(currentPath.toString, s"target/pdnd-interop/docs/$tokenId/${contentType}")
+    val docsPath: Path    = Paths.get(currentPath.toString, s"$path/$resourceId")
     val pathCreated: Path = Files.createDirectories(docsPath)
 
-    Paths.get(pathCreated.toString, s"${fileName}").toString
+    Paths.get(pathCreated.toString, s"$fileName").toString
 
   }
 

@@ -14,24 +14,26 @@ trait FileManager {
 
   /** Stores the specified file in a unique location
     * @param containerPath storage destination container name
-    * @param tokenId the unique identifier of the location
+    * @param path storage destination file path
+    * @param resourceId the unique identifier of the location
     * @param fileParts file contents and its information as retrieved from an Akka HTTP call
     * @return the path where the file has been stored
     */
-  def store(containerPath: String)(tokenId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
+  def store(containerPath: String, path: String)(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
 
   /** Copies the specified file in the defined location
     *
     * @param containerPath storage destination container name
+    * @param path storage destination file path
     * @param filePathToCopy path of the file to copy
-    * @param locationId unique identifier of the location
-    * @param contentType copied file content type
+    * @param resourceId unique identifier of the location
     * @param fileName name of the copied file
     * @return the path where the file has been
     */
   def copy(
-    containerPath: String
-  )(filePathToCopy: String, locationId: UUID, contentType: String, fileName: String): Future[StorageFilePath]
+    containerPath: String,
+    path: String
+  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath]
 
   /** Returns the stream of the file located at the specified path
     * @param containerPath storage destination container name

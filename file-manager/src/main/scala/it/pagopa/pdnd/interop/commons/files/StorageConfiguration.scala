@@ -7,7 +7,6 @@ import com.typesafe.config.{Config, ConfigFactory}
   * @param applicationId application identifier as defined on third party storage (e.g.: AWS CLIENT)
   * @param applicationSecret application password as defined on third party storage (e.g.: AWS PASSWORD)
   * @param endpoint third party storage location (e.g.: AWS S3 endpoint)
-  * @param container third party storage container (e.g.: AWS S3 bucket name)
   */
 case class StorageAccountInfo(applicationId: String, applicationSecret: String, endpoint: String)
 
@@ -22,7 +21,7 @@ object StorageConfiguration {
 
   /** Returns storage account configuration data
     */
-  val storageAccountInfo =
+  val storageAccountInfo: StorageAccountInfo =
     StorageAccountInfo(
       applicationId = config.getString("pdnd-interop-commons.storage.application.id"),
       applicationSecret = config.getString("pdnd-interop-commons.storage.application.secret"),
