@@ -11,6 +11,11 @@ object GenericComponentErrors {
 
   final case object MissingUserId extends ComponentError("9996", "Uid has not been passed")
 
+  final case object MissingSub extends ComponentError("9995", "Subject has not been passed")
+
+  final case class MissingClaim(claimName: String)
+      extends ComponentError("9990", s"Claim $claimName has not been passed")
+
   final case class ValidationRequestError(errorMessage: String) extends ComponentError("9000", errorMessage)
 
 }
