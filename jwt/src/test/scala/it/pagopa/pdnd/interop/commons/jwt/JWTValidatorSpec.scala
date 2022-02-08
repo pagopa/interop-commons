@@ -85,27 +85,27 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
     }
 
     "fail validation when jwt is expired" in {
-      val issuer    = UUID.randomUUID().toString
-      val clientId  = UUID.randomUUID()
-      val audiences = List(UUID.randomUUID().toString)
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID()
+      val audience = List(UUID.randomUUID().toString)
 
       val rsaKid         = rsaKey.computeThumbprint().toJSONString
       val privateRsaKey  = rsaKey.toJSONString
       val expirationTime = Date.from(OffsetDateTime.of(2021, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
-      val jwt            = makeJWT(issuer, clientId.toString, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+      val jwt            = makeJWT(issuer, clientId.toString, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       validator.getClaims(jwt) shouldBe a[Failure[_]]
     }
 
     "properly validate a jwt for a known audience" in {
-      val issuer    = UUID.randomUUID().toString
-      val clientId  = UUID.randomUUID().toString
-      val audiences = List("aud1")
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+      val audience = List("aud1")
 
       val rsaKid         = rsaKey.computeThumbprint().toJSONString
       val privateRsaKey  = rsaKey.toJSONString
       val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
-      val jwt            = makeJWT(issuer, clientId, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+      val jwt            = makeJWT(issuer, clientId, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
         var publicKeyset = Map(
@@ -113,21 +113,21 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
         override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
-          getClaimsVerifier(audiences = Set("aud1"))
+          getClaimsVerifier(audience = Set("aud1"))
       }
 
       validator.getClaims(jwt) shouldBe a[Success[_]]
     }
 
     "fail validation for an unknown audience" in {
-      val issuer    = UUID.randomUUID().toString
-      val clientId  = UUID.randomUUID().toString
-      val audiences = List("aud2")
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID().toString
+      val audience = List("aud2")
 
       val rsaKid         = rsaKey.computeThumbprint().toJSONString
       val privateRsaKey  = rsaKey.toJSONString
       val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
-      val jwt            = makeJWT(issuer, clientId, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+      val jwt            = makeJWT(issuer, clientId, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
         var publicKeyset = Map(
@@ -135,7 +135,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
         override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
-          getClaimsVerifier(audiences = Set("aud1"))
+          getClaimsVerifier(audience = Set("aud1"))
       }
 
       validator.getClaims(jwt) shouldBe a[Failure[_]]

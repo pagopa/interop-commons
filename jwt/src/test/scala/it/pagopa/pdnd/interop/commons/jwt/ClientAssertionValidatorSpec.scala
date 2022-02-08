@@ -103,14 +103,14 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
     }
 
     "fail validation when assertion is expired" in {
-      val issuer    = UUID.randomUUID().toString
-      val clientId  = UUID.randomUUID()
-      val audiences = List(UUID.randomUUID().toString)
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID()
+      val audience = List(UUID.randomUUID().toString)
 
       val rsaKid         = rsaKey.computeThumbprint().toJSONString
       val privateRsaKey  = rsaKey.toJSONString
       val expirationTime = Date.from(OffsetDateTime.of(2021, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
-      val assertion      = makeJWT(issuer, clientId.toString, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+      val assertion      = makeJWT(issuer, clientId.toString, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       val validation = DefaultClientAssertionValidator
         .validate(
@@ -125,18 +125,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
     }
 
     "validate a client assertion for a known audience" in {
-      val issuer    = UUID.randomUUID().toString
-      val clientId  = UUID.randomUUID()
-      val audiences = List("aud1")
+      val issuer   = UUID.randomUUID().toString
+      val clientId = UUID.randomUUID()
+      val audience = List("aud1")
 
       val rsaKid         = rsaKey.computeThumbprint().toJSONString
       val privateRsaKey  = rsaKey.toJSONString
       val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
-      val assertion      = makeJWT(issuer, clientId.toString, audiences, expirationTime, "RSA", rsaKid, privateRsaKey)
+      val assertion      = makeJWT(issuer, clientId.toString, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       object CustomClientAssertionValidator extends DefaultClientAssertionValidator {
         override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
-          getClaimsVerifier(audiences = Set("aud1"))
+          getClaimsVerifier(audience = Set("aud1"))
       }
 
       val validation = CustomClientAssertionValidator
@@ -158,7 +158,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       val assertion = createMockJWT(rsaKey, issuer, clientId.toString, List("test"), "RSA")
       object CustomClientAssertionValidator extends DefaultClientAssertionValidator {
         override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
-          getClaimsVerifier(audiences = Set("aud1"))
+          getClaimsVerifier(audience = Set("aud1"))
       }
 
       val validation = CustomClientAssertionValidator
