@@ -27,10 +27,13 @@ final class BlobStorageManagerImpl extends FileManager {
     storageClient
   }
 
-  override def store(containerPath: String)(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
+  override def store(
+    containerPath: String,
+    path: String
+  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
     Future.fromTry {
       Try {
-        val blobKey = createBlobKey(resourceId.toString, fileName = fileParts._1.getFileName)
+        val blobKey = createBlobKey(resourceId.toString, path = path, fileName = fileParts._1.getFileName)
         logger.debug("Storing file id {} at path {}", resourceId.toString, blobKey)
         val blobContainerClient    = azureBlobClient.getBlobContainerClient(containerPath)
         val blobClient: BlobClient = blobContainerClient.getBlobClient(blobKey)
@@ -41,12 +44,13 @@ final class BlobStorageManagerImpl extends FileManager {
     }
 
   override def copy(
-    containerPath: String
+    containerPath: String,
+    path: String
   )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] = {
     Future.fromTry {
       Try {
         logger.debug("Copying file {}", filePathToCopy)
-        val destination            = createBlobKey(resourceId.toString, fileName = fileName)
+        val destination            = createBlobKey(resourceId.toString, path = path, fileName = fileName)
         val blobContainerClient    = azureBlobClient.getBlobContainerClient(containerPath)
         val blobClient: BlobClient = blobContainerClient.getBlobClient(destination)
         blobClient.copyFromUrl(filePathToCopy)
@@ -77,7 +81,7 @@ final class BlobStorageManagerImpl extends FileManager {
     }.fold(error => Future.failed[Boolean](error), _ => Future.successful(true))
   }
 
-  private def createBlobKey(resourceId: String, fileName: String): String =
-    s"${storageAccountInfo.path}/$resourceId/$fileName"
+  private def createBlobKey(resourceId: String, path: String, fileName: String): String =
+    s"$path/$resourceId/$fileName"
 
 }

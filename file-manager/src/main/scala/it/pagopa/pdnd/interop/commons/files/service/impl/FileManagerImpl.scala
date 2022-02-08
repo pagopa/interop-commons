@@ -2,7 +2,6 @@ package it.pagopa.pdnd.interop.commons.files.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.pdnd.interop.commons.files.service.{FileManager, StorageFilePath}
-import it.pagopa.pdnd.interop.commons.files.StorageConfiguration.storageAccountInfo
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream, InputStream}
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
@@ -16,10 +15,13 @@ final class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
-  override def store(containerPath: String)(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
+  override def store(
+    containerPath: String,
+    path: String
+  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
     Future.fromTry {
       Try {
-        val destPath = createPath(resourceId.toString, fileParts._1.getFileName)
+        val destPath = createPath(resourceId.toString, path, fileParts._1.getFileName)
 
         moveRenameFile(fileParts._2.getPath, destPath).toString
       }
@@ -43,11 +45,12 @@ final class FileManagerImpl extends FileManager {
   }
 
   override def copy(
-    containerPath: String
+    containerPath: String,
+    path: String
   )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] =
     Future.fromTry {
       Try {
-        val destination = createPath(resourceId.toString, fileName)
+        val destination = createPath(resourceId = resourceId.toString, path = path, fileName = fileName)
         Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
 
         destination
@@ -55,9 +58,9 @@ final class FileManagerImpl extends FileManager {
       }
     }
 
-  private def createPath(resourceId: String, fileName: String): String = {
+  private def createPath(resourceId: String, path: String, fileName: String): String = {
 
-    val docsPath: Path    = Paths.get(currentPath.toString, s"${storageAccountInfo.path}/$resourceId")
+    val docsPath: Path    = Paths.get(currentPath.toString, s"$path/$resourceId")
     val pathCreated: Path = Files.createDirectories(docsPath)
 
     Paths.get(pathCreated.toString, s"$fileName").toString
