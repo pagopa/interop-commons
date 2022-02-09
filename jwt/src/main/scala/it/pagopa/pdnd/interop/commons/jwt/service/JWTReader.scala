@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, provide,
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils.getBearer
-import it.pagopa.pdnd.interop.commons.utils.{BEARER, CORRELATION_ID_HEADER, UID}
+import it.pagopa.pdnd.interop.commons.utils.{BEARER, CORRELATION_ID_HEADER, UID, SUB}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -54,10 +54,9 @@ trait JWTReader {
     def bearerAsContexts(bearer: String) =
       for {
         claims <- getClaims(bearer)
-        uid <- Try {
-          claims.getStringClaim(UID)
-        }
-      } yield Seq(BEARER -> bearer, UID -> Option(uid).getOrElse(""))
+        uid    <- Try(claims.getStringClaim(UID))
+        sub    <- Try(claims.getSubject)
+      } yield Seq(BEARER -> bearer, UID -> Option(uid).getOrElse(""), SUB -> sub)
 
     authenticationDirective(bearerAsContexts)
   }

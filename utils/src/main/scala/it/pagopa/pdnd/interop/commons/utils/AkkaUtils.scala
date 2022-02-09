@@ -4,10 +4,16 @@ import akka.http.scaladsl.server.Directives.Authenticator
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.TryOps
-import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingUserId}
+import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors.{
+  MissingBearer,
+  MissingUserId,
+  MissingClaim,
+  MissingSub
+}
 
 import scala.concurrent.Future
 import scala.util.Try
+import it.pagopa.pdnd.interop.commons.utils.errors.GenericComponentErrors
 
 /** Mixes in Akka utilities
   */
@@ -37,6 +43,14 @@ trait AkkaUtils {
 
   def getUid(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(UID).toRight(MissingUserId).toTry
   def getUidFuture(contexts: Seq[(String, String)]): Future[String] = getUid(contexts).toFuture
+
+  def getSub(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(SUB).toRight(MissingSub).toTry
+  def getSubFuture(contexts: Seq[(String, String)]): Future[String] = getSub(contexts).toFuture
+
+  def getClaim(contexts: Seq[(String, String)], claimName: String): Try[String] =
+    contexts.toMap.get(claimName).toRight(MissingClaim(claimName)).toTry
+  def getClaimFuture(contexts: Seq[(String, String)], claimName: String): Future[String] =
+    getClaim(contexts, claimName).toFuture
 
 }
 
