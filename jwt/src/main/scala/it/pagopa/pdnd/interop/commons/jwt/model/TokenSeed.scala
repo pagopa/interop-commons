@@ -73,6 +73,32 @@ object TokenSeed {
       audience = audience,
       customClaims = customClaims
     )
+  }
 
+  def createInternalToken(
+    algorithm: JWSAlgorithm,
+    key: JWK,
+    subject: String,
+    audience: List[String],
+    tokenIssuer: String,
+    validityDurationMilliseconds: Long
+  ): Try[TokenSeed] = {
+    for {
+      issuedAt <- Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
+      kid      <- Try { key.computeThumbprint().toString }
+      iat      <- Try { issuedAt.toEpochMilli }
+      exp      <- Try { issuedAt.plusMillis(validityDurationMilliseconds).toEpochMilli }
+    } yield TokenSeed(
+      id = UUID.randomUUID(),
+      algorithm = algorithm,
+      kid = kid,
+      clientId = subject,
+      issuer = tokenIssuer,
+      issuedAt = iat,
+      nbf = iat,
+      expireAt = exp,
+      audience = audience,
+      customClaims = Map.empty
+    )
   }
 }

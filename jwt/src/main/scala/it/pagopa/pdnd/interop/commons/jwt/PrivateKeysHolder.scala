@@ -1,9 +1,10 @@
 package it.pagopa.pdnd.interop.commons.jwt
 
-import com.nimbusds.jose.{JWSAlgorithm, JWSSigner}
 import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer, RSASSASigner}
 import com.nimbusds.jose.jwk.JWK
+import com.nimbusds.jose.{JWSAlgorithm, JWSSigner}
 import it.pagopa.pdnd.interop.commons.jwt.errors.PrivateKeyNotFound
+import it.pagopa.pdnd.interop.commons.jwt.model.{EC, JWTAlgorithmType, RSA}
 
 import scala.util.{Random, Try}
 
@@ -16,6 +17,13 @@ trait PrivateKeysHolder {
   /** Private keyset for RSA signatures
     */
   val ECPrivateKeyset: Map[KID, SerializedKey]
+
+  private[jwt] final def getPrivateKeyByAlgorithmType(algorithmType: JWTAlgorithmType): Try[JWK] = {
+    algorithmType match {
+      case RSA => getPrivateKeyByAlgorithm(JWSAlgorithm.RS256)
+      case EC  => getPrivateKeyByAlgorithm(JWSAlgorithm.ES256)
+    }
+  }
 
   /* Returns a random private key picked from the available keyset according to the specified algorithm
    * @param algorithm JWS Algorithm type

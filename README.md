@@ -107,15 +107,26 @@ pdnd-interop-commons {
       connection-timeout = ${CONNECTION_TIMEOUT}
       read-timeout = ${READ_TIMEOUT}
     }
+    
+    internal-token {
+      issuer = ${JWT_ISSUER}
+      subject = ${JWT_SUBJECT}
+      audience = ${JWT_AUDIENCE}
+      duration-milliseconds = ${JWT_DURATION_MS}
+    }
   }
 }
 ```
 
 Where:
 
-| Variable name           | Variable type      | Notes                                                      |
-|-------------------------|--------------------|------------------------------------------------------------|
-| **WELL_KNOWN_URL** | String             | URL address of the Well Known exposing the public JWK set. |
-| **SIZE_LIMIT**            | Integer, default 0 | The read size limit, in bytes. If zero no limit.              |
-| **CONNECTION_TIMEOUT**            | Integer, default 0 | The URL connection timeout, in milliseconds. If zero no (infinite) timeout.              |
-| **READ_TIMEOUT**            | Integer, default 0 | The URL read timeout, in milliseconds. If zero no (infinite) timeout.              |
+| Variable name         | Variable type      | Notes                                                                                        |
+|-----------------------|--------------------|----------------------------------------------------------------------------------------------|
+| **WELL_KNOWN_URL**    | String             | URL address of the Well Known exposing the public JWK set.                                   |
+| **SIZE_LIMIT**        | Integer, default 0 | The read size limit, in bytes. If zero no limit.                                             |
+| **CONNECTION_TIMEOUT** | Integer, default 0 | The URL connection timeout, in milliseconds. If zero no (infinite) timeout.                  |
+| **READ_TIMEOUT**      | Integer, default 0 | The URL read timeout, in milliseconds. If zero no (infinite) timeout.                        |
+| **JWT_ISSUER**       | String             | The issuer of any internal interop token                                                     |
+| **JWT_SUBJECT**      | String             | The subject of any internal interop token                                                    |
+| **JWT_AUDIENCE**      | String             | A string representing the audience of the internal token. So far a single string is expected |
+| **JWT_DURATION_MS**   | Long               | Long number representing the token validity, in milliseconds                                 |

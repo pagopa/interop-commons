@@ -1,10 +1,10 @@
 package it.pagopa.pdnd.interop.commons.jwt.service.impl
 
-import com.nimbusds.jose.{JOSEObjectType, JWSHeader, JWSSigner}
+import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.pdnd.interop.commons.jwt.PrivateKeysHolder
-import it.pagopa.pdnd.interop.commons.jwt.model.TokenSeed
+import it.pagopa.pdnd.interop.commons.jwt.model.{EC, JWTAlgorithmType, RSA, TokenSeed}
 import it.pagopa.pdnd.interop.commons.jwt.service.PDNDTokenGenerator
+import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
@@ -39,6 +39,52 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       signedPDNDJWT   <- signToken(pdndJWT, tokenSigner)
       serializedToken <- Try { signedPDNDJWT.serialize() }
       _ = logger.debug("Token generated")
+    } yield serializedToken
+
+  override def generateInternalRSAToken(): Try[String] = {
+    val jwtClaims = JWTConfiguration.jwtInternalTokenConfig
+    generateInternalToken(
+      RSA,
+      jwtClaims.subject,
+      audience = jwtClaims.audience.toList,
+      tokenIssuer = jwtClaims.issuer,
+      millisecondsDuration = jwtClaims.durationInMilliseconds
+    )
+  }
+
+  override def generateInternalECToken(): Try[String] = {
+    val jwtClaims = JWTConfiguration.jwtInternalTokenConfig
+    generateInternalToken(
+      EC,
+      jwtClaims.subject,
+      audience = jwtClaims.audience.toList,
+      tokenIssuer = jwtClaims.issuer,
+      millisecondsDuration = jwtClaims.durationInMilliseconds
+    )
+  }
+
+  override def generateInternalToken(
+    jwtAlgorithmType: JWTAlgorithmType,
+    subject: String,
+    audience: List[String],
+    tokenIssuer: String,
+    millisecondsDuration: Long
+  ): Try[String] =
+    for {
+      pdndPrivateKey <- getPrivateKeyByAlgorithmType(jwtAlgorithmType)
+      tokenSeed <- TokenSeed.createInternalToken(
+        algorithm = JWSAlgorithm.RS256,
+        key = pdndPrivateKey,
+        subject = subject,
+        audience = audience,
+        tokenIssuer = tokenIssuer,
+        validityDurationMilliseconds = millisecondsDuration
+      )
+      pdndJWT         <- jwtFromSeed(tokenSeed)
+      tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)
+      signedPDNDJWT   <- signToken(pdndJWT, tokenSigner)
+      serializedToken <- Try { signedPDNDJWT.serialize() }
+      _ = logger.debug("PDND internal Token generated")
     } yield serializedToken
 
   private def jwtFromSeed(seed: TokenSeed): Try[SignedJWT] = Try {
