@@ -16,6 +16,8 @@ import scala.util.Try
 trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: PrivateKeysHolder =>
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
+  private lazy val jwtClaims = JWTConfiguration.jwtInternalTokenConfig
+
   override def generate(
     clientAssertion: String,
     audience: List[String],
@@ -37,12 +39,11 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       pdndJWT         <- jwtFromSeed(tokenSeed)
       tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)
       signedPDNDJWT   <- signToken(pdndJWT, tokenSigner)
-      serializedToken <- Try { signedPDNDJWT.serialize() }
+      serializedToken <- Try(signedPDNDJWT.serialize())
       _ = logger.debug("Token generated")
     } yield serializedToken
 
   override def generateInternalRSAToken(): Try[String] = {
-    val jwtClaims = JWTConfiguration.jwtInternalTokenConfig
     generateInternalToken(
       RSA,
       jwtClaims.subject,
@@ -53,7 +54,6 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
   }
 
   override def generateInternalECToken(): Try[String] = {
-    val jwtClaims = JWTConfiguration.jwtInternalTokenConfig
     generateInternalToken(
       EC,
       jwtClaims.subject,

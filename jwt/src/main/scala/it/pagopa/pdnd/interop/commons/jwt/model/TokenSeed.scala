@@ -84,10 +84,10 @@ object TokenSeed {
     validityDurationMilliseconds: Long
   ): Try[TokenSeed] = {
     for {
-      issuedAt <- Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
-      kid      <- Try { key.computeThumbprint().toString }
-      iat      <- Try { issuedAt.toEpochMilli }
-      exp      <- Try { issuedAt.plusMillis(validityDurationMilliseconds).toEpochMilli }
+      kid <- Try { key.computeThumbprint().toString }
+      issuedAt = Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
+      iat <- issuedAt.map(_.toEpochMilli)
+      exp <- issuedAt.map(_.plusMillis(validityDurationMilliseconds).toEpochMilli)
     } yield TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,
