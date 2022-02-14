@@ -53,16 +53,6 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
     )
   }
 
-  override def generateInternalECToken(): Try[String] = {
-    generateInternalToken(
-      EC,
-      jwtClaims.subject,
-      audience = jwtClaims.audience.toList,
-      tokenIssuer = jwtClaims.issuer,
-      millisecondsDuration = jwtClaims.durationInMilliseconds
-    )
-  }
-
   override def generateInternalToken(
     jwtAlgorithmType: JWTAlgorithmType,
     subject: String,

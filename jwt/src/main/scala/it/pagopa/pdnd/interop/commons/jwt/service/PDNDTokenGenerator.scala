@@ -31,13 +31,6 @@ trait PDNDTokenGenerator {
     */
   def generateInternalRSAToken(): Try[String]
 
-  /** Returns an internal JWT token signed with an Elliptic Curve key.
-    * <br/>
-    * All the expected claims are retrieved from commons configuration parameters
-    * @return
-    */
-  def generateInternalECToken(): Try[String]
-
   /** Returns an internal JWT token.
     * @param jwtAlgorithmType - Algorithm type, either [[it.pagopa.pdnd.interop.commons.jwt.model.RSA]] or [[it.pagopa.pdnd.interop.commons.jwt.model.EC]]
     * @param subject token <code>sub</code>
