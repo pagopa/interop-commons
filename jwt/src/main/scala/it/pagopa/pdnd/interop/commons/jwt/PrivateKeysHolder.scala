@@ -18,12 +18,11 @@ trait PrivateKeysHolder {
     */
   val ECPrivateKeyset: Map[KID, SerializedKey]
 
-  private[jwt] final def getPrivateKeyByAlgorithmType(algorithmType: JWTAlgorithmType): Try[JWK] = {
+  private[jwt] final def getPrivateKeyByAlgorithmType(algorithmType: JWTAlgorithmType): Try[JWK] =
     algorithmType match {
       case RSA => getPrivateKeyByAlgorithm(JWSAlgorithm.RS256)
       case EC  => getPrivateKeyByAlgorithm(JWSAlgorithm.ES256)
     }
-  }
 
   /* Returns a random private key picked from the available keyset according to the specified algorithm
    * @param algorithm JWS Algorithm type
