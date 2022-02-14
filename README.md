@@ -126,7 +126,7 @@ Where:
 | **SIZE_LIMIT**        | Integer, default 0 | The read size limit, in bytes. If zero no limit.                                             |
 | **CONNECTION_TIMEOUT** | Integer, default 0 | The URL connection timeout, in milliseconds. If zero no (infinite) timeout.                  |
 | **READ_TIMEOUT**      | Integer, default 0 | The URL read timeout, in milliseconds. If zero no (infinite) timeout.                        |
-| **JWT_ISSUER**       | String             | The issuer of any internal interop token                                                     |
-| **JWT_SUBJECT**      | String             | The subject of any internal interop token                                                    |
-| **JWT_AUDIENCE**      | String             | A string representing the audience of the internal token. So far a single string is expected |
-| **JWT_DURATION_MS**   | Long               | Long number representing the token validity, in milliseconds                                 |
+| **JWT_ISSUER**       | String             | The issuer of the internal interop token                                                     |
+| **JWT_SUBJECT**      | String             | The subject of the internal interop token                                                    |
+| **JWT_AUDIENCE**      | String             | The only audience of the internal token |
+| **JWT_DURATION_MS**   | Long               | The token validity in milliseconds                                 |
