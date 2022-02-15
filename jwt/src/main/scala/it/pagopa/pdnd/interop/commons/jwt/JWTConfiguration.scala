@@ -21,7 +21,7 @@ final object JWTConfiguration {
     issuer = config.getString("pdnd-interop-commons.jwt.internal-token.issuer"),
     subject = config.getString("pdnd-interop-commons.jwt.internal-token.subject"),
     audience = Set(config.getString("pdnd-interop-commons.jwt.internal-token.audience")),
-    durationInMilliseconds = config.getLong("pdnd-interop-commons.jwt.internal-token.duration-milliseconds")
+    durationInSeconds = config.getLong("pdnd-interop-commons.jwt.internal-token.duration-seconds")
   )
 
 }

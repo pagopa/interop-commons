@@ -2,7 +2,7 @@ package it.pagopa.pdnd.interop.commons.jwt.service.impl
 
 import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.pdnd.interop.commons.jwt.model.{EC, JWTAlgorithmType, RSA, TokenSeed}
+import it.pagopa.pdnd.interop.commons.jwt.model.{JWTAlgorithmType, RSA, TokenSeed}
 import it.pagopa.pdnd.interop.commons.jwt.service.PDNDTokenGenerator
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder}
 import org.slf4j.{Logger, LoggerFactory}
@@ -49,7 +49,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       jwtClaims.subject,
       audience = jwtClaims.audience.toList,
       tokenIssuer = jwtClaims.issuer,
-      millisecondsDuration = jwtClaims.durationInMilliseconds
+      millisecondsDuration = jwtClaims.durationInSeconds
     )
   }
 

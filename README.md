@@ -112,7 +112,7 @@ pdnd-interop-commons {
       issuer = ${JWT_ISSUER}
       subject = ${JWT_SUBJECT}
       audience = ${JWT_AUDIENCE}
-      duration-milliseconds = ${JWT_DURATION_MS}
+      duration-seconds = ${JWT_DURATION_SECONDS}
     }
   }
 }
@@ -129,4 +129,4 @@ Where:
 | **JWT_ISSUER**       | String             | The issuer of the internal interop token                                                     |
 | **JWT_SUBJECT**      | String             | The subject of the internal interop token                                                    |
 | **JWT_AUDIENCE**      | String             | The only audience of the internal token |
-| **JWT_DURATION_MS**   | Long               | The token validity in milliseconds                                 |
+| **JWT_DURATION_MS**   | Long               | The token validity in seconds                                 |
