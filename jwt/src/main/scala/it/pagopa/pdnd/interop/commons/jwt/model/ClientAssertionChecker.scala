@@ -1,14 +1,19 @@
 package it.pagopa.pdnd.interop.commons.jwt.model
 
+import com.nimbusds.jose.{JWSAlgorithm, JWSVerifier}
 import com.nimbusds.jwt.SignedJWT
-import org.slf4j.{Logger, LoggerFactory}
-import scala.util.{Try, Failure}
-import it.pagopa.pdnd.interop.commons.jwt.{ecVerifier, rsaVerifier}
 import it.pagopa.pdnd.interop.commons.jwt.errors.{InvalidJWTSignature, JWSSignerNotAvailable}
-import com.nimbusds.jose.JWSVerifier
-import com.nimbusds.jose.JWSAlgorithm
+import it.pagopa.pdnd.interop.commons.jwt.{ecVerifier, rsaVerifier}
+import org.slf4j.{Logger, LoggerFactory}
 
-final class ClientAssertionChecker private (private val jwt: SignedJWT, val kid: String, val subject: String) {
+import scala.util.{Failure, Try}
+
+final class ClientAssertionChecker private (
+  private val jwt: SignedJWT,
+  val kid: String,
+  val subject: String,
+  val purposeId: String
+) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   def verify(publicKey: String): Try[Unit] =
@@ -28,6 +33,6 @@ final class ClientAssertionChecker private (private val jwt: SignedJWT, val kid:
 
 object ClientAssertionChecker {
 
-  private[jwt] def apply(jwt: SignedJWT, kid: String, subject: String): ClientAssertionChecker =
-    new ClientAssertionChecker(jwt, kid, subject)
+  private[jwt] def apply(jwt: SignedJWT, kid: String, subject: String, purposeId: String): ClientAssertionChecker =
+    new ClientAssertionChecker(jwt, kid, subject, purposeId)
 }
