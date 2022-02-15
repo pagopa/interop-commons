@@ -11,26 +11,26 @@ import cats.data.NonEmptyList
 import it.pagopa.pdnd.interop.commons.jwt.errors.InvalidAccessTokenRequest
 import cats.data.Validated.{Invalid, Valid}
 
-final case class ClientAssertionRequest private (
+final case class ValidClientAssertionRequest private (
   clientAssertion: String,
   clientAssertionType: String,
   grantType: String,
   clientId: Option[UUID]
 )
 
-object ClientAssertionRequest {
+object ValidClientAssertionRequest {
 
   private final val jwtBearerClientAssertionType: String =
     "urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
   private final val clientCredentialsGrantType: String = "client_credentials"
 
-  def apply(
+  def from(
     clientAssertion: String,
     clientAssertionType: String,
     grantType: String,
     clientId: Option[UUID]
-  ): Try[ClientAssertionRequest] = validateGrantAndAssertionType(clientAssertionType, grantType)
-    .as(new ClientAssertionRequest(clientAssertion, clientAssertionType, grantType, clientId))
+  ): Try[ValidClientAssertionRequest] = validateGrantAndAssertionType(clientAssertionType, grantType)
+    .as(new ValidClientAssertionRequest(clientAssertion, clientAssertionType, grantType, clientId))
 
   private def validateGrantAndAssertionType(clientAssertionType: String, grantType: String): Try[(String, String)] = {
     val validClientAssertion: Validated[NonEmptyList[Throwable], String] = Validated

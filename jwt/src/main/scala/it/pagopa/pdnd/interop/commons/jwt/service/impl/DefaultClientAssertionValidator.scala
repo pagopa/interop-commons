@@ -4,7 +4,7 @@ import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import it.pagopa.pdnd.interop.commons.jwt.errors.{InvalidSubject, PurposeIdNotProvided, SubjectNotFound}
-import it.pagopa.pdnd.interop.commons.jwt.model.{ClientAssertionChecker, ClientAssertionRequest}
+import it.pagopa.pdnd.interop.commons.jwt.model.{ClientAssertionChecker, ValidClientAssertionRequest}
 import it.pagopa.pdnd.interop.commons.jwt.service.ClientAssertionValidator
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -20,7 +20,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
 
   protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
-  def extractJwtInfo(clientAssertionRequest: ClientAssertionRequest): Try[ClientAssertionChecker] =
+  def extractJwtInfo(clientAssertionRequest: ValidClientAssertionRequest): Try[ClientAssertionChecker] =
     for {
       jwt <- Try(SignedJWT.parse(clientAssertionRequest.clientAssertion))
       _   <- Try(claimsVerifier.verify(jwt.getJWTClaimsSet, null))
