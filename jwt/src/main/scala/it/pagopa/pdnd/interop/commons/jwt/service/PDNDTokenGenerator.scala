@@ -13,7 +13,7 @@ trait PDNDTokenGenerator {
     * @param audience audience of the generated token
     * @param customClaims map containing possible custom claims to add to the token
     * @param tokenIssuer value to set to the <code>iss</code> claim
-    * @param validityDuration long value representing the token duration
+    * @param validityDurationInSeconds long value representing the token duration
     * @return generated serialized token
     */
   def generate(
@@ -21,7 +21,7 @@ trait PDNDTokenGenerator {
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
-    validityDuration: Long
+    validityDurationInSeconds: Long
   ): Try[String]
 
   /** Returns an internal JWT token.
@@ -29,7 +29,7 @@ trait PDNDTokenGenerator {
     * @param subject token <code>sub</code>
     * @param audience token <code>aud</code>
     * @param tokenIssuer token <code>iss</code>
-    * @param millisecondsDuration token <code>exp</code>
+    * @param secondsDuration token <code>exp</code>
     * @return
     */
   def generateInternalToken(
@@ -37,6 +37,6 @@ trait PDNDTokenGenerator {
     subject: String,
     audience: List[String],
     tokenIssuer: String,
-    millisecondsDuration: Long
+    secondsDuration: Long
   ): Try[String]
 }

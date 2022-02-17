@@ -120,13 +120,13 @@ pdnd-interop-commons {
 
 Where:
 
-| Variable name         | Variable type      | Notes                                                                                        |
-|-----------------------|--------------------|----------------------------------------------------------------------------------------------|
-| **WELL_KNOWN_URL**    | String             | URL address of the Well Known exposing the public JWK set.                                   |
-| **SIZE_LIMIT**        | Integer, default 0 | The read size limit, in bytes. If zero no limit.                                             |
-| **CONNECTION_TIMEOUT** | Integer, default 0 | The URL connection timeout, in milliseconds. If zero no (infinite) timeout.                  |
-| **READ_TIMEOUT**      | Integer, default 0 | The URL read timeout, in milliseconds. If zero no (infinite) timeout.                        |
-| **JWT_ISSUER**       | String             | The issuer of the internal interop token                                                     |
-| **JWT_SUBJECT**      | String             | The subject of the internal interop token                                                    |
-| **JWT_AUDIENCE**      | String             | The only audience of the internal token |
-| **JWT_DURATION_MS**   | Long               | The token validity in seconds                                 |
+| Variable name            | Variable type      | Notes                                                                                        |
+|--------------------------|--------------------|----------------------------------------------------------------------------------------------|
+| **WELL_KNOWN_URL**       | String             | URL address of the Well Known exposing the public JWK set.                                   |
+| **SIZE_LIMIT**           | Integer, default 0 | The read size limit, in bytes. If zero no limit.                                             |
+| **CONNECTION_TIMEOUT**   | Integer, default 0 | The URL connection timeout, in milliseconds. If zero no (infinite) timeout.                  |
+| **READ_TIMEOUT**         | Integer, default 0 | The URL read timeout, in milliseconds. If zero no (infinite) timeout.                        |
+| **JWT_ISSUER**           | String             | The issuer of the internal interop token                                                     |
+| **JWT_SUBJECT**          | String             | The subject of the internal interop token                                                    |
+| **JWT_AUDIENCE**         | String             | The only audience of the internal token |
+| **JWT_DURATION_SECONDS** | Long               | The token validity in seconds                                 |
