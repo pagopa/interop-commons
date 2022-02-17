@@ -73,7 +73,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       pdndJWT         <- jwtFromSeed(tokenSeed)
       tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)
       signedPDNDJWT   <- signToken(pdndJWT, tokenSigner)
-      serializedToken <- Try { signedPDNDJWT.serialize() }
+      serializedToken <- Try(signedPDNDJWT.serialize())
       _ = logger.debug("PDND internal Token generated")
     } yield serializedToken
 
@@ -97,9 +97,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)
     val payload = seed.customClaims
-      .foldLeft(builder) { (jwtBuilder, k) =>
-        jwtBuilder.claim(k._1, k._2)
-      }
+      .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .build()
 
     new SignedJWT(header, payload)
