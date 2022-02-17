@@ -58,7 +58,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
         subject = subject,
         audience = audience,
         tokenIssuer = tokenIssuer,
-        validityDurationMilliseconds = secondsDuration
+        validityDurationSeconds = secondsDuration
       )
       pdndJWT         <- jwtFromSeed(tokenSeed)
       tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)
