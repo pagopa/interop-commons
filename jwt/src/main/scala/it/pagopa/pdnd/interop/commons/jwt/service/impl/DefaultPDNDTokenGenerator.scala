@@ -43,16 +43,6 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
       _ = logger.debug("Token generated")
     } yield serializedToken
 
-  override def generateInternalRSAToken(): Try[String] = {
-    generateInternalToken(
-      RSA,
-      jwtClaims.subject,
-      audience = jwtClaims.audience.toList,
-      tokenIssuer = jwtClaims.issuer,
-      millisecondsDuration = jwtClaims.durationInSeconds
-    )
-  }
-
   override def generateInternalToken(
     jwtAlgorithmType: JWTAlgorithmType,
     subject: String,
