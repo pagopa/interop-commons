@@ -8,6 +8,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import it.pagopa.pdnd.interop.commons.jwt.service.impl.{DefaultClientAssertionValidator, getClaimsVerifier}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import it.pagopa.pdnd.interop.commons.jwt.model.{ValidClientAssertionRequest, ClientAssertionChecker}
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.{Date, UUID}
@@ -36,14 +37,19 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
 
       val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
-      val validation = DefaultClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientUUID),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
       validation shouldBe a[Success[_]]
     }
 
@@ -53,15 +59,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
 
       val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
-      val validation = DefaultClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientUUID),
-          clientKeys =
-            Map(rsaKey.computeThumbprint().toJSONString -> new RSAKeyGenerator(2048).generate.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(new RSAKeyGenerator(2048).generate.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -72,14 +81,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
 
       val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
-      val validation = DefaultClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = "invalid",
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientUUID),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = "invalid",
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -90,14 +103,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
 
       val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
-      val validation = DefaultClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = "auth_code",
-          clientUUID = Some(clientUUID),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = "auth_code",
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -112,14 +129,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       val expirationTime = Date.from(OffsetDateTime.of(2021, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
       val assertion      = makeJWT(issuer, clientId.toString, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
-      val validation = DefaultClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -139,14 +160,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           getClaimsVerifier(audience = Set("aud1"))
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Success[_]]
     }
@@ -160,15 +185,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
         override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
           getClaimsVerifier(audience = Set("aud1"))
       }
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -185,14 +213,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           )
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Success[_]]
     }
@@ -209,14 +241,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           )
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -231,14 +267,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           getClaimsVerifier(requiredClaims = Set(JWTClaimNames.ISSUER))
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Success[_]]
     }
@@ -253,14 +293,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           getClaimsVerifier(requiredClaims = Set("nonce"))
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
@@ -275,14 +319,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           getClaimsVerifier(prohibitedClaims = Set("nonce"))
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Success[_]]
     }
@@ -297,14 +345,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
           getClaimsVerifier(prohibitedClaims = Set(JWTClaimNames.ISSUER))
       }
 
-      val validation = CustomClientAssertionValidator
-        .validate(
-          clientAssertion = assertion,
-          clientAssertionType = VALID_ASSERTION_TYPE,
-          grantType = CLIENT_CREDENTIALS,
-          clientUUID = Some(clientId),
-          clientKeys = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString)
-        )
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- CustomClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
 
       validation shouldBe a[Failure[_]]
     }
