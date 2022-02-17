@@ -2,7 +2,7 @@ package it.pagopa.pdnd.interop.commons.jwt.service.impl
 
 import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.pdnd.interop.commons.jwt.model.{JWTAlgorithmType, RSA, TokenSeed}
+import it.pagopa.pdnd.interop.commons.jwt.model.{JWTAlgorithmType, TokenSeed}
 import it.pagopa.pdnd.interop.commons.jwt.service.PDNDTokenGenerator
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder}
 import org.slf4j.{Logger, LoggerFactory}
@@ -23,7 +23,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
-    validityDuration: Long
+    validityDurationInSeconds: Long
   ): Try[String] =
     for {
       clientAssertionToken <- Try(SignedJWT.parse(clientAssertion))
@@ -34,7 +34,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
         audience,
         customClaims,
         tokenIssuer,
-        validityDuration
+        validityDurationInSeconds
       )
       pdndJWT         <- jwtFromSeed(tokenSeed)
       tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)
@@ -48,7 +48,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
     subject: String,
     audience: List[String],
     tokenIssuer: String,
-    millisecondsDuration: Long
+    secondsDuration: Long
   ): Try[String] =
     for {
       pdndPrivateKey <- getPrivateKeyByAlgorithmType(jwtAlgorithmType)
@@ -58,7 +58,7 @@ trait DefaultPDNDTokenGenerator extends PDNDTokenGenerator { privateKeysHolder: 
         subject = subject,
         audience = audience,
         tokenIssuer = tokenIssuer,
-        validityDurationMilliseconds = millisecondsDuration
+        validityDurationMilliseconds = secondsDuration
       )
       pdndJWT         <- jwtFromSeed(tokenSeed)
       tokenSigner     <- getSigner(tokenSeed.algorithm, pdndPrivateKey)

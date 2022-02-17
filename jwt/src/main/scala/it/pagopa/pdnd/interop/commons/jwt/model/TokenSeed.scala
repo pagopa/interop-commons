@@ -4,6 +4,7 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jwt.SignedJWT
 
+import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import java.util.UUID
 import scala.util.Try
@@ -43,7 +44,7 @@ object TokenSeed {
     * @param audience <code>aud</code> claim content
     * @param customClaims map of possible custom claims in string format
     * @param tokenIssuer <code>iss</code> claim content
-    * @param validityDurationMilliseconds milliseconds representing this token duration
+    * @param validityDurationSeconds seconds representing this token duration
     * @return
     */
   def create(
@@ -52,15 +53,15 @@ object TokenSeed {
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
-    validityDurationMilliseconds: Long
+    validityDurationSeconds: Long
   ): Try[TokenSeed] = {
     for {
-      issuedAt  <- Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
-      algorithm <- Try { assertion.getHeader.getAlgorithm }
-      kid       <- Try { key.computeThumbprint().toString }
-      subject   <- Try { assertion.getJWTClaimsSet.getSubject }
-      iat       <- Try { issuedAt.toEpochMilli }
-      exp       <- Try { issuedAt.plusMillis(validityDurationMilliseconds).toEpochMilli }
+      issuedAt  <- Try(Instant.now(Clock.system(ZoneId.of("UTC"))))
+      algorithm <- Try(assertion.getHeader.getAlgorithm)
+      kid       <- Try(key.computeThumbprint().toString)
+      subject   <- Try(assertion.getJWTClaimsSet.getSubject)
+      iat       <- Try(issuedAt.toEpochMilli)
+      exp       <- Try(issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
     } yield TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,
@@ -81,13 +82,13 @@ object TokenSeed {
     subject: String,
     audience: List[String],
     tokenIssuer: String,
-    validityDurationMilliseconds: Long
+    validityDurationSeconds: Long
   ): Try[TokenSeed] = {
     for {
       kid <- Try { key.computeThumbprint().toString }
       issuedAt = Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
       iat <- issuedAt.map(_.toEpochMilli)
-      exp <- issuedAt.map(_.plusMillis(validityDurationMilliseconds).toEpochMilli)
+      exp <- issuedAt.map(_.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
     } yield TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,
