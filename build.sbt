@@ -35,7 +35,7 @@ lazy val sharedSettings: SettingsDefinition = Seq(
 lazy val utils = project
   .in(file(utilsModuleName))
   .settings(
-    name := "pdnd-interop-commons-utils",
+    name := "interop-commons-utils",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.akkaDependencies
   )
@@ -44,7 +44,7 @@ lazy val utils = project
 lazy val fileManager = project
   .in(file(fileManagerModuleName))
   .settings(
-    name := "pdnd-interop-commons-file-manager",
+    name := "interop-commons-file-manager",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.fileDependencies
   )
@@ -54,7 +54,7 @@ lazy val fileManager = project
 lazy val jwtModule = project
   .in(file(jwtModuleName))
   .settings(
-    name := "pdnd-interop-commons-jwt",
+    name := "interop-commons-jwt",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.jwtDependencies
   )
@@ -64,7 +64,7 @@ lazy val jwtModule = project
 lazy val mailManager = project
   .in(file(mailManagerModuleName))
   .settings(
-    name := "pdnd-interop-commons-mail-manager",
+    name := "interop-commons-mail-manager",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.mailDependencies
   )
@@ -74,7 +74,7 @@ lazy val mailManager = project
 lazy val vault = project
   .in(file(vaultModuleName))
   .settings(
-    name := "pdnd-interop-commons-vault",
+    name := "interop-commons-vault",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.vaultDependencies,
     Test / fork := true
@@ -84,4 +84,4 @@ lazy val vault = project
 
 lazy val commons = (project in file("."))
   .aggregate(utils, fileManager, mailManager, vault, jwtModule)
-  .settings(name := "pdnd-interop-commons", publish / skip := true, publishLocal / skip := true)
+  .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)

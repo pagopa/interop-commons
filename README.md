@@ -1,7 +1,7 @@
-pdnd-interop-commons
+interop-commons
 ---
 
-_Utility library for PDND interop_
+_Utility library for interop_
 
 ### Specs
 
@@ -11,19 +11,19 @@ This implements some modules:
 - `file-manager` - a module for file management operations;
 - `mail-manager` - a module for e-mail operations;
 - `vault` - a module for read only accesses to Vault instances;
-- `jwt` - a module for PDND tokens management;
+- `jwt` - a module for Interop tokens management;
 
 ---
 
-The abovementioned modules are released as separated jar files, that you can import straightly and independently in any PDND component according to your needs.  
+The abovementioned modules are released as separated jar files, that you can import straightly and independently in any Interop component according to your needs.  
 
-Probably each PDND component shall need at least the `utils` module, since it implements nitty common utility features.
+Probably each Interop component shall need at least the `utils` module, since it implements nitty common utility features.
 
 ### File Manager Module
 This is the HOCON configuration object for the module:
 
 ```
-pdnd-interop-commons {
+interop-commons {
   storage {
     type = ${STORAGE_TYPE}
     endpoint = ${STORAGE_ENDPOINT}
@@ -48,7 +48,7 @@ Where:
 This is the HOCON configuration object for the module:
 
 ```
- pdnd-interop-commons {
+ interop-commons {
    mail {
      sender = ${MAIL_SENDER_ADDRESS}
      smtp {
@@ -78,7 +78,7 @@ Where:
 This is the HOCON configuration object for the module:
 
 ```
-pdnd-interop-commons {
+interop-commons {
   vault {
     address = ${VAULT_ADDR}
     token = ${VAULT_TOKEN}
@@ -99,7 +99,7 @@ Where:
 This is the HOCON configuration object for the module:
 
 ```
-pdnd-interop-commons {
+interop-commons {
   jwt {
     public-keys {
       url = ${WELL_KNOWN_URL}
