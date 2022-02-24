@@ -13,7 +13,7 @@ package object logging {
 
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
       val fieldsMap = fields.toMap
-      val subject   = fieldsMap.get(UID).filter(!_.isBlank).orElse(fieldsMap.get(SUB))
+      val subject   = fieldsMap.get(UID).filterNot(_.isBlank).orElse(fieldsMap.get(SUB))
       s"[${optToLog(subject)}] [${optToLog(fieldsMap.get(CORRELATION_ID_HEADER))}] - $originalMsg"
     }
   }
