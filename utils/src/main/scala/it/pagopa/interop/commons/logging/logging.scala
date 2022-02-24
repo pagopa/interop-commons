@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons
 
 import com.typesafe.scalalogging.CanLog
-import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, UID}
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, SUB, UID}
 
 package object logging {
   type ContextFieldsToLog = Seq[(String, String)]
@@ -13,7 +13,8 @@ package object logging {
 
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
       val fieldsMap = fields.toMap
-      s"[${optToLog(fieldsMap.get(UID))}] [${optToLog(fieldsMap.get(CORRELATION_ID_HEADER))}] - $originalMsg"
+      val subject   = fieldsMap.get(UID).filterNot(_.isBlank).orElse(fieldsMap.get(SUB))
+      s"[${optToLog(subject)}] [${optToLog(fieldsMap.get(CORRELATION_ID_HEADER))}] - $originalMsg"
     }
   }
 }
