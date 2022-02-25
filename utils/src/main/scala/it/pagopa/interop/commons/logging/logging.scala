@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
 import com.typesafe.scalalogging.CanLog
-import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, SUB, UID}
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, UID, IP_ADDRESS, SUB}
 
 package object logging {
   type ContextFieldsToLog = Seq[(String, String)]
@@ -25,7 +25,7 @@ package object logging {
   implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
       val fieldsMap = fields.toMap
-      s"${contexts(fieldsMap)} - $originalMsg"
+      s"[${optToLog(fieldsMap.get(UID))}] [${optToLog(fieldsMap.get(CORRELATION_ID_HEADER))}] - $originalMsg"
     }
   }
 
