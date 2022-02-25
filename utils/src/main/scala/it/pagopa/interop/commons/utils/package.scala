@@ -11,6 +11,7 @@ package object utils {
   val BEARER: String                                       = "bearer"
   val UID: String                                          = "uid"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
+  val IP_ADDRESS: String                                   = "callerIP"
 
   val INTEROP_PRODUCT_NAME: String = "interop"
 }
