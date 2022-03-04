@@ -3,7 +3,7 @@ package it.pagopa.interop.commons.jwt.service.impl
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.errors.{InvalidSubject, PurposeIdNotProvided, SubjectNotFound}
+import it.pagopa.interop.commons.jwt.errors.{InvalidSubject, SubjectNotFound}
 import it.pagopa.interop.commons.jwt.model.{ClientAssertionChecker, ValidClientAssertionRequest}
 import it.pagopa.interop.commons.jwt.service.ClientAssertionValidator
 import org.slf4j.{Logger, LoggerFactory}
@@ -26,10 +26,9 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
       _   <- Try(claimsVerifier.verify(jwt.getJWTClaimsSet, null))
       clientIdOpt = clientAssertionRequest.clientId.map(_.toString)
       _           = logger.debug("Getting subject claim")
-      subject <- subjectClaim(clientIdOpt, jwt.getJWTClaimsSet)
-      purposeId <- Try(jwt.getJWTClaimsSet.getStringClaim(PURPOSE_ID))
-        .transform(Success(_), _ => Failure(PurposeIdNotProvided))
-      kid <- Try(jwt.getHeader.getKeyID)
+      subject   <- subjectClaim(clientIdOpt, jwt.getJWTClaimsSet)
+      purposeId <- Try(Option(jwt.getJWTClaimsSet.getStringClaim(PURPOSE_ID)))
+      kid       <- Try(jwt.getHeader.getKeyID)
     } yield ClientAssertionChecker(jwt, kid, subject, purposeId)
 
   private def subjectClaim(clientId: Option[String], claimSet: JWTClaimsSet): Try[String] = {

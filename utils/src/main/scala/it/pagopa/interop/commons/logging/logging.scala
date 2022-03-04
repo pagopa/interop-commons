@@ -52,9 +52,7 @@ package object logging {
     * @param wrappingDirective directive to be decorated
     * @return directive with contexts enriched with logging attributes
     */
-  def withLoggingAttributes(
-    wrappingDirective: Directive1[Seq[(String, String)]]
-  ): Directive1[Seq[(String, String)]] = {
+  def withLoggingAttributes(wrappingDirective: Directive1[Seq[(String, String)]]): Directive1[Seq[(String, String)]] = {
     extractClientIP.flatMap(ip => {
       val ipAddress = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
 
