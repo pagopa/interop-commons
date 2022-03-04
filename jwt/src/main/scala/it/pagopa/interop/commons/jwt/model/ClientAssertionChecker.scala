@@ -12,7 +12,7 @@ final class ClientAssertionChecker private (
   private val jwt: SignedJWT,
   val kid: String,
   val subject: String,
-  val purposeId: String
+  val purposeId: Option[String]
 ) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -33,6 +33,11 @@ final class ClientAssertionChecker private (
 
 object ClientAssertionChecker {
 
-  private[jwt] def apply(jwt: SignedJWT, kid: String, subject: String, purposeId: String): ClientAssertionChecker =
+  private[jwt] def apply(
+    jwt: SignedJWT,
+    kid: String,
+    subject: String,
+    purposeId: Option[String]
+  ): ClientAssertionChecker =
     new ClientAssertionChecker(jwt, kid, subject, purposeId)
 }
