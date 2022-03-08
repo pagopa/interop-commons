@@ -25,7 +25,7 @@ final case class TokenSeed(
   id: UUID,
   algorithm: JWSAlgorithm,
   kid: String,
-  clientId: String,
+  subject: String,
   issuer: String,
   issuedAt: Long,
   nbf: Long,
@@ -49,6 +49,7 @@ object TokenSeed {
     */
   def create(
     assertion: SignedJWT,
+    subject: String,
     key: JWK,
     audience: List[String],
     customClaims: Map[String, String],
@@ -59,14 +60,13 @@ object TokenSeed {
       issuedAt  <- Try(Instant.now(Clock.system(ZoneId.of("UTC"))))
       algorithm <- Try(assertion.getHeader.getAlgorithm)
       kid       <- Try(key.computeThumbprint().toString)
-      subject   <- Try(assertion.getJWTClaimsSet.getSubject)
       iat       <- Try(issuedAt.toEpochMilli)
       exp       <- Try(issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
     } yield TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,
       kid = kid,
-      clientId = subject,
+      subject = subject,
       issuer = tokenIssuer,
       issuedAt = iat,
       nbf = iat,
@@ -93,7 +93,7 @@ object TokenSeed {
       id = UUID.randomUUID(),
       algorithm = algorithm,
       kid = kid,
-      clientId = subject,
+      subject = subject,
       issuer = tokenIssuer,
       issuedAt = iat,
       nbf = iat,
