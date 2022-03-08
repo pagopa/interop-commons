@@ -20,6 +20,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
 
   override def generate(
     clientAssertion: String,
+    subject: String,
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
@@ -30,6 +31,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       interopPrivateKey    <- getPrivateKeyByAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
       tokenSeed <- TokenSeed.create(
         clientAssertionToken,
+        subject,
         interopPrivateKey,
         audience,
         customClaims,
@@ -82,7 +84,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .jwtID(seed.id.toString)
       .issuer(seed.issuer)
       .audience(seed.audience.asJava)
-      .subject(seed.clientId)
+      .subject(seed.subject)
       .issueTime(issuedAt)
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)

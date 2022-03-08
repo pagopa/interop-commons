@@ -26,12 +26,14 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
 
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
+      val subject    = UUID.randomUUID().toString
 
       val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val interopToken = generator
         .generate(
           clientAssertion = assertion,
+          subject = subject,
           audience = List("test"),
           customClaims = Map("testClaim" -> "hello world"),
           issuerUUID,
