@@ -17,9 +17,8 @@ final case class ValidClientAssertionRequest private (
 
 object ValidClientAssertionRequest {
 
-  private final val jwtBearerClientAssertionType: String =
-    "urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
-  private final val clientCredentialsGrantType: String = "client_credentials"
+  private final val jwtBearerClientAssertionType: String = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+  private final val clientCredentialsGrantType: String   = "client_credentials"
 
   def from(
     clientAssertion: String,
