@@ -20,7 +20,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
     override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] = getClaimsVerifier()
   }
 
-  val VALID_ASSERTION_TYPE: String = "urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer"
+  val VALID_ASSERTION_TYPE: String = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
   val CLIENT_CREDENTIALS: String   = "client_credentials"
 
   val rsaKey = new RSAKeyGenerator(2048).generate
