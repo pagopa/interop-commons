@@ -15,7 +15,7 @@ This implements some modules:
 
 ---
 
-The abovementioned modules are released as separated jar files, that you can import straightly and independently in any Interop component according to your needs.  
+The abovementioned modules are released as separated jar files, that you can import straightly and independently in any Interop component according to your needs.
 
 Probably each Interop component shall need at least the `utils` module, since it implements nitty common utility features.
 
@@ -107,7 +107,7 @@ interop-commons {
       connection-timeout = ${CONNECTION_TIMEOUT}
       read-timeout = ${READ_TIMEOUT}
     }
-    
+
     internal-token {
       issuer = ${JWT_ISSUER}
       subject = ${JWT_SUBJECT}
