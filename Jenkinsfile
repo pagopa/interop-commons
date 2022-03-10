@@ -2,10 +2,14 @@
 void sbtAction(String task) {
   echo "Executing ${task} on SBT"
   sh '''
-      echo "realm=Sonatype Nexus Repository Manager\nhost=${NEXUS}\nuser=${NEXUS_CREDENTIALS_USR}\npassword=${NEXUS_CREDENTIALS_PSW}" > ~/.sbt/.credentials
+      echo "
+      realm=Sonatype Nexus Repository Manager
+      host=${NEXUS}
+      user=${NEXUS_CREDENTIALS_USR}
+      password=${NEXUS_CREDENTIALS_PSW}" > ~/.sbt/.credentials
      '''
-  //using both interpolation and string concatenation to avoid Jenkins security warnings
-  sh 'sbt -Dsbt.log.noformat=true -Djavax.net.ssl.trustStore=./PDNDTrustStore -Djavax.net.ssl.trustStorePassword=${PDND_TRUST_STORE_PSW} ' + "${task}"
+
+  sh "sbt -Dsbt.log.noformat=true ${task}"
 }
 
 pipeline {
@@ -13,36 +17,15 @@ pipeline {
   agent none
 
   stages {
-    stage('Initializing build') {
-      agent { label 'sbt-template' }
-      environment {
-        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
-      }
-      steps {
-        withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd_certificate')]) {
-          sh '''
-             cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer
-             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
-             cp $JAVA_HOME/jre/lib/security/cacerts main_certs
-             keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
-           '''
-          stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
-        }
-      }
-    }
-
     stage('Test and Publish library') {
       agent { label 'sbt-template' }
       environment {
-        NEXUS = 'gateway.interop.pdnd.dev'
-        DOCKER_REPO = 'gateway.interop.pdnd.dev'
-        MAVEN_REPO = 'gateway.interop.pdnd.dev'
+        NEXUS = "${env.NEXUS}"
         NEXUS_CREDENTIALS = credentials('pdnd-nexus')
-        PDND_TRUST_STORE_PSW = credentials('pdnd-interop-trust-psw')
+        MAVEN_REPO = "${env.MAVEN_REPO}"
       }
       steps {
         container('sbt-container') {
-          unstash "pdnd_trust_store"
           script {
             sbtAction 'test publish'
           }
