@@ -16,7 +16,7 @@ object Versions {
   lazy val logbackVersion             = "1.2.8"
   lazy val mockJavaMailVersion        = "1.9"
   lazy val mockitoVersion             = "3.9.0"
-  lazy val nimbusVersion              = "9.15.2"
+  lazy val nimbusVersion              = "9.21"
   lazy val openhtmltopdfVersion       = "1.0.10"
   lazy val pdfBoxVersion              = "2.0.24"
   lazy val pdfCompareVersion          = "1.1.60"
