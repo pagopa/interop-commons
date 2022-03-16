@@ -24,6 +24,6 @@ object Versions {
   lazy val scalatestVersion           = "3.2.10"
   lazy val swaggerValidatorVersion    = "2.23.0"
   lazy val testContainersScalaVersion = "0.39.12"
-  lazy val typesafeConfigVersion      = "1.4.1"
+  lazy val typesafeConfigVersion      = "1.4.2"
   lazy val vaultDriverVersion         = "5.1.0"
 }
