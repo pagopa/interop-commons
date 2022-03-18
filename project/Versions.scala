@@ -19,7 +19,7 @@ object Versions {
   lazy val nimbusVersion              = "9.15.2"
   lazy val openhtmltopdfVersion       = "1.0.10"
   lazy val pdfBoxVersion              = "2.0.24"
-  lazy val pdfCompareVersion          = "1.1.60"
+  lazy val pdfCompareVersion          = "1.1.61"
   lazy val s3Persistence              = "1.1.74"
   lazy val scalatestVersion           = "3.2.10"
   lazy val swaggerValidatorVersion    = "2.23.0"
