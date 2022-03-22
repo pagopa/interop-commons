@@ -1,6 +1,8 @@
 package it.pagopa.interop.commons.files.service
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import com.openhtmltopdf.util.XRLog
+import com.openhtmltopdf.slf4j.Slf4jLogger
 import it.pagopa.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.jsoup.Jsoup
@@ -28,6 +30,7 @@ trait PDFManager {
   def getPDF[O <: OutputStream, T](htmlTemplate: String, customData: Map[String, String])(streamOp: O => T) = { o: O =>
     Using(o) { stream =>
       logger.debug("Getting PDF for HTML template...")
+      XRLog.setLoggerImpl(new Slf4jLogger())
       val compiledHTML = TextTemplate(htmlTemplate, customData).toText
       val doc          = Jsoup.parse(compiledHTML, "UTF-8")
       val dom          = W3CDom.convert(doc)

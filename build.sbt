@@ -1,6 +1,6 @@
 import ProjectSettings.ProjectFrom
 
-ThisBuild / scalaVersion := "2.13.7"
+ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
 ThisBuild / version := ComputeVersion.version
@@ -34,11 +34,7 @@ lazy val sharedSettings: SettingsDefinition = Seq(
 
 lazy val utils = project
   .in(file(utilsModuleName))
-  .settings(
-    name := "interop-commons-utils",
-    sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.akkaDependencies
-  )
+  .settings(name := "interop-commons-utils", sharedSettings, libraryDependencies ++= Dependencies.Jars.akkaDependencies)
   .setupBuildInfo
 
 lazy val fileManager = project
@@ -53,11 +49,7 @@ lazy val fileManager = project
 
 lazy val jwtModule = project
   .in(file(jwtModuleName))
-  .settings(
-    name := "interop-commons-jwt",
-    sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.jwtDependencies
-  )
+  .settings(name := "interop-commons-jwt", sharedSettings, libraryDependencies ++= Dependencies.Jars.jwtDependencies)
   .dependsOn(utils)
   .setupBuildInfo
 
