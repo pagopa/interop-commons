@@ -22,9 +22,9 @@ object SprayCommonFormats {
       override def write(obj: UUID): JsValue = JsString(obj.toString)
 
       override def read(json: JsValue): UUID = json match {
-        case JsString(s) =>
+        case JsString(s)  =>
           Try(UUID.fromString(s)) match {
-            case Success(result) => result
+            case Success(result)    => result
             case Failure(exception) =>
               deserializationError(s"could not parse $s as UUID", exception)
           }
@@ -46,7 +46,7 @@ object SprayCommonFormats {
       }
 
       override def read(json: JsValue): File = json match {
-        case JsString(s) =>
+        case JsString(s)  =>
           Try {
             val file = Files.createTempFile(UUID.randomUUID().toString, ".temp").toFile
             val pw   = new PrintWriter(file, StandardCharsets.UTF_8)
@@ -54,7 +54,7 @@ object SprayCommonFormats {
             pw.close()
             file
           } match {
-            case Success(result) => result
+            case Success(result)    => result
             case Failure(exception) =>
               deserializationError(s"could not parse $s as File", exception)
           }
@@ -70,9 +70,9 @@ object SprayCommonFormats {
       override def write(obj: OffsetDateTime): JsValue = JsString(obj.format(dateFormatter))
 
       override def read(json: JsValue): OffsetDateTime = json match {
-        case JsString(s) =>
+        case JsString(s)  =>
           s.toOffsetDateTime match {
-            case Success(result) => result
+            case Success(result)    => result
             case Failure(exception) =>
               deserializationError(s"could not parse $s as java OffsetDateTime", exception)
           }
@@ -88,9 +88,9 @@ object SprayCommonFormats {
       override def write(obj: URI): JsValue = JsString(obj.toString)
 
       override def read(json: JsValue): URI = json match {
-        case JsString(s) =>
+        case JsString(s)  =>
           Try(URI.create(s)) match {
-            case Success(result) => result
+            case Success(result)    => result
             case Failure(exception) =>
               deserializationError(s"could not parse $s as URI", exception)
           }

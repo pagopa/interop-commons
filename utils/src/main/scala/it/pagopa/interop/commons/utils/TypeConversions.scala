@@ -25,25 +25,25 @@ object TypeConversions {
   implicit class OptionOps[A](val option: Option[A]) extends AnyVal {
     def toFuture(e: Throwable): Future[A] = option.fold[Future[A]](Future.failed(e))(Future.successful)
     def toTry(e: Throwable): Try[A]       = option.fold[Try[A]](Failure(e))(t => Success(t))
-    def toTry(msg: String): Try[A] =
+    def toTry(msg: String): Try[A]        =
       option.map(Success(_)).getOrElse(Failure(new NoSuchElementException(msg)))
   }
 
   implicit class OffsetDateTimeOps(val dt: OffsetDateTime) extends AnyVal {
-    def toMillis: Long = dt.toInstant.toEpochMilli
+    def toMillis: Long                 = dt.toInstant.toEpochMilli
     def asFormattedString: Try[String] = Try {
       dt.format(dateFormatter)
     }
   }
 
   implicit class StringOps(val str: String) extends AnyVal {
-    def toUUID: Try[UUID] = Try {
+    def toUUID: Try[UUID]                     = Try {
       UUID.fromString(str)
     }
     def toOffsetDateTime: Try[OffsetDateTime] = Try { OffsetDateTime.parse(str, dateFormatter) }
     def toFutureUUID: Future[UUID]            = str.toUUID.toFuture
     def parseCommaSeparated: List[String]     = str.split(",").map(_.trim).toList.filterNot(entry => entry == "")
-    def decodeBase64: Try[String] = Try {
+    def decodeBase64: Try[String]             = Try {
       val decoded: Array[Byte] = Base64.getDecoder.decode(str.getBytes(StandardCharsets.UTF_8))
       new String(decoded, StandardCharsets.UTF_8)
     }
