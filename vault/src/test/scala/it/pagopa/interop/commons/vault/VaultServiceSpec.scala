@@ -25,11 +25,11 @@ class VaultServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfter
     "encoded2=aG93IGFyZSB5b3U/"
   )
 
-  //Dad won't be proud of this, but for tests it's acceptable, isn't it?
+  // Dad won't be proud of this, but for tests it's acceptable, isn't it?
   var vaultService: VaultService = _
 
   override def beforeAll() = {
-    //we need to instantiate this before all since we need that Docker container is running to get actual port
+    // we need to instantiate this before all since we need that Docker container is running to get actual port
     vaultService = new DefaultVaultService with VaultClientInstance {
       override val client: Vault = {
         val config = new VaultConfig()

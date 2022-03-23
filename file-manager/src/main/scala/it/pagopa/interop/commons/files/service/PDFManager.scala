@@ -18,6 +18,7 @@ import scala.util.{Try, Using}
 trait PDFManager {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  XRLog.setLoggerImpl(new Slf4jLogger())
 
   /** Defines a PDF to be streamed to a specific resource
     * @param htmlTemplate HTML template to be rendered as PDF
@@ -30,7 +31,6 @@ trait PDFManager {
   def getPDF[O <: OutputStream, T](htmlTemplate: String, customData: Map[String, String])(streamOp: O => T) = { o: O =>
     Using(o) { stream =>
       logger.debug("Getting PDF for HTML template...")
-      XRLog.setLoggerImpl(new Slf4jLogger())
       val compiledHTML = TextTemplate(htmlTemplate, customData).toText
       val doc          = Jsoup.parse(compiledHTML, "UTF-8")
       val dom          = W3CDom.convert(doc)

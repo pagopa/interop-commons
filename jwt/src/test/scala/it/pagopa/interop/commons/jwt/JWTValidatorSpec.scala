@@ -22,7 +22,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
   val publicEcKey: String  = ecKey.toPublicJWK.toJSONString
 
   val validator = new DefaultJWTReader with PublicKeysHolder {
-    var publicKeyset = Map(
+    var publicKeyset                                                                 = Map(
       rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
       ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
     )
@@ -106,7 +106,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt            = makeJWT(issuer, clientId, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -128,7 +128,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt            = makeJWT(issuer, clientId, audience, expirationTime, "RSA", rsaKid, privateRsaKey)
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -146,7 +146,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -164,7 +164,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -184,7 +184,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -202,7 +202,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -221,7 +221,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )
@@ -239,7 +239,7 @@ class JWTValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper 
       val jwt = createMockJWT(rsaKey, issuer, clientId, List("test"), "RSA")
 
       val validator: DefaultJWTReader = new DefaultJWTReader with PublicKeysHolder {
-        var publicKeyset = Map(
+        var publicKeyset                                                                 = Map(
           rsaKey.computeThumbprint().toJSONString -> rsaKey.toPublicJWK.toJSONString,
           ecKey.computeThumbprint().toJSONString  -> ecKey.toPublicJWK.toJSONString
         )

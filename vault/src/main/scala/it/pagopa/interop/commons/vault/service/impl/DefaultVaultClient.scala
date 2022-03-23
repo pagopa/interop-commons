@@ -7,7 +7,7 @@ import it.pagopa.interop.commons.vault.service.VaultClientInstance
 /** Defines configuration setup for a Vault client implementation
   */
 object DefaultVaultClient {
-  private lazy val configuration = VaultClientConfiguration.vaultConfig
+  private lazy val configuration      = VaultClientConfiguration.vaultConfig
   private lazy val vaultClient: Vault = {
     val config = new VaultConfig()
       .address(configuration.address)

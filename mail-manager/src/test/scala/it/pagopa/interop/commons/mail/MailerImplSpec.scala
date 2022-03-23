@@ -32,7 +32,7 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
       val milanInbox = Mailbox.get("legal@comune.milano.it")
       milanInbox.size shouldBe 1
-      val milanMsg = milanInbox.get(0)
+      val milanMsg   = milanInbox.get(0)
       milanMsg.getContent shouldBe s"This is the UUID token ${uuidToken}"
       milanMsg.getSubject shouldBe "Interop - Onboarding Comune di Milano"
     }
@@ -50,7 +50,7 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
       val bolognaInbox = Mailbox.get("legal@comune.bologna.it")
       bolognaInbox.size shouldBe 1
-      val bolognaMsg = bolognaInbox.get(0)
+      val bolognaMsg   = bolognaInbox.get(0)
       bolognaMsg.getContent shouldBe a[MimeMultipart]
       bolognaMsg.getSubject shouldBe "Interop - Onboarding"
     }

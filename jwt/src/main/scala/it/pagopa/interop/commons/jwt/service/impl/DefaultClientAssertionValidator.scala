@@ -38,7 +38,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
         Failure(SubjectNotFound)
 
       case Success(s) if s == clientId.getOrElse(s) => Success(s)
-      case Success(s) =>
+      case Success(s)                               =>
         logger.error(s"Subject value $s is not equal to the provided client_id $clientId")
         Failure(InvalidSubject(s))
     }

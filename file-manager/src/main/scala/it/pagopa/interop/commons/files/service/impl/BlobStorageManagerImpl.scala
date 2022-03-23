@@ -17,10 +17,10 @@ final class BlobStorageManagerImpl extends FileManager {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   lazy val azureBlobClient: BlobServiceClient = {
-    val accountName: String    = storageAccountInfo.applicationId
-    val accountKey: String     = storageAccountInfo.applicationSecret
-    val endpointSuffix: String = storageAccountInfo.endpoint
-    val connectionString =
+    val accountName: String              = storageAccountInfo.applicationId
+    val accountKey: String               = storageAccountInfo.applicationSecret
+    val endpointSuffix: String           = storageAccountInfo.endpoint
+    val connectionString                 =
       s"DefaultEndpointsProtocol=https;AccountName=$accountName;AccountKey=$accountKey;EndpointSuffix=$endpointSuffix"
     val storageClient: BlobServiceClient =
       new BlobServiceClientBuilder().connectionString(connectionString).buildClient()
@@ -33,9 +33,9 @@ final class BlobStorageManagerImpl extends FileManager {
   )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
     Future.fromTry {
       Try {
-        val blobKey = createBlobKey(resourceId.toString, path = path, fileName = fileParts._1.getFileName)
+        val blobKey             = createBlobKey(resourceId.toString, path = path, fileName = fileParts._1.getFileName)
         logger.debug("Storing file id {} at path {}", resourceId.toString, blobKey)
-        val blobContainerClient    = azureBlobClient.getBlobContainerClient(containerPath)
+        val blobContainerClient = azureBlobClient.getBlobContainerClient(containerPath)
         val blobClient: BlobClient = blobContainerClient.getBlobClient(blobKey)
         blobClient.uploadFromFile(fileParts._2.getPath)
         logger.debug("File {} stored", resourceId.toString)
