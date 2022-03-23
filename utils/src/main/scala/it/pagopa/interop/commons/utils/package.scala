@@ -12,14 +12,5 @@ package object utils {
   val UID: String                                          = "uid"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
-  val ADMITTABLE_HEADERS                                   = Set(CORRELATION_ID_HEADER, IP_ADDRESS)
-
-  val INTEROP_PRODUCT_NAME: String = "interop"
-
-  /** Returns all the admittable headers that can be forwarded downstream, given the request contexts passed as argument.
-    * @param contexts HTTP request contexts
-    * @return the <code>Map</code> of all the admittable headers to be forwarded downstream
-    */
-  def admittableHeaders(contexts: Seq[(String, String)]): Map[String, String] =
-    contexts.toMap.filter(k => ADMITTABLE_HEADERS.contains(k._1))
+  val INTEROP_PRODUCT_NAME: String                         = "interop"
 }

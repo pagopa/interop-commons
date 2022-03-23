@@ -6,7 +6,9 @@ import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
 import com.typesafe.scalalogging.CanLog
-import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, UID, IP_ADDRESS, SUB}
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, SUB, UID}
+
+import java.util.UUID
 
 package object logging {
   type ContextFieldsToLog = Seq[(String, String)]
@@ -59,7 +61,7 @@ package object logging {
       optionalHeaderValueByName(CORRELATION_ID_HEADER).flatMap(correlationId => {
         wrappingDirective.map(contexts =>
           contexts
-            .prepended((CORRELATION_ID_HEADER, correlationId.getOrElse("")))
+            .prepended((CORRELATION_ID_HEADER, correlationId.getOrElse(UUID.randomUUID().toString)))
             .prepended((IP_ADDRESS, ipAddress))
         )
       })
