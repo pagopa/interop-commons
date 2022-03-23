@@ -27,7 +27,7 @@ final class ClientAssertionChecker private (
   private[this] def getVerifier(algorithm: JWSAlgorithm, publicKey: String): Try[JWSVerifier] = algorithm match {
     case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512 => rsaVerifier(publicKey)
     case JWSAlgorithm.ES256                                           => ecVerifier(publicKey)
-    case _                                                            => Failure(JWSSignerNotAvailable(s"Algorithm ${algorithm.getName} not supported"))
+    case _ => Failure(JWSSignerNotAvailable(s"Algorithm ${algorithm.getName} not supported"))
   }
 }
 
