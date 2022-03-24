@@ -88,7 +88,9 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .issueTime(issuedAt)
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)
-    val payload                       = seed.customClaims
+      .claim("typ", "at+jwt")
+
+    val payload = seed.customClaims
       .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .build()
 
