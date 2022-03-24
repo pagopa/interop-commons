@@ -79,6 +79,9 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .build()
 
     val builder: JWTClaimsSet.Builder = new JWTClaimsSet.Builder()
+
+    val payload = seed.customClaims
+      .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .jwtID(seed.id.toString)
       .issuer(seed.issuer)
       .audience(seed.audience.asJava)
@@ -87,9 +90,6 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)
       .claim(typClaim, "at+jwt")
-
-    val payload = seed.customClaims
-      .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .build()
 
     new SignedJWT(header, payload)
