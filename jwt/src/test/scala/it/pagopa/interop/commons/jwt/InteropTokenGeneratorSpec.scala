@@ -46,6 +46,7 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
       signed.getJWTClaimsSet.getSubject shouldBe clientUUID.toString
       signed.getJWTClaimsSet.getStringClaim("testClaim") shouldBe "hello world"
       signed.getJWTClaimsSet.getStringClaim("typ") shouldBe "at+jwt"
+      signed.getJWTClaimsSet.getStringClaim("client_id") shouldBe clientUUID.toString
 
       val verifier = new RSASSAVerifier(rsaKey.toRSAKey)
       signed.verify(verifier) shouldBe true

@@ -9,6 +9,9 @@ package object jwt {
   type KID           = String
   type SerializedKey = String
 
+  final val clientIdClaim = "client_id"
+  final val typClaim      = "typ"
+
   private[jwt] def rsaVerifier(jwkKey: String): Try[RSASSAVerifier] = {
     Try {
       val jwk: JWK  = JWK.parse(jwkKey)

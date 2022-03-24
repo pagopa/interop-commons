@@ -4,7 +4,7 @@ import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import it.pagopa.interop.commons.jwt.model.{JWTAlgorithmType, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
-import it.pagopa.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder}
+import it.pagopa.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder, typClaim}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
@@ -86,7 +86,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .issueTime(issuedAt)
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)
-      .claim("typ", "at+jwt")
+      .claim(typClaim, "at+jwt")
 
     val payload = seed.customClaims
       .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
