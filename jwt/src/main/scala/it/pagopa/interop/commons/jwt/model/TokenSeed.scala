@@ -49,7 +49,6 @@ object TokenSeed {
     */
   def create(
     assertion: SignedJWT,
-    subject: String,
     key: JWK,
     audience: List[String],
     customClaims: Map[String, String],
@@ -66,7 +65,7 @@ object TokenSeed {
       id = UUID.randomUUID(),
       algorithm = algorithm,
       kid = kid,
-      subject = subject,
+      subject = assertion.getJWTClaimsSet.getSubject,
       issuer = tokenIssuer,
       issuedAt = iat,
       nbf = iat,

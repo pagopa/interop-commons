@@ -18,7 +18,6 @@ trait InteropTokenGenerator {
     */
   def generate(
     clientAssertion: String,
-    subject: String,
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
