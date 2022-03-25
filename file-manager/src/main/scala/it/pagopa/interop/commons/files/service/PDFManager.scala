@@ -1,8 +1,6 @@
 package it.pagopa.interop.commons.files.service
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
-import com.openhtmltopdf.util.XRLog
-import com.openhtmltopdf.slf4j.Slf4jLogger
 import it.pagopa.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.jsoup.Jsoup
@@ -18,7 +16,6 @@ import scala.util.{Try, Using}
 trait PDFManager {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  XRLog.setLoggerImpl(new Slf4jLogger())
 
   /** Defines a PDF to be streamed to a specific resource
     * @param htmlTemplate HTML template to be rendered as PDF
