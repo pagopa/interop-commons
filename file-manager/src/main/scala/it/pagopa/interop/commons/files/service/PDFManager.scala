@@ -1,8 +1,6 @@
 package it.pagopa.interop.commons.files.service
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
-import com.openhtmltopdf.util.XRLog
-import com.openhtmltopdf.slf4j.Slf4jLogger
 import it.pagopa.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.jsoup.Jsoup
