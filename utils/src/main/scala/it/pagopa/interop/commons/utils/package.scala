@@ -5,7 +5,6 @@ import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBea
 
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
-import scala.concurrent.ExecutionContext
 
 package object utils {
   private[utils] lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -18,9 +17,7 @@ package object utils {
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
   val INTEROP_PRODUCT_NAME: String                         = "interop"
 
-  def extractHeaders(
-    contexts: Seq[(String, String)]
-  )(implicit ec: ExecutionContext): Either[ComponentError, (String, String, Option[String])] = {
+  def extractHeaders(contexts: Seq[(String, String)]): Either[ComponentError, (String, String, Option[String])] = {
     val contextsMap = contexts.toMap
     for {
       bearerToken   <- contextsMap.get(BEARER).toRight(MissingBearer)
