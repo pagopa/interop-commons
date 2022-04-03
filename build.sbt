@@ -1,9 +1,9 @@
 import ProjectSettings.ProjectFrom
 
-ThisBuild / scalaVersion := "2.13.8"
-ThisBuild / organization := "it.pagopa"
+ThisBuild / scalaVersion     := "2.13.8"
+ThisBuild / organization     := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
-ThisBuild / version := ComputeVersion.version
+ThisBuild / version          := ComputeVersion.version
 
 lazy val fileManagerModuleName = "file-manager"
 lazy val mailManagerModuleName = "mail-manager"
@@ -18,12 +18,12 @@ cleanFiles += baseDirectory.value / vaultModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
-  scalacOptions := Seq(),
+  scalacOptions     := Seq(),
   scalafmtOnCompile := true,
   libraryDependencies ++= Dependencies.Jars.commonDependencies,
   credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-  updateOptions := updateOptions.value.withGigahorse(false),
-  publishTo := {
+  updateOptions     := updateOptions.value.withGigahorse(false),
+  publishTo         := {
     val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
     if (isSnapshot.value)
       Some("snapshots" at nexus + "maven-snapshots/")
@@ -66,7 +66,7 @@ lazy val mailManager = project
 lazy val vault = project
   .in(file(vaultModuleName))
   .settings(
-    name := "interop-commons-vault",
+    name        := "interop-commons-vault",
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.vaultDependencies,
     Test / fork := true
