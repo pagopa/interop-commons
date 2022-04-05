@@ -74,7 +74,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
 
     val header: JWSHeader = new JWSHeader.Builder(seed.algorithm)
       .customParam("use", "sig")
-      .`type`(JOSEObjectType.JWT)
+      .`type`(new JOSEObjectType("at+jwt"))
       .keyID(seed.kid)
       .build()
 
@@ -89,7 +89,6 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .issueTime(issuedAt)
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)
-      .claim(typClaim, "at+jwt")
       .build()
 
     new SignedJWT(header, payload)
