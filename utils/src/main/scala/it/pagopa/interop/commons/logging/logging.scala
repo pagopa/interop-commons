@@ -71,7 +71,7 @@ package object logging {
       optionalHeaderValueByName(CORRELATION_ID_HEADER).flatMap(correlationId => {
         // Exclude headers for security reason if the service is internet facing
         val actualCorrelationId =
-          if (!isInternetFacing) correlationId.getOrElse(UUID.randomUUID().toString) else UUID.randomUUID().toString
+          if (isInternetFacing) UUID.randomUUID().toString else correlationId.getOrElse(UUID.randomUUID().toString)
         wrappingDirective.map(contexts =>
           contexts
             .prepended((CORRELATION_ID_HEADER, actualCorrelationId))
