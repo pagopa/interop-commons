@@ -16,6 +16,8 @@ package object utils {
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
   val INTEROP_PRODUCT_NAME: String                         = "interop"
+  val PURPOSE_ID_CLAIM: String                             = "purposeId"
+  val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
 
   def extractHeaders(contexts: Seq[(String, String)]): Either[ComponentError, (String, String, Option[String])] = {
     val contextsMap = contexts.toMap
