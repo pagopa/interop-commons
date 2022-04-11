@@ -5,17 +5,19 @@ ThisBuild / organization     := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
 ThisBuild / version          := ComputeVersion.version
 
-lazy val fileManagerModuleName = "file-manager"
-lazy val mailManagerModuleName = "mail-manager"
-lazy val jwtModuleName         = "jwt"
-lazy val vaultModuleName       = "vault"
-lazy val utilsModuleName       = "utils"
+val fileManagerModuleName = "file-manager"
+val mailManagerModuleName = "mail-manager"
+val jwtModuleName         = "jwt"
+val vaultModuleName       = "vault"
+val utilsModuleName       = "utils"
+val queueModuleName       = "queue-manager"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
 cleanFiles += baseDirectory.value / jwtModuleName / "target"
 cleanFiles += baseDirectory.value / vaultModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
+cleanFiles += baseDirectory.value / queueModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
   scalacOptions     := Seq(),
@@ -72,6 +74,15 @@ lazy val vault = project
     Test / fork := true
   )
   .dependsOn(utils)
+  .setupBuildInfo
+
+lazy val queue = project
+  .in(file(queueModuleName))
+  .settings(
+    name := "interop-commons-queue-manager",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.queueDependencies
+  )
   .setupBuildInfo
 
 lazy val commons = (project in file("."))

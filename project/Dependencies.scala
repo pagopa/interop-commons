@@ -45,9 +45,15 @@ object Dependencies {
     lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
   }
 
+  private[this] object spray {
+    lazy val spray = "io.spray" %% "spray-json" % sprayJsonVersion
+  }
+
   private[this] object aws {
     lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val s3           = awsNamespace % "s3" % awsSdkVersion
+    lazy val s3           = awsNamespace % "s3"       % awsSdkVersion
+    lazy val dynamodb     = awsNamespace % "dynamodb" % awsDynamoDBVersion
+    lazy val sqs          = awsNamespace % "sqs"      % awsSqsVersion
   }
 
   private[this] object courier {
@@ -134,14 +140,14 @@ object Dependencies {
         pdfcompare.lib       % Test
       )
 
-    lazy val mailDependencies: Seq[ModuleID] =
-      Seq(courier.mail % Compile, courier.testMocking % Test)
+    lazy val mailDependencies: Seq[ModuleID] = Seq(courier.mail % Compile, courier.testMocking % Test)
 
     lazy val vaultDependencies: Seq[ModuleID] =
       Seq(vault.driver % Compile, testContainers.scalatest % Test, testContainers.vault % Test)
 
-    lazy val jwtDependencies: Seq[ModuleID] =
-      Seq(nimbus.joseJwt % Compile)
+    lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
+
+    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, spray.spray % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
