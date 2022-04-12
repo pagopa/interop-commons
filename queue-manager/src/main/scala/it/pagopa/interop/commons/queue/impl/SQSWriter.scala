@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.sqs.model.SqsException
 import java.util.UUID
 import it.pagopa.interop.commons.queue.QueueAccountInfo
 import it.pagopa.interop.commons.queue.QueueWriter
-import it.pagopa.interop.commons.queue.message.Event
+import it.pagopa.interop.commons.queue.message.ProjectableEvent
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -28,7 +28,7 @@ import spray.json.RootJsonFormat
 import spray.json.JsonWriter
 import spray.json._
 
-final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Event, JsValue])(implicit
+final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[ProjectableEvent, JsValue])(implicit
   ec: ExecutionContext
 ) extends QueueWriter {
 

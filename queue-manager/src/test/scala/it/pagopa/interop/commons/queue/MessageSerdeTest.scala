@@ -9,7 +9,7 @@ import spray.json.RootJsonFormat
 import it.pagopa.interop.commons.queue.message.Message.uuidFormat
 import it.pagopa.interop.commons.queue.message.Message
 import MessageSerdeTest._
-import it.pagopa.interop.commons.queue.message.Event
+import it.pagopa.interop.commons.queue.message.QueueableEvent
 
 class MessageSerdeTest extends AnyWordSpecLike with Matchers {
 
@@ -45,8 +45,14 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
     }
 
     "be deconverted" in {
-      testJson1.parseJson.convertTo[Message] shouldBe testMessage1
-      testJson2.parseJson.convertTo[Message] shouldBe testMessage2
+      val parsedMessage1: Message = testJson1.parseJson.convertTo[Message]
+      val parsedMessage2: Message = testJson2.parseJson.convertTo[Message]
+      parsedMessage1 shouldBe testMessage1
+      parsedMessage2 shouldBe testMessage2
+
+      val payloads: List[QueueableEvent] = List(parsedMessage1, parsedMessage2).map(_.payload)
+      payloads.collect { case x: ThingCreated => x } shouldBe parsedMessage1.payload :: Nil
+      payloads.collect { case x: AnotherThing => x } shouldBe parsedMessage2.payload :: Nil
     }
   }
 
@@ -54,26 +60,22 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
 
 object MessageSerdeTest {
 
-  final case class ThingCreated(thingUUID: UUID, thingName: String) extends Event
-  final case class AnotherThing(thingUUID: UUID, thingName: String) extends Event
+  final case class ThingCreated(thingUUID: UUID, thingName: String) extends QueueableEvent
+  final case class AnotherThing(thingUUID: UUID, thingName: String) extends QueueableEvent
 
   val thingCreatedFormat: RootJsonFormat[ThingCreated] = jsonFormat2(ThingCreated.apply)
   val anotherThingFormat: RootJsonFormat[AnotherThing] = jsonFormat2(AnotherThing.apply)
 
-  val f: PartialFunction[String, JsValue => Event] = {
+  val f: PartialFunction[String, JsValue => QueueableEvent] = {
     case "thing_created" => _.convertTo[ThingCreated](thingCreatedFormat)
     case "another_thing" => _.convertTo[AnotherThing](anotherThingFormat)
   }
 
-  val g: PartialFunction[Event, JsValue] = {
+  val g: PartialFunction[QueueableEvent, JsValue] = {
     case x: ThingCreated => x.toJson(thingCreatedFormat)
     case x: AnotherThing => x.toJson(anotherThingFormat)
   }
 
   implicit val messageReader: JsonReader[Message] = Message.messageReader(f)
   implicit val messageWriter: JsonWriter[Message] = Message.messageWriter(g)
-
-  val json: String =
-    """{"eventJournalPersistenceId":"persId","eventJournalSequenceNumber":1,"eventTimestamp":100,"kind":"thing_created","messageUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329","payload":{"kind":"thing_created","thingName":"thingName","thingUUID":"9cc6e73c-3c50-4da1-926c-f674f50f3677"}}"""
-
 }

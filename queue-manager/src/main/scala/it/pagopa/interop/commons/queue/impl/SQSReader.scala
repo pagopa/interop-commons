@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import scala.concurrent.Future
-import it.pagopa.interop.commons.queue.message.Event
+import it.pagopa.interop.commons.queue.message.ProjectableEvent
 import scala.jdk.CollectionConverters._
 import software.amazon.awssdk.services.sqs.model.{Message => SQSMessage}
 import it.pagopa.interop.commons.queue.{QueueAccountInfo}
@@ -19,8 +19,8 @@ import spray.json.RootJsonFormat
 import scala.util.Try
 import spray.json._
 
-final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[String, JsValue => Event])(implicit
-  ec: ExecutionContext
+final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[String, JsValue => ProjectableEvent])(
+  implicit ec: ExecutionContext
 ) extends QueueReader {
 
   implicit val messageReader: JsonReader[Message] = Message.messageReader(f)
