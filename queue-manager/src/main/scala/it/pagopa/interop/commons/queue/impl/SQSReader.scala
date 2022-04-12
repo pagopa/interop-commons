@@ -7,13 +7,17 @@ import scala.concurrent.ExecutionContext
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import scala.concurrent.Future
+import it.pagopa.interop.commons.queue.message.Named
 import scala.jdk.CollectionConverters._
 import software.amazon.awssdk.services.sqs.model.{Message => SQSMessage}
 import it.pagopa.interop.commons.queue.{QueueAccountInfo}
-import it.pagopa.interop.commons.queue.message.{Message, JsonSerde}
+import it.pagopa.interop.commons.queue.message.Message
 import cats.syntax.all._
 import it.pagopa.interop.commons.queue.QueueReader
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
+import spray.json.RootJsonFormat
+import scala.util.Try
+import spray.json._
 
 final class SQSReader(queueAccountInfo: QueueAccountInfo)(implicit ec: ExecutionContext) extends QueueReader {
 
@@ -44,15 +48,27 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(implicit ec: Execution
     sqsClient.deleteMessage(deleteMessageRequest)
   }.void
 
-  override def receiveN[T: JsonSerde](n: Int): Future[List[Message[T]]] = for {
-    rawMessages <- rawReceiveN(n)
-    messages    <- Future.fromTry(rawMessages.map(_.body()).traverse(Message.from[T]).toTry)
-  } yield messages
+  private def from[T: Named](deser: PartialFunction[String, RootJsonFormat[T]])(s: String): Try[Message[T]] = {
+    implicit val mf = Message.jsonReader(deser)
+    Try(s.parseJson.convertTo[Message[T]])
+  }
 
-  override def handleN[T: JsonSerde, V](n: Int)(f: Message[T] => Future[V]): Future[List[V]] = for {
+  override def receiveN[T: Named](
+    n: Int
+  )(deser: PartialFunction[String, RootJsonFormat[T]]): Future[List[Message[T]]] = {
+    implicit val reader = Message.jsonReader(deser)
+    for {
+      rawMessages <- rawReceiveN(n)
+      messages    <- Future.fromTry(rawMessages.map(_.body()).traverse(from(deser)))
+    } yield messages
+  }
+
+  override def handleN[T: Named, V](
+    n: Int
+  )(deser: PartialFunction[String, RootJsonFormat[T]])(f: Message[T] => Future[V]): Future[List[V]] = for {
     rawMessages        <- rawReceiveN(n)
     messagesAndHandles <- rawMessages.traverse(message =>
-      Future.fromTry(Message.from(message.body()).toTry).map((_, message.receiptHandle()))
+      Future.fromTry(from(deser)(message.body())).map((_, message.receiptHandle()))
     )
     result             <- messagesAndHandles
       .traverseFilter { case (message, handle) =>
@@ -60,10 +76,12 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(implicit ec: Execution
       }
   } yield result
 
-  override def handle[T: JsonSerde, V](f: Message[T] => Future[V]): Future[Unit] = {
+  override def handle[T: Named, V](
+    deser: PartialFunction[String, RootJsonFormat[T]]
+  )(f: Message[T] => Future[V]): Future[Unit] = {
     // Submitting to an ExecutionContext introduces an async boundary that reset the stack,
     // that makes Future behave like it's trampolining, so this function is stack safe.
-    def loop: Future[List[V]] = handleN[T, V](10)(f).flatMap(_ => loop).recoverWith(_ => loop)
+    def loop: Future[List[V]] = handleN[T, V](10)(deser)(f).flatMap(_ => loop).recoverWith(_ => loop)
     loop.void
   }
 
