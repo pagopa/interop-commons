@@ -6,17 +6,15 @@ import spray.json.DefaultJsonProtocol._
 import scala.util.Try
 import Message._
 
-trait Named[T] { val kind: String }
-object Named   {
-  def apply[T](implicit x: Named[T]): Named[T] = x
-}
+trait Event { val kind: String }
 
-final case class Message[T: Named](
+final case class Message(
   messageUUID: UUID,
   eventJournalPersistenceId: String,
   eventJournalSequenceNumber: Long,
   eventTimestamp: Long,
-  payload: T
+  kind: String,
+  payload: Event
 )
 
 object Message {
@@ -28,40 +26,81 @@ object Message {
     override def write(uuid: UUID): JsValue = JsString(uuid.toString)
   }
 
-  def jsonWriter[T: Named](implicit x: RootJsonFormat[T]): JsonWriter[Message[T]] = new JsonWriter[Message[T]] {
-    override def write(m: Message[T]): JsValue = JsObject(
-      "messageUUID"                -> JsString(m.messageUUID.toString),
-      "eventJournalPersistenceId"  -> JsString(m.eventJournalPersistenceId),
-      "eventJournalSequenceNumber" -> JsNumber(m.eventJournalSequenceNumber),
-      "eventTimestamp"             -> JsNumber(m.eventTimestamp),
-      "kind"                       -> JsString(Named[T].kind),
-      "payload"                    -> m.payload.toJson
+  private def eventJsonReader(f: PartialFunction[String, JsValue => Event]): JsonReader[Event] = new JsonReader[Event] {
+    override def read(json: JsValue): Event = {
+      val maybeKind: Either[Throwable, String] =
+        json.asJsObject.getFields("kind").headOption match {
+          case Some(JsString(x)) => Right(x)
+          case _                 => Left(new Exception("Field kind is required"))
+        }
+
+      val maybeDeserializer: Either[Throwable, JsValue => Event] = maybeKind.flatMap(kind =>
+        if (f.isDefinedAt(kind)) Right(f(kind))
+        else Left(new Exception(s"Missing mapping for kind $kind"))
+      )
+
+      maybeDeserializer match {
+        case Left(ex) => throw ex
+        case Right(f) => f(json)
+      }
+    }
+  }
+
+  private def eventJsonWriter(f: PartialFunction[Event, JsValue]): JsonWriter[Event] = new JsonWriter[Event] {
+    override def write(obj: Event): JsValue =
+      f.applyOrElse(
+        obj,
+        (_: Event) => throw new Exception(s"Unmapped kind of event ${obj.getClass().getCanonicalName()}")
+      )
+  }
+
+  def messageWriter(f: PartialFunction[Event, JsValue]): JsonWriter[Message] = new JsonWriter[Message] {
+    implicit val eventSerializer: JsonWriter[Event] = eventJsonWriter(f)
+    override def write(obj: Message): JsValue       = JsObject(
+      "messageUUID"                -> obj.messageUUID.toJson,
+      "eventJournalPersistenceId"  -> obj.eventJournalPersistenceId.toJson,
+      "eventJournalSequenceNumber" -> obj.eventJournalSequenceNumber.toJson,
+      "eventTimestamp"             -> obj.eventTimestamp.toJson,
+      "kind"                       -> obj.kind.toJson,
+      "payload"                    -> obj.payload.toJson
     )
   }
 
-  def jsonReader[T: Named](deser: PartialFunction[String, RootJsonFormat[T]]): JsonReader[Message[T]] =
-    new JsonReader[Message[T]] {
-      override def read(json: JsValue): Message[T] = {
-        val jsObject: JsObject = json.asJsObject
-
-        implicit val eventDeserializer: RootJsonFormat[T] = jsObject.getFields("kind") match {
-          case Seq(JsString(x)) =>
-            deser.applyOrElse(x, throw new DeserializationException(s"Unable to deserialize Event $x"))
-          case _                => throw new DeserializationException("kind expected")
-        }
-
-        jsObject.getFields(
-          "messageUUID",
-          "eventJournalPersistenceId",
-          "eventJournalSequenceNumber",
-          "eventTimestamp",
-          "payload"
-        ) match {
-          case Seq(uuidS, JsString(ejpId), ejsn, time, payload: JsObject) =>
-            Message(uuidS.convertTo[UUID], ejpId, ejsn.convertTo[Long], time.convertTo[Long], payload.convertTo[T])
-          case _ => throw new DeserializationException("Unable to deserialize Message")
-        }
+  def messageReader(f: PartialFunction[String, JsValue => Event]): JsonReader[Message] = new JsonReader[Message] {
+    implicit val eventDeserializer: JsonReader[Event] = eventJsonReader(f)
+    override def read(json: JsValue): Message         = {
+      json.asJsObject.getFields(
+        "messageUUID",
+        "eventJournalPersistenceId",
+        "eventJournalSequenceNumber",
+        "eventTimestamp",
+        "kind",
+        "payload"
+      ) match {
+        case Seq(uuid, ejpi, ejsn, time, kind, payload) =>
+          Message(
+            uuid.convertTo[UUID],
+            ejpi.convertTo[String],
+            ejsn.convertTo[Long],
+            time.convertTo[Long],
+            kind.convertTo[String],
+            payload.convertTo[Event]
+          )
+        case _                                          => throw new Exception("Unable to deserialize message")
       }
     }
+  }
+
+  def messageSerde(
+    f: PartialFunction[String, JsValue => Event]
+  )(g: PartialFunction[Event, JsValue]): RootJsonFormat[Message] = {
+    implicit val eventSerializer: JsonWriter[Event]   = eventJsonWriter(g)
+    implicit val eventDeserializer: JsonReader[Event] = eventJsonReader(f)
+    implicit val eventSerde: RootJsonFormat[Event]    = new RootJsonFormat[Event] {
+      override def read(json: JsValue): Event = eventDeserializer.read(json)
+      override def write(obj: Event): JsValue = eventSerializer.write(obj)
+    }
+    jsonFormat6(Message.apply)
+  }
 
 }

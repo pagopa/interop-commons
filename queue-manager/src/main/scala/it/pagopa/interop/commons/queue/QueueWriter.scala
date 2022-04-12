@@ -3,23 +3,22 @@ package it.pagopa.interop.commons.queue
 import scala.concurrent.Future
 import it.pagopa.interop.commons.queue.QueueConfiguration
 import it.pagopa.interop.commons.queue.impl.SQSWriter
-import it.pagopa.interop.commons.queue.message.Message
-import it.pagopa.interop.commons.queue.message.Named
+import it.pagopa.interop.commons.queue.message.{Message, Event}
 import scala.concurrent.ExecutionContext
 import scala.util.{Try, Success, Failure}
 import spray.json.RootJsonFormat
+import spray.json.JsValue
 
-trait QueueWriter[T] {
-
-  def send(message: Message[T]): Future[String]
-  def sendBulk(messages: List[Message[T]]): Future[List[String]]
+trait QueueWriter {
+  def send(message: Message): Future[String]
+  def sendBulk(messages: List[Message]): Future[List[String]]
 }
 
 object QueueWriter {
 
-  def get[T: Named](implicit ec: ExecutionContext, x: RootJsonFormat[T]): Try[QueueWriter[T]] =
+  def get(f: PartialFunction[Event, JsValue])(implicit ec: ExecutionContext): Try[QueueWriter] =
     QueueConfiguration.queueImplementation match {
-      case "aws" => Success(new SQSWriter[T](QueueConfiguration.queueAccountInfo))
+      case "aws" => Success(new SQSWriter(QueueConfiguration.queueAccountInfo)(f))
       case x     => Failure(new RuntimeException(s"Unsupported queue implementation: $x"))
     }
 }

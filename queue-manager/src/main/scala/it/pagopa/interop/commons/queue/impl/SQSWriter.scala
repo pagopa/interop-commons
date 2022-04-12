@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.sqs.model.SqsException
 import java.util.UUID
 import it.pagopa.interop.commons.queue.QueueAccountInfo
 import it.pagopa.interop.commons.queue.QueueWriter
-import it.pagopa.interop.commons.queue.message.Named
+import it.pagopa.interop.commons.queue.message.Event
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -28,10 +28,11 @@ import spray.json.RootJsonFormat
 import spray.json.JsonWriter
 import spray.json._
 
-final class SQSWriter[T: Named](queueAccountInfo: QueueAccountInfo)(implicit ec: ExecutionContext, x: RootJsonFormat[T])
-    extends QueueWriter[T] {
+final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Event, JsValue])(implicit
+  ec: ExecutionContext
+) extends QueueWriter {
 
-  implicit private val w: JsonWriter[Message[T]] = Message.jsonWriter
+  implicit private val w: JsonWriter[Message] = Message.messageWriter(f)
 
   private val awsCredentials: AwsBasicCredentials =
     AwsBasicCredentials.create(queueAccountInfo.accessKeyId, queueAccountInfo.secretAccessKey)
@@ -42,7 +43,7 @@ final class SQSWriter[T: Named](queueAccountInfo: QueueAccountInfo)(implicit ec:
     .region(Region.EU_CENTRAL_1)
     .build()
 
-  override def send(message: Message[T]): Future[String] = Future {
+  override def send(message: Message): Future[String] = Future {
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
       .builder()
       .queueUrl(queueAccountInfo.queueUrl)
@@ -54,10 +55,10 @@ final class SQSWriter[T: Named](queueAccountInfo: QueueAccountInfo)(implicit ec:
     sqsClient.sendMessage(sendMsgRequest).messageId()
   }
 
-  override def sendBulk(messages: List[Message[T]]): Future[List[String]] = Future {
+  override def sendBulk(messages: List[Message]): Future[List[String]] = Future {
     assert(messages.size <= 10, "Amazon SQS supports a bulk of maximum 10 messages")
 
-    def messageAdapter(m: Message[T]): SendMessageBatchRequestEntry = SendMessageBatchRequestEntry
+    def messageAdapter(m: Message): SendMessageBatchRequestEntry = SendMessageBatchRequestEntry
       .builder()
       // it is used to track the eventual failure for this specific message
       .id(UUID.randomUUID().toString())
