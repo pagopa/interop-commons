@@ -6,7 +6,7 @@ import spray.json.DefaultJsonProtocol._
 import scala.util.Try
 import Message._
 
-trait Event { val kind: String }
+trait Event
 
 final case class Message(
   messageUUID: UUID,
@@ -26,22 +26,33 @@ object Message {
     override def write(uuid: UUID): JsValue = JsString(uuid.toString)
   }
 
-  private def eventJsonReader(f: PartialFunction[String, JsValue => Event]): JsonReader[Event] = new JsonReader[Event] {
-    override def read(json: JsValue): Event = {
-      val maybeKind: Either[Throwable, String] =
-        json.asJsObject.getFields("kind").headOption match {
-          case Some(JsString(x)) => Right(x)
-          case _                 => Left(new Exception("Field kind is required"))
-        }
+  private def eventJsonReader(f: JsValue => Event): JsonReader[Event] = f
 
-      val maybeDeserializer: Either[Throwable, JsValue => Event] = maybeKind.flatMap(kind =>
-        if (f.isDefinedAt(kind)) Right(f(kind))
-        else Left(new Exception(s"Missing mapping for kind $kind"))
-      )
+  def messageReader(f: PartialFunction[String, JsValue => Event]): JsonReader[Message] = new JsonReader[Message] {
+    override def read(json: JsValue): Message = {
+      json.asJsObject.getFields(
+        "messageUUID",
+        "eventJournalPersistenceId",
+        "eventJournalSequenceNumber",
+        "eventTimestamp",
+        "kind",
+        "payload"
+      ) match {
+        case Seq(uuid, ejpi, ejsn, time, kind, payload) =>
+          val kindString: String                      = kind.convertTo[String]
+          val deserializer: JsValue => Event          =
+            f.applyOrElse(kindString, (_: String) => throw new Exception(s"Missing mapping for kind $kindString"))
+          implicit val eventReader: JsonReader[Event] = eventJsonReader(deserializer)
 
-      maybeDeserializer match {
-        case Left(ex) => throw ex
-        case Right(f) => f(json)
+          Message(
+            uuid.convertTo[UUID],
+            ejpi.convertTo[String],
+            ejsn.convertTo[Long],
+            time.convertTo[Long],
+            kindString,
+            payload.convertTo[Event]
+          )
+        case _ => throw new Exception("Unable to deserialize message structure")
       }
     }
   }
@@ -66,34 +77,7 @@ object Message {
     )
   }
 
-  def messageReader(f: PartialFunction[String, JsValue => Event]): JsonReader[Message] = new JsonReader[Message] {
-    implicit val eventDeserializer: JsonReader[Event] = eventJsonReader(f)
-    override def read(json: JsValue): Message         = {
-      json.asJsObject.getFields(
-        "messageUUID",
-        "eventJournalPersistenceId",
-        "eventJournalSequenceNumber",
-        "eventTimestamp",
-        "kind",
-        "payload"
-      ) match {
-        case Seq(uuid, ejpi, ejsn, time, kind, payload) =>
-          Message(
-            uuid.convertTo[UUID],
-            ejpi.convertTo[String],
-            ejsn.convertTo[Long],
-            time.convertTo[Long],
-            kind.convertTo[String],
-            payload.convertTo[Event]
-          )
-        case _                                          => throw new Exception("Unable to deserialize message")
-      }
-    }
-  }
-
-  def messageSerde(
-    f: PartialFunction[String, JsValue => Event]
-  )(g: PartialFunction[Event, JsValue]): RootJsonFormat[Message] = {
+  def messageSerde(f: PartialFunction[JsValue, Event])(g: PartialFunction[Event, JsValue]): RootJsonFormat[Message] = {
     implicit val eventSerializer: JsonWriter[Event]   = eventJsonWriter(g)
     implicit val eventDeserializer: JsonReader[Event] = eventJsonReader(f)
     implicit val eventSerde: RootJsonFormat[Event]    = new RootJsonFormat[Event] {

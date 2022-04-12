@@ -13,21 +13,40 @@ import it.pagopa.interop.commons.queue.message.Event
 
 class MessageSerdeTest extends AnyWordSpecLike with Matchers {
 
+  val testMessage1      =
+    Message(
+      UUID.fromString("4129a4dd-0596-48dd-a975-dc5bd0022329"),
+      "persId",
+      1L,
+      100L,
+      "thing_created",
+      ThingCreated(UUID.fromString("4129a4dd-0596-48dd-a975-dc5bd0022329"), "thingName")
+    )
+  val testJson1: String =
+    """{"eventJournalPersistenceId":"persId","eventJournalSequenceNumber":1,"eventTimestamp":100,"kind":"thing_created","messageUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329","payload":{"thingName":"thingName","thingUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329"}}"""
+
+  val testMessage2 =
+    Message(
+      UUID.fromString("4129a4dd-0596-48dd-a975-dc5bd0022329"),
+      "persId",
+      1L,
+      100L,
+      "another_thing",
+      AnotherThing(UUID.fromString("4129a4dd-0596-48dd-a975-dc5bd0022329"), "thingName")
+    )
+
+  val testJson2: String =
+    """{"eventJournalPersistenceId":"persId","eventJournalSequenceNumber":1,"eventTimestamp":100,"kind":"another_thing","messageUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329","payload":{"thingName":"thingName","thingUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329"}}"""
+
   "Message" should {
     "be converted" in {
-      val string = Message(
-        UUID.randomUUID(),
-        "persId",
-        1L,
-        100L,
-        "thing_created",
-        ThingCreated("thing_created", UUID.randomUUID(), "thingName")
-      ).toJson.compactPrint
-      string shouldBe "ciao"
+      testMessage1.toJson.compactPrint shouldBe testJson1
+      testMessage2.toJson.compactPrint shouldBe testJson2
     }
 
     "be deconverted" in {
-      println(json.parseJson.convertTo[Message])
+      testJson1.parseJson.convertTo[Message] shouldBe testMessage1
+      testJson2.parseJson.convertTo[Message] shouldBe testMessage2
     }
   }
 
@@ -35,11 +54,11 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
 
 object MessageSerdeTest {
 
-  final case class ThingCreated(kind: String, thingUUID: UUID, thingName: String) extends Event
-  final case class AnotherThing(kind: String, thingUUID: UUID, thingName: String) extends Event
+  final case class ThingCreated(thingUUID: UUID, thingName: String) extends Event
+  final case class AnotherThing(thingUUID: UUID, thingName: String) extends Event
 
-  val thingCreatedFormat: RootJsonFormat[ThingCreated] = jsonFormat3(ThingCreated.apply)
-  val anotherThingFormat: RootJsonFormat[AnotherThing] = jsonFormat3(AnotherThing.apply)
+  val thingCreatedFormat: RootJsonFormat[ThingCreated] = jsonFormat2(ThingCreated.apply)
+  val anotherThingFormat: RootJsonFormat[AnotherThing] = jsonFormat2(AnotherThing.apply)
 
   val f: PartialFunction[String, JsValue => Event] = {
     case "thing_created" => _.convertTo[ThingCreated](thingCreatedFormat)
