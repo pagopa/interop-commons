@@ -18,4 +18,6 @@ object GenericComponentErrors {
 
   final case class ValidationRequestError(errorMessage: String) extends ComponentError("9000", errorMessage)
 
+  final case class GenericClientError(errorMessage: String) extends ComponentError("8999", errorMessage)
+
 }
