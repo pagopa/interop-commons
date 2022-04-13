@@ -70,7 +70,9 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
     sqsClient.deleteMessage(deleteMessageRequest)
   }.void
 
-  private def reEnqueue(receiptHandle: String): Future[Unit] = Future {
+  private def waitTimeout: Future[Unit] = Future(Thread.sleep(VISIBILITY_TIMEOUT_IN_SECONDS * 1000))
+
+  private def reEnqueueOrWait(receiptHandle: String): Future[Unit] = Future {
     val request: ChangeMessageVisibilityRequest = ChangeMessageVisibilityRequest
       .builder()
       .queueUrl(queueAccountInfo.queueUrl)
@@ -78,14 +80,14 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
       .visibilityTimeout(0)
       .build()
     sqsClient.changeMessageVisibility(request)
-  }.void
+  }.void.recoverWith(_ => waitTimeout)
 
   private def handleAndDeleteSingleMessageOrReEnqueue[V](
     f: Message => Future[V]
   )(m: Message, handle: String): Future[V] =
     f(m)
       .flatMap(v => deleteMessage(handle).as(v))
-      .recoverWith { case e => reEnqueue(handle) >> Future.failed(e) }
+      .recoverWith { case e => reEnqueueOrWait(handle) >> Future.failed(e) }
 
   override def handleN[V](n: Int)(f: Message => Future[V]): Future[List[V]] = for {
     messagesAndHandles <- receiveMessageAndHandleN(n)
