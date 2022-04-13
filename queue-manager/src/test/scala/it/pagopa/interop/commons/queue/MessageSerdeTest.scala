@@ -9,7 +9,7 @@ import spray.json.RootJsonFormat
 import it.pagopa.interop.commons.queue.message.Message.uuidFormat
 import it.pagopa.interop.commons.queue.message.Message
 import MessageSerdeTest._
-import it.pagopa.interop.commons.queue.message.QueueableEvent
+import it.pagopa.interop.commons.queue.message.ProjectableEvent
 
 class MessageSerdeTest extends AnyWordSpecLike with Matchers {
 
@@ -50,7 +50,7 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
       parsedMessage1 shouldBe testMessage1
       parsedMessage2 shouldBe testMessage2
 
-      val payloads: List[QueueableEvent] = List(parsedMessage1, parsedMessage2).map(_.payload)
+      val payloads: List[ProjectableEvent] = List(parsedMessage1, parsedMessage2).map(_.payload)
       payloads.collect { case x: ThingCreated => x } shouldBe parsedMessage1.payload :: Nil
       payloads.collect { case x: AnotherThing => x } shouldBe parsedMessage2.payload :: Nil
     }
@@ -60,18 +60,18 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
 
 object MessageSerdeTest {
 
-  final case class ThingCreated(thingUUID: UUID, thingName: String) extends QueueableEvent
-  final case class AnotherThing(thingUUID: UUID, thingName: String) extends QueueableEvent
+  final case class ThingCreated(thingUUID: UUID, thingName: String) extends ProjectableEvent
+  final case class AnotherThing(thingUUID: UUID, thingName: String) extends ProjectableEvent
 
   val thingCreatedFormat: RootJsonFormat[ThingCreated] = jsonFormat2(ThingCreated.apply)
   val anotherThingFormat: RootJsonFormat[AnotherThing] = jsonFormat2(AnotherThing.apply)
 
-  val f: PartialFunction[String, JsValue => QueueableEvent] = {
+  val f: PartialFunction[String, JsValue => ProjectableEvent] = {
     case "thing_created" => _.convertTo[ThingCreated](thingCreatedFormat)
     case "another_thing" => _.convertTo[AnotherThing](anotherThingFormat)
   }
 
-  val g: PartialFunction[QueueableEvent, JsValue] = {
+  val g: PartialFunction[ProjectableEvent, JsValue] = {
     case x: ThingCreated => x.toJson(thingCreatedFormat)
     case x: AnotherThing => x.toJson(anotherThingFormat)
   }

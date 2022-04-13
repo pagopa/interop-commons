@@ -18,17 +18,18 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
 import spray.json.RootJsonFormat
 import scala.util.Try
 import spray.json._
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest
 
 final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[String, JsValue => ProjectableEvent])(
   implicit ec: ExecutionContext
 ) extends QueueReader {
 
-  implicit val messageReader: JsonReader[Message] = Message.messageReader(f)
+  private val VISIBILITY_TIMEOUT_IN_SECONDS: Int          = 30
+  implicit private val messageReader: JsonReader[Message] = Message.messageReader(f)
 
   private val awsCredentials: AwsBasicCredentials =
     AwsBasicCredentials.create(queueAccountInfo.accessKeyId, queueAccountInfo.secretAccessKey)
-
-  private val sqsClient: SqsClient = SqsClient
+  private val sqsClient: SqsClient                = SqsClient
     .builder()
     .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
     .region(Region.EU_CENTRAL_1)
@@ -39,9 +40,26 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
       .builder()
       .queueUrl(queueAccountInfo.queueUrl)
       .maxNumberOfMessages(n)
+      .visibilityTimeout(VISIBILITY_TIMEOUT_IN_SECONDS)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).messages().asScala.toList
   }
+
+  private def rawReceiveBodyAndHandleN(n: Int): Future[List[(String, String)]] = for {
+    messages <- rawReceiveN(n)
+  } yield messages.map(m => (m.body(), m.receiptHandle()))
+
+  private def toMessage(s: String): Future[Message] = Future.fromTry(Try(s.parseJson.convertTo[Message]))
+
+  private def receiveMessageAndHandleN(n: Int): Future[List[(Message, String)]] = for {
+    messages <- rawReceiveN(n)
+    bodyAndHandle = messages.map(m => (m.body(), m.receiptHandle()))
+    messagesAndHandles <- bodyAndHandle.traverse { case (body, handle) => toMessage(body).map((_, handle)) }
+  } yield messagesAndHandles
+
+  override def receiveN(n: Int): Future[List[Message]] = for {
+    messagesAndHandles <- receiveMessageAndHandleN(n)
+  } yield messagesAndHandles.map(_._1)
 
   private def deleteMessage(handle: String): Future[Unit] = Future {
     val deleteMessageRequest: DeleteMessageRequest = DeleteMessageRequest
@@ -52,24 +70,28 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
     sqsClient.deleteMessage(deleteMessageRequest)
   }.void
 
-  private def from(s: String): Try[Message] = Try(s.parseJson.convertTo[Message])
+  private def reEnqueue(receiptHandle: String): Future[Unit] = Future {
+    val request: ChangeMessageVisibilityRequest = ChangeMessageVisibilityRequest
+      .builder()
+      .queueUrl(queueAccountInfo.queueUrl)
+      .receiptHandle(receiptHandle)
+      .visibilityTimeout(0)
+      .build()
+    sqsClient.changeMessageVisibility(request)
+  }.void
 
-  override def receiveN(n: Int): Future[List[Message]] = {
-    for {
-      rawMessages <- rawReceiveN(n)
-      messages    <- Future.fromTry(rawMessages.map(_.body()).traverse(from(_)))
-    } yield messages
-  }
+  private def handleAndDeleteSingleMessageOrReEnqueue[V](
+    f: Message => Future[V]
+  )(m: Message, handle: String): Future[V] =
+    f(m)
+      .flatMap(v => deleteMessage(handle).as(v))
+      .recoverWith { case e => reEnqueue(handle) >> Future.failed(e) }
 
   override def handleN[V](n: Int)(f: Message => Future[V]): Future[List[V]] = for {
-    rawMessages        <- rawReceiveN(n)
-    messagesAndHandles <- rawMessages.traverse(message =>
-      Future.fromTry(from(message.body())).map((_, message.receiptHandle()))
-    )
-    result             <- messagesAndHandles
-      .traverseFilter { case (message, handle) =>
-        (f(message) <* deleteMessage(handle)).map(_.some).recover { case _ => None }
-      }
+    messagesAndHandles <- receiveMessageAndHandleN(n)
+    result             <- messagesAndHandles.traverse { case (message, handle) =>
+      handleAndDeleteSingleMessageOrReEnqueue(f)(message, handle)
+    }
   } yield result
 
   override def handle[V](f: Message => Future[V]): Future[Unit] = {

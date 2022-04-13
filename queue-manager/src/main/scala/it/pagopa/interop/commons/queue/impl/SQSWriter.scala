@@ -47,7 +47,7 @@ final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Pro
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
       .builder()
       .queueUrl(queueAccountInfo.queueUrl)
-      .messageBody(message.toJson(w).compactPrint)
+      .messageBody(message.toJson.compactPrint)
       .messageGroupId(s"${message.eventJournalPersistenceId}_${message.eventJournalSequenceNumber}")
       .messageDeduplicationId(s"${message.eventJournalPersistenceId}_${message.eventJournalSequenceNumber}")
       .build()
