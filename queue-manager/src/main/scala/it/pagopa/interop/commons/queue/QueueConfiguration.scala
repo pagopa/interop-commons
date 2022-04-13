@@ -8,6 +8,7 @@ object QueueConfiguration {
   lazy val config: Config = ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
 
   val queueImplementation: String = config.getString("interop-commons.queue.type")
+  val visibilityTimeout: Integer  = config.getInt("interop-commons.queue.visibility-timeout-in-seconds")
 
   val queueAccountInfo: QueueAccountInfo = QueueAccountInfo(
     queueUrl = config.getString("interop-commons.queue.url"),

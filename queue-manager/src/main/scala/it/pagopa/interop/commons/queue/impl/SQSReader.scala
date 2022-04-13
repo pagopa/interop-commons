@@ -10,7 +10,7 @@ import scala.concurrent.Future
 import it.pagopa.interop.commons.queue.message.ProjectableEvent
 import scala.jdk.CollectionConverters._
 import software.amazon.awssdk.services.sqs.model.{Message => SQSMessage}
-import it.pagopa.interop.commons.queue.{QueueAccountInfo}
+import it.pagopa.interop.commons.queue.QueueAccountInfo
 import it.pagopa.interop.commons.queue.message.Message
 import cats.syntax.all._
 import it.pagopa.interop.commons.queue.QueueReader
@@ -19,17 +19,21 @@ import spray.json.RootJsonFormat
 import scala.util.Try
 import spray.json._
 import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest
+import it.pagopa.interop.commons.queue.QueueConfiguration
+import scala.util.Failure
+import scala.util.Success
 
 final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[String, JsValue => ProjectableEvent])(
   implicit ec: ExecutionContext
 ) extends QueueReader {
 
-  private val VISIBILITY_TIMEOUT_IN_SECONDS: Int          = 30
+  private val VISIBILITY_TIMEOUT_IN_SECONDS: Int          = QueueConfiguration.visibilityTimeout
   implicit private val messageReader: JsonReader[Message] = Message.messageReader(f)
 
   private val awsCredentials: AwsBasicCredentials =
     AwsBasicCredentials.create(queueAccountInfo.accessKeyId, queueAccountInfo.secretAccessKey)
-  private val sqsClient: SqsClient                = SqsClient
+
+  private val sqsClient: SqsClient = SqsClient
     .builder()
     .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
     .region(Region.EU_CENTRAL_1)
@@ -49,7 +53,10 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
     messages <- rawReceiveN(n)
   } yield messages.map(m => (m.body(), m.receiptHandle()))
 
-  private def toMessage(s: String): Future[Message] = Future.fromTry(Try(s.parseJson.convertTo[Message]))
+  private def toMessage(s: String): Future[Message] = Try(s.parseJson) match {
+    case Failure(_)    => Future.failed(new DeserializationException(s"Not a valid json: $s"))
+    case Success(json) => Future.fromTry(Try(json.convertTo[Message]))
+  }
 
   private def receiveMessageAndHandleN(n: Int): Future[List[(Message, String)]] = for {
     messages <- rawReceiveN(n)

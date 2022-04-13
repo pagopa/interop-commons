@@ -38,13 +38,13 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
   val testJson2: String =
     """{"eventJournalPersistenceId":"persId","eventJournalSequenceNumber":1,"eventTimestamp":100,"kind":"another_thing","messageUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329","payload":{"thingName":"thingName","thingUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329"}}"""
 
-  "Message" should {
-    "be converted" in {
+  "Messages" should {
+    "be serialized correctly" in {
       testMessage1.toJson.compactPrint shouldBe testJson1
       testMessage2.toJson.compactPrint shouldBe testJson2
     }
 
-    "be deconverted" in {
+    "be deserialized correctly" in {
       val parsedMessage1: Message = testJson1.parseJson.convertTo[Message]
       val parsedMessage2: Message = testJson2.parseJson.convertTo[Message]
       parsedMessage1 shouldBe testMessage1
@@ -56,10 +56,49 @@ class MessageSerdeTest extends AnyWordSpecLike with Matchers {
     }
   }
 
+  "Message deserialization" should {
+    "be idempotent" in {
+      testMessage1.toJson.compactPrint.parseJson.convertTo[Message] shouldBe testMessage1
+      testMessage1.toJson.compactPrint.parseJson.convertTo[Message] shouldBe testMessage1
+      testJson1.parseJson.convertTo[Message].toJson.compactPrint shouldBe testJson1
+      testJson2.parseJson.convertTo[Message].toJson.compactPrint shouldBe testJson2
+    }
+
+    "fail if the message doesn't adhere to structure" in {
+      val error = intercept[DeserializationException] {
+        """{"hello":"world"}""".parseJson.convertTo[Message]
+      }
+      error.getMessage() shouldBe "Unable to deserialize message structure"
+    }
+
+    "fail if the kind is not mapped" in {
+      val error = intercept[DeserializationException] {
+        """{"eventJournalPersistenceId":"persId","eventJournalSequenceNumber":1,"eventTimestamp":100,"kind":"paperino","messageUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329","payload":{"thingName":"thingName","thingUUID":"4129a4dd-0596-48dd-a975-dc5bd0022329"}}""".parseJson
+          .convertTo[Message]
+      }
+      error.getMessage() shouldBe "Missing mapping for kind paperino"
+    }
+  }
+
+  "Message serialization" should {
+    "fail if the event is not mapped" in {
+      val event: Paperino  = Paperino("quack")
+      val message: Message =
+        Message(UUID.fromString("4129a4dd-0596-48dd-a975-dc5bd0022329"), "persistId", 0L, 0L, "paperino", event)
+
+      val error = intercept[SerializationException] {
+        message.toJson
+      }
+
+      error.getMessage() shouldBe "Unmapped kind of event Paperino"
+    }
+  }
+
 }
 
 object MessageSerdeTest {
 
+  final case class Paperino(quack: String)                          extends ProjectableEvent
   final case class ThingCreated(thingUUID: UUID, thingName: String) extends ProjectableEvent
   final case class AnotherThing(thingUUID: UUID, thingName: String) extends ProjectableEvent
 

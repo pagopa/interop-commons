@@ -42,7 +42,10 @@ object Message {
           case Seq(uuid, ejpi, ejsn, time, kind, payload) =>
             val kindString: String                                 = kind.convertTo[String]
             val deserializer: JsValue => ProjectableEvent          =
-              f.applyOrElse(kindString, (_: String) => throw new Exception(s"Missing mapping for kind $kindString"))
+              f.applyOrElse(
+                kindString,
+                (_: String) => throw new DeserializationException(s"Missing mapping for kind $kindString")
+              )
             implicit val eventReader: JsonReader[ProjectableEvent] = eventJsonReader(deserializer)
 
             Message(
@@ -53,7 +56,7 @@ object Message {
               kindString,
               payload.convertTo[ProjectableEvent]
             )
-          case _ => throw new Exception("Unable to deserialize message structure")
+          case _ => throw new DeserializationException("Unable to deserialize message structure")
         }
       }
     }
@@ -63,7 +66,8 @@ object Message {
       override def write(obj: ProjectableEvent): JsValue =
         f.applyOrElse(
           obj,
-          (_: ProjectableEvent) => throw new Exception(s"Unmapped kind of event ${obj.getClass().getCanonicalName()}")
+          (_: ProjectableEvent) =>
+            throw new SerializationException(s"Unmapped kind of event ${obj.getClass().getSimpleName()}")
         )
     }
 
