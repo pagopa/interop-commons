@@ -16,9 +16,8 @@ trait QueueReader {
 
 object QueueReader {
 
-  def get(f: PartialFunction[String, JsValue => ProjectableEvent])(implicit ec: ExecutionContext): Try[QueueReader] =
-    QueueConfiguration.queueImplementation match {
-      case "aws" => Success(new SQSReader(QueueConfiguration.queueAccountInfo)(f))
-      case x     => Failure(new RuntimeException(s"Unsupported queue implementation: $x"))
-    }
+  def get(queueUrl: String, visibilityTimeoutInSeconds: Integer = 30)(
+    f: PartialFunction[String, JsValue => ProjectableEvent]
+  )(implicit ec: ExecutionContext): QueueReader =
+    new SQSReader(QueueConfiguration.queueAccountInfo, queueUrl, visibilityTimeoutInSeconds)(f)
 }

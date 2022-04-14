@@ -28,11 +28,13 @@ import spray.json.RootJsonFormat
 import spray.json.JsonWriter
 import spray.json._
 
-final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[ProjectableEvent, JsValue])(implicit
-  ec: ExecutionContext
-) extends QueueWriter {
+final class SQSWriter(queueAccountInfo: QueueAccountInfo, queueUrl: String)(
+  f: PartialFunction[ProjectableEvent, JsValue]
+)(implicit ec: ExecutionContext)
+    extends QueueWriter {
 
-  implicit private val w: JsonWriter[Message] = Message.messageWriter(f)
+  private val CONSTANT_MESSAGE_GROUP_ID: String = "message_group_all_notification"
+  implicit private val w: JsonWriter[Message]   = Message.messageWriter(f)
 
   private val awsCredentials: AwsBasicCredentials =
     AwsBasicCredentials.create(queueAccountInfo.accessKeyId, queueAccountInfo.secretAccessKey)
@@ -46,9 +48,9 @@ final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Pro
   override def send(message: Message): Future[String] = Future {
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
       .builder()
-      .queueUrl(queueAccountInfo.queueUrl)
+      .queueUrl(queueUrl)
       .messageBody(message.toJson.compactPrint)
-      .messageGroupId(s"${message.eventJournalPersistenceId}_${message.eventJournalSequenceNumber}")
+      .messageGroupId(CONSTANT_MESSAGE_GROUP_ID)
       .messageDeduplicationId(s"${message.eventJournalPersistenceId}_${message.eventJournalSequenceNumber}")
       .build()
 
@@ -56,20 +58,18 @@ final class SQSWriter(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Pro
   }
 
   override def sendBulk(messages: List[Message]): Future[List[String]] = Future {
-    assert(messages.size <= 10, "Amazon SQS supports a bulk of maximum 10 messages")
-
     def messageAdapter(m: Message): SendMessageBatchRequestEntry = SendMessageBatchRequestEntry
       .builder()
       // it is used to track the eventual failure for this specific message
       .id(UUID.randomUUID().toString())
       .messageBody(m.toJson.compactPrint)
-      .messageGroupId(s"${m.eventJournalPersistenceId}_${m.eventJournalSequenceNumber}")
+      .messageGroupId(CONSTANT_MESSAGE_GROUP_ID)
       .messageDeduplicationId(s"${m.eventJournalPersistenceId}_${m.eventJournalSequenceNumber}")
       .build()
 
     val sendMessageBatchRequest = SendMessageBatchRequest
       .builder()
-      .queueUrl(queueAccountInfo.queueUrl)
+      .queueUrl(queueUrl)
       .entries(messages.map(messageAdapter).asJavaCollection)
       .build()
 

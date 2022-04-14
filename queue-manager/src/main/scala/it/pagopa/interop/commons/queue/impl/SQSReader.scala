@@ -23,11 +23,11 @@ import it.pagopa.interop.commons.queue.QueueConfiguration
 import scala.util.Failure
 import scala.util.Success
 
-final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[String, JsValue => ProjectableEvent])(
-  implicit ec: ExecutionContext
-) extends QueueReader {
+final class SQSReader(queueAccountInfo: QueueAccountInfo, queueUrl: String, visibilityTimeout: Integer)(
+  f: PartialFunction[String, JsValue => ProjectableEvent]
+)(implicit ec: ExecutionContext)
+    extends QueueReader {
 
-  private val VISIBILITY_TIMEOUT_IN_SECONDS: Int          = QueueConfiguration.visibilityTimeout
   implicit private val messageReader: JsonReader[Message] = Message.messageReader(f)
 
   private val awsCredentials: AwsBasicCredentials =
@@ -42,9 +42,9 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
   private def rawReceiveN(n: Int): Future[List[SQSMessage]] = Future {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
-      .queueUrl(queueAccountInfo.queueUrl)
+      .queueUrl(queueUrl)
       .maxNumberOfMessages(n)
-      .visibilityTimeout(VISIBILITY_TIMEOUT_IN_SECONDS)
+      .visibilityTimeout(visibilityTimeout)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).messages().asScala.toList
   }
@@ -77,30 +77,12 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo)(f: PartialFunction[Str
     sqsClient.deleteMessage(deleteMessageRequest)
   }.void
 
-  private def waitTimeout: Future[Unit] = Future(Thread.sleep(VISIBILITY_TIMEOUT_IN_SECONDS * 1000))
-
-  private def reEnqueueOrWait(receiptHandle: String): Future[Unit] = Future {
-    val request: ChangeMessageVisibilityRequest = ChangeMessageVisibilityRequest
-      .builder()
-      .queueUrl(queueAccountInfo.queueUrl)
-      .receiptHandle(receiptHandle)
-      .visibilityTimeout(0)
-      .build()
-    sqsClient.changeMessageVisibility(request)
-  }.void.recoverWith(_ => waitTimeout)
-
-  private def handleAndDeleteSingleMessageOrReEnqueue[V](
-    f: Message => Future[V]
-  )(m: Message, handle: String): Future[V] =
-    f(m)
-      .flatMap(v => deleteMessage(handle).as(v))
-      .recoverWith { case e => reEnqueueOrWait(handle) >> Future.failed(e) }
+  private def handleMessageAndDelete[V](f: Message => Future[V])(m: Message, handle: String): Future[V] =
+    f(m).flatMap(v => deleteMessage(handle).as(v))
 
   override def handleN[V](n: Int)(f: Message => Future[V]): Future[List[V]] = for {
     messagesAndHandles <- receiveMessageAndHandleN(n)
-    result             <- messagesAndHandles.traverse { case (message, handle) =>
-      handleAndDeleteSingleMessageOrReEnqueue(f)(message, handle)
-    }
+    result <- messagesAndHandles.traverse { case (message, handle) => handleMessageAndDelete(f)(message, handle) }
   } yield result
 
   override def handle[V](f: Message => Future[V]): Future[Unit] = {

@@ -16,9 +16,7 @@ trait QueueWriter {
 
 object QueueWriter {
 
-  def get(f: PartialFunction[ProjectableEvent, JsValue])(implicit ec: ExecutionContext): Try[QueueWriter] =
-    QueueConfiguration.queueImplementation match {
-      case "aws" => Success(new SQSWriter(QueueConfiguration.queueAccountInfo)(f))
-      case x     => Failure(new RuntimeException(s"Unsupported queue implementation: $x"))
-    }
+  def get(queueUrl: String, visibilityTimeout: Integer)(f: PartialFunction[ProjectableEvent, JsValue])(implicit
+    ec: ExecutionContext
+  ): QueueWriter = new SQSWriter(QueueConfiguration.queueAccountInfo, queueUrl)(f)
 }
