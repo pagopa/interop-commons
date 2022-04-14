@@ -10,6 +10,7 @@ package object utils {
   val SUB: String                                          = "sub"
   val BEARER: String                                       = "bearer"
   val UID: String                                          = "uid"
+  val ORGANIZATION: String                                 = "organization"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
   val ADMITTABLE_HEADERS                                   = Set(CORRELATION_ID_HEADER, IP_ADDRESS)

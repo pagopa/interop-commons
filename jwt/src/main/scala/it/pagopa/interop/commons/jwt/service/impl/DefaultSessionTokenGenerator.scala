@@ -57,7 +57,7 @@ trait DefaultSessionTokenGenerator extends SessionTokenGenerator { privateKeysHo
 
     val header: JWSHeader = new JWSHeader.Builder(seed.algorithm)
       .customParam("use", "sig")
-      .`type`(JOSEObjectType.JWT)
+      .`type`(`at+jwt`)
       .keyID(seed.kid)
       .build()
 

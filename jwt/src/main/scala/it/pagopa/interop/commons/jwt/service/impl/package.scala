@@ -1,5 +1,6 @@
 package it.pagopa.interop.commons.jwt.service
 
+import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
@@ -7,6 +8,8 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import scala.jdk.CollectionConverters.SetHasAsJava
 
 package object impl {
+
+  final val `at+jwt`: JOSEObjectType = new JOSEObjectType("at+jwt")
 
   def getClaimsVerifier(
     audience: Set[String] = Set.empty,
@@ -28,4 +31,5 @@ package object impl {
     claims.foreach { case (k, v) => builder.claim(k, v) }
     builder.build()
   }
+
 }
