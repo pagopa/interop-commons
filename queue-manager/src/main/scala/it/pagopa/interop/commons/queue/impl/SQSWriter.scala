@@ -42,7 +42,7 @@ final class SQSWriter(queueAccountInfo: QueueAccountInfo, queueUrl: String)(
   private val sqsClient: SqsClient = SqsClient
     .builder()
     .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
-    .region(Region.EU_CENTRAL_1)
+    .region(queueAccountInfo.region)
     .build()
 
   override def send(message: Message): Future[String] = Future {

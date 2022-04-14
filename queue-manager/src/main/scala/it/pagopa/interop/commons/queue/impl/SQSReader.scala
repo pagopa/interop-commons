@@ -36,7 +36,7 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo, queueUrl: String, visi
   private val sqsClient: SqsClient = SqsClient
     .builder()
     .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
-    .region(Region.EU_CENTRAL_1)
+    .region(queueAccountInfo.region)
     .build()
 
   private def rawReceiveN(n: Int): Future[List[SQSMessage]] = Future {
@@ -71,7 +71,7 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo, queueUrl: String, visi
   private def deleteMessage(handle: String): Future[Unit] = Future {
     val deleteMessageRequest: DeleteMessageRequest = DeleteMessageRequest
       .builder()
-      .queueUrl(queueAccountInfo.queueUrl)
+      .queueUrl(queueUrl)
       .receiptHandle(handle)
       .build()
     sqsClient.deleteMessage(deleteMessageRequest)
