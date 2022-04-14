@@ -19,6 +19,21 @@ The abovementioned modules are released as separated jar files, that you can imp
 
 Probably each Interop component shall need at least the `utils` module, since it implements nitty common utility features.
 
+### Utility and Logging Module
+This is the HOCON configuration object for the module:
+
+```
+interop-commons {
+  isInternetFacing = true
+}
+```
+
+Where:
+
+| Variable name                  | Variable type | Notes                           |
+|--------------------------------|---------------|---------------------------------|
+| **isInternetFacing**           | Boolean       | Used to apply security policies |
+
 ### File Manager Module
 This is the HOCON configuration object for the module:
 
