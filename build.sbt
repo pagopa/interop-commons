@@ -86,5 +86,5 @@ lazy val queue = project
   .setupBuildInfo
 
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, vault, jwtModule)
+  .aggregate(utils, fileManager, mailManager, vault, jwtModule, queue)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)
