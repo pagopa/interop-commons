@@ -25,4 +25,7 @@ object Versions {
   lazy val testContainersScalaVersion = "0.40.5"
   lazy val typesafeConfigVersion      = "1.4.2"
   lazy val vaultDriverVersion         = "5.1.0"
+  lazy val awsDynamoDBVersion         = "2.17.157"
+  lazy val awsSqsVersion              = "2.17.160"
+  lazy val sprayJsonVersion           = "1.3.6"
 }

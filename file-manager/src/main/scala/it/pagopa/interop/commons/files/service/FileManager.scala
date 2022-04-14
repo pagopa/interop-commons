@@ -63,12 +63,11 @@ object FileManager {
     * @param fileManager the identifier of the specific instance
     * @return the specific instance
     */
-  def getConcreteImplementation(fileManager: String): Try[FileManager] = {
-    fileManager match {
-      case "File"           => Try { new FileManagerImpl() }
-      case "BlobStorage"    => Try { new BlobStorageManagerImpl() }
-      case "S3"             => Try { new S3ManagerImpl() }
-      case wrongManager @ _ => Failure(new RuntimeException(s"Unsupported file manager: $wrongManager"))
-    }
+  def getConcreteImplementation(fileManager: String): Try[FileManager] = fileManager match {
+    case "File"           => Try { new FileManagerImpl() }
+    case "BlobStorage"    => Try { new BlobStorageManagerImpl() }
+    case "S3"             => Try { new S3ManagerImpl() }
+    case wrongManager @ _ => Failure(new RuntimeException(s"Unsupported file manager: $wrongManager"))
   }
+
 }

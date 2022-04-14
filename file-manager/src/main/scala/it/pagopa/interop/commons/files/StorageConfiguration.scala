@@ -13,7 +13,8 @@ case class StorageAccountInfo(applicationId: String, applicationSecret: String, 
 /** Defines File manager configuration
   */
 object StorageConfiguration {
-  lazy val config: Config = ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
+  private lazy val config: Config =
+    ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
 
   /** Returns the file manager name as defined in configuration file.
     */
@@ -21,10 +22,9 @@ object StorageConfiguration {
 
   /** Returns storage account configuration data
     */
-  val storageAccountInfo: StorageAccountInfo =
-    StorageAccountInfo(
-      applicationId = config.getString("interop-commons.storage.application.id"),
-      applicationSecret = config.getString("interop-commons.storage.application.secret"),
-      endpoint = config.getString("interop-commons.storage.endpoint")
-    )
+  val storageAccountInfo: StorageAccountInfo = StorageAccountInfo(
+    applicationId = config.getString("interop-commons.storage.application.id"),
+    applicationSecret = config.getString("interop-commons.storage.application.secret"),
+    endpoint = config.getString("interop-commons.storage.endpoint")
+  )
 }
