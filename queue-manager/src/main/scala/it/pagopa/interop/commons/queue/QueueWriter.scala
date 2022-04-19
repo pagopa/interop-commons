@@ -16,7 +16,6 @@ trait QueueWriter {
 
 object QueueWriter {
 
-  def get(queueUrl: String, visibilityTimeout: Integer)(f: PartialFunction[ProjectableEvent, JsValue])(implicit
-    ec: ExecutionContext
-  ): QueueWriter = new SQSWriter(QueueConfiguration.queueAccountInfo, queueUrl)(f)
+  def get(queueUrl: String)(f: PartialFunction[ProjectableEvent, JsValue])(implicit ec: ExecutionContext): QueueWriter =
+    new SQSWriter(QueueConfiguration.queueAccountInfo, queueUrl)(f)
 }
