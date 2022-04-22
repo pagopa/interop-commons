@@ -3,6 +3,7 @@ package it.pagopa.interop.commons.jwt.model
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jwt.SignedJWT
+import it.pagopa.interop.commons.jwt.clientIdClaim
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -13,7 +14,6 @@ import scala.util.Try
   * @param id token identifier claim - <code>jit</code>
   * @param algorithm algorithm used for this token
   * @param kid key identifier
-  * @param clientId token subject claim - <code>sub</code>
   * @param issuer token issuer claim - <code>iss</code>
   * @param issuedAt token issued at claim - <code>iat</code>
   * @param nbf token not before claim - <code>nbf</code>
@@ -49,7 +49,6 @@ object TokenSeed {
     */
   def create(
     assertion: SignedJWT,
-    subject: String,
     key: JWK,
     audience: List[String],
     customClaims: Map[String, String],
@@ -66,13 +65,13 @@ object TokenSeed {
       id = UUID.randomUUID(),
       algorithm = algorithm,
       kid = kid,
-      subject = subject,
+      subject = assertion.getJWTClaimsSet.getSubject,
       issuer = tokenIssuer,
       issuedAt = iat,
       nbf = iat,
       expireAt = exp,
       audience = audience,
-      customClaims = customClaims
+      customClaims = customClaims + (clientIdClaim -> assertion.getJWTClaimsSet.getSubject)
     )
   }
 

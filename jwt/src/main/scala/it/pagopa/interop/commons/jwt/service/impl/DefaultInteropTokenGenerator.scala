@@ -4,7 +4,7 @@ import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import it.pagopa.interop.commons.jwt.model.{JWTAlgorithmType, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
-import it.pagopa.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder}
+import it.pagopa.interop.commons.jwt.{JWTConfiguration, PrivateKeysHolder, typClaim}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
@@ -20,7 +20,6 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
 
   override def generate(
     clientAssertion: String,
-    subject: String,
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
@@ -29,19 +28,18 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
     for {
       clientAssertionToken <- Try(SignedJWT.parse(clientAssertion))
       interopPrivateKey    <- getPrivateKeyByAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
-      tokenSeed <- TokenSeed.create(
+      tokenSeed            <- TokenSeed.create(
         clientAssertionToken,
-        subject,
         interopPrivateKey,
         audience,
         customClaims,
         tokenIssuer,
         validityDurationInSeconds
       )
-      interopJWT       <- jwtFromSeed(tokenSeed)
-      tokenSigner      <- getSigner(tokenSeed.algorithm, interopPrivateKey)
-      signedInteropJWT <- signToken(interopJWT, tokenSigner)
-      serializedToken  <- Try(signedInteropJWT.serialize())
+      interopJWT           <- jwtFromSeed(tokenSeed)
+      tokenSigner          <- getSigner(tokenSeed.algorithm, interopPrivateKey)
+      signedInteropJWT     <- signToken(interopJWT, tokenSigner)
+      serializedToken      <- Try(signedInteropJWT.serialize())
       _ = logger.debug("Token generated")
     } yield serializedToken
 
@@ -54,7 +52,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
   ): Try[String] =
     for {
       interopPrivateKey <- getPrivateKeyByAlgorithmType(jwtAlgorithmType)
-      tokenSeed <- TokenSeed.createInternalToken(
+      tokenSeed         <- TokenSeed.createInternalToken(
         algorithm = JWSAlgorithm.RS256,
         key = interopPrivateKey,
         subject = subject,
@@ -62,10 +60,10 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
         tokenIssuer = tokenIssuer,
         validityDurationSeconds = secondsDuration
       )
-      interopJWT       <- jwtFromSeed(tokenSeed)
-      tokenSigner      <- getSigner(tokenSeed.algorithm, interopPrivateKey)
-      signedInteropJWT <- signToken(interopJWT, tokenSigner)
-      serializedToken  <- Try(signedInteropJWT.serialize())
+      interopJWT        <- jwtFromSeed(tokenSeed)
+      tokenSigner       <- getSigner(tokenSeed.algorithm, interopPrivateKey)
+      signedInteropJWT  <- signToken(interopJWT, tokenSigner)
+      serializedToken   <- Try(signedInteropJWT.serialize())
       _ = logger.debug("Interop internal Token generated")
     } yield serializedToken
 
@@ -81,6 +79,9 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .build()
 
     val builder: JWTClaimsSet.Builder = new JWTClaimsSet.Builder()
+
+    val payload = seed.customClaims
+      .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .jwtID(seed.id.toString)
       .issuer(seed.issuer)
       .audience(seed.audience.asJava)
@@ -88,8 +89,6 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
       .issueTime(issuedAt)
       .notBeforeTime(notBeforeTime)
       .expirationTime(expirationTime)
-    val payload = seed.customClaims
-      .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .build()
 
     new SignedJWT(header, payload)

@@ -24,7 +24,7 @@ final class S3ManagerImpl extends FileManager {
   lazy val s3Client: S3Client = {
     val awsCredentials =
       AwsBasicCredentials.create(storageAccountInfo.applicationId, storageAccountInfo.applicationSecret)
-    val s3 = S3Client
+    val s3             = S3Client
       .builder()
       .region(Region.EU_CENTRAL_1) // TODO This should be configurable
       .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
@@ -40,7 +40,7 @@ final class S3ManagerImpl extends FileManager {
     Future.fromTry {
 
       Try {
-        val s3Key = createS3Key(resourceId.toString, path = path, fileName = fileParts._1.getFileName)
+        val s3Key         = createS3Key(resourceId.toString, path = path, fileName = fileParts._1.getFileName)
         logger.debug("Storing file id {} at path {}", resourceId.toString, s3Key)
         val objectRequest =
           PutObjectRequest.builder
@@ -83,7 +83,7 @@ final class S3ManagerImpl extends FileManager {
   override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
     Try {
       logger.debug("Getting file {} from container {}", filePath, containerPath)
-      val getObjectRequest: GetObjectRequest =
+      val getObjectRequest: GetObjectRequest         =
         GetObjectRequest.builder.bucket(containerPath).key(filePath).build
       val s3Object: ResponseBytes[GetObjectResponse] = s3Client.getObject(getObjectRequest, ResponseTransformer.toBytes)
       val inputStream: InputStream                   = s3Object.asInputStream()

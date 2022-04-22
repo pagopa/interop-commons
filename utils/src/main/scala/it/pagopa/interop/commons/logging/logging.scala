@@ -5,11 +5,21 @@ import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.CanLog
-import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, UID, IP_ADDRESS, SUB}
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, SUB, UID}
+
+import java.util.UUID
 
 package object logging {
   type ContextFieldsToLog = Seq[(String, String)]
+
+  private val config: Config            = ConfigFactory.load()
+  private val isInternetFacing: Boolean =
+    if (config.hasPath("interop-commons.isInternetFacing"))
+      config.getBoolean("interop-commons.isInternetFacing")
+    else
+      false
 
   @inline private def optToLog(opt: Option[String]): String = opt.getOrElse("")
 
@@ -47,22 +57,37 @@ package object logging {
     DebuggingDirectives.logRequestResult(logWithoutBody _)
   }
 
-  /** Enriches a wrapping directive with logging context attributes
+  /** Generates a wrapping directive with logging context attributes with given configurations
     *
     * @param wrappingDirective directive to be decorated
     * @return directive with contexts enriched with logging attributes
     */
-  def withLoggingAttributes(wrappingDirective: Directive1[Seq[(String, String)]]): Directive1[Seq[(String, String)]] = {
+  def withLoggingAttributesGenerator(
+    isInternetFacing: Boolean
+  ): Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] = { wrappingDirective =>
     extractClientIP.flatMap(ip => {
       val ipAddress = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
 
       optionalHeaderValueByName(CORRELATION_ID_HEADER).flatMap(correlationId => {
+        // Exclude headers for security reason if the service is internet facing
+        val actualCorrelationId =
+          if (isInternetFacing) UUID.randomUUID().toString else correlationId.getOrElse(UUID.randomUUID().toString)
         wrappingDirective.map(contexts =>
           contexts
-            .prepended((CORRELATION_ID_HEADER, correlationId.getOrElse("")))
+            .prepended((CORRELATION_ID_HEADER, actualCorrelationId))
             .prepended((IP_ADDRESS, ipAddress))
         )
       })
     })
   }
+
+  /** Enriches a wrapping directive with logging context attributes
+    *
+    * @param wrappingDirective directive to be decorated
+    * @return directive with contexts enriched with logging attributes
+    */
+  val withLoggingAttributes: Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] =
+    (wrappingDirective: Directive1[Seq[(String, String)]]) =>
+      withLoggingAttributesGenerator(isInternetFacing)(wrappingDirective)
+
 }

@@ -28,13 +28,16 @@ object Dependencies {
   }
 
   private[this] object akka {
-    lazy val namespace  = "com.typesafe.akka"
-    lazy val actorTyped = namespace           %% "akka-actor-typed"     % akkaVersion
-    lazy val http       = namespace           %% "akka-http"            % akkaHttpVersion
-    lazy val httpJson   = namespace           %% "akka-http-spray-json" % akkaHttpVersion
-    lazy val httpJson4s = "de.heikoseeberger" %% "akka-http-json4s"     % akkaHttpJson4sVersion
-    lazy val slf4j      = namespace           %% "akka-slf4j"           % akkaVersion
-    lazy val stream     = namespace           %% "akka-stream"          % akkaVersion
+    lazy val namespace     = "com.typesafe.akka"
+    lazy val actorTyped    = namespace           %% "akka-actor-typed"     % akkaVersion
+    lazy val http          = namespace           %% "akka-http"            % akkaHttpVersion
+    lazy val httpJson      = namespace           %% "akka-http-spray-json" % akkaHttpVersion
+    lazy val httpJson4s    = "de.heikoseeberger" %% "akka-http-json4s"     % akkaHttpJson4sVersion
+    lazy val slf4j         = namespace           %% "akka-slf4j"           % akkaVersion
+    lazy val stream        = namespace           %% "akka-stream"          % akkaVersion
+    lazy val httpTestkit   = namespace           %% "akka-http-testkit"    % akkaHttpVersion
+    lazy val streamTestkit = namespace           %% "akka-stream-testkit"  % akkaVersion
+
   }
 
   private[this] object azure {
@@ -42,9 +45,15 @@ object Dependencies {
     lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
   }
 
+  private[this] object spray {
+    lazy val spray = "io.spray" %% "spray-json" % sprayJsonVersion
+  }
+
   private[this] object aws {
     lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val s3           = awsNamespace % "s3" % awsSdkVersion
+    lazy val s3           = awsNamespace % "s3"       % awsSdkVersion
+    lazy val dynamodb     = awsNamespace % "dynamodb" % awsDynamoDBVersion
+    lazy val sqs          = awsNamespace % "sqs"      % awsSqsVersion
   }
 
   private[this] object courier {
@@ -108,12 +117,14 @@ object Dependencies {
   object Jars {
     lazy val akkaDependencies: Seq[ModuleID] =
       Seq(
-        akka.http       % Compile,
-        akka.httpJson   % Compile,
-        akka.httpJson4s % Compile,
-        akka.slf4j      % Compile,
-        akka.stream     % Compile,
-        akka.actorTyped % Compile
+        akka.http          % Compile,
+        akka.httpJson      % Compile,
+        akka.httpJson4s    % Compile,
+        akka.slf4j         % Compile,
+        akka.stream        % Compile,
+        akka.actorTyped    % Compile,
+        akka.httpTestkit   % Test,
+        akka.streamTestkit % Test
       )
 
     lazy val fileDependencies: Seq[ModuleID] =
@@ -129,14 +140,14 @@ object Dependencies {
         pdfcompare.lib       % Test
       )
 
-    lazy val mailDependencies: Seq[ModuleID] =
-      Seq(courier.mail % Compile, courier.testMocking % Test)
+    lazy val mailDependencies: Seq[ModuleID] = Seq(courier.mail % Compile, courier.testMocking % Test)
 
     lazy val vaultDependencies: Seq[ModuleID] =
       Seq(vault.driver % Compile, testContainers.scalatest % Test, testContainers.vault % Test)
 
-    lazy val jwtDependencies: Seq[ModuleID] =
-      Seq(nimbus.joseJwt % Compile)
+    lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
+
+    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, spray.spray % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy

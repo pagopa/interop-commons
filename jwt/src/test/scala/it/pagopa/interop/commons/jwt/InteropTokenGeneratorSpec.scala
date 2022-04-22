@@ -1,6 +1,7 @@
 package it.pagopa.interop.commons.jwt
 
 import com.nimbusds.jose.crypto.RSASSAVerifier
+import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.SignedJWT
 import it.pagopa.interop.commons.jwt.service.impl.DefaultInteropTokenGenerator
@@ -12,7 +13,7 @@ import scala.util.Success
 
 class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper {
 
-  val rsaKey               = new RSAKeyGenerator(2048).generate
+  val rsaKey: RSAKey       = new RSAKeyGenerator(2048).generate
   val publicRsaKey: String = rsaKey.toPublicJWK.toJSONString
 
   val generator = new DefaultInteropTokenGenerator with PrivateKeysHolder {
@@ -26,14 +27,12 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
 
       val issuerUUID = UUID.randomUUID().toString
       val clientUUID = UUID.randomUUID()
-      val subject    = UUID.randomUUID().toString
 
       val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
 
       val interopToken = generator
         .generate(
           clientAssertion = assertion,
-          subject = subject,
           audience = List("test"),
           customClaims = Map("testClaim" -> "hello world"),
           issuerUUID,
@@ -44,7 +43,10 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
 
       val signed = SignedJWT.parse(interopToken.get)
 
+      signed.getHeader.getType.getType shouldBe "at+jwt"
+      signed.getJWTClaimsSet.getSubject shouldBe clientUUID.toString
       signed.getJWTClaimsSet.getStringClaim("testClaim") shouldBe "hello world"
+      signed.getJWTClaimsSet.getStringClaim("client_id") shouldBe clientUUID.toString
 
       val verifier = new RSASSAVerifier(rsaKey.toRSAKey)
       signed.verify(verifier) shouldBe true

@@ -34,7 +34,7 @@ trait DefaultSessionTokenGenerator extends SessionTokenGenerator { privateKeysHo
   ): Try[String] = {
     for {
       interopPrivateKey <- getPrivateKeyByAlgorithmType(jwtAlgorithmType)
-      seed <- SessionTokenSeed.create(
+      seed              <- SessionTokenSeed.create(
         key = interopPrivateKey,
         audience = audience,
         algorithm = getAlgorithm(jwtAlgorithmType),
@@ -42,10 +42,10 @@ trait DefaultSessionTokenGenerator extends SessionTokenGenerator { privateKeysHo
         validityDurationSeconds = validityDurationInSeconds,
         claimsSet = claimsSet
       )
-      interopJWT       <- jwtFromSessionTokenSeed(seed)
-      tokenSigner      <- getSigner(seed.algorithm, interopPrivateKey)
-      signedInteropJWT <- signToken(interopJWT, tokenSigner)
-      serializedToken  <- Try(signedInteropJWT.serialize())
+      interopJWT        <- jwtFromSessionTokenSeed(seed)
+      tokenSigner       <- getSigner(seed.algorithm, interopPrivateKey)
+      signedInteropJWT  <- signToken(interopJWT, tokenSigner)
+      serializedToken   <- Try(signedInteropJWT.serialize())
       _ = logger.debug("Session Token generated")
     } yield serializedToken
   }

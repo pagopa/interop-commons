@@ -6,6 +6,7 @@ import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import it.pagopa.interop.commons.jwt.errors.{InvalidSubject, SubjectNotFound}
 import it.pagopa.interop.commons.jwt.model.{ClientAssertionChecker, ValidClientAssertionRequest}
 import it.pagopa.interop.commons.jwt.service.ClientAssertionValidator
+import it.pagopa.interop.commons.utils.PURPOSE_ID_CLAIM
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -16,8 +17,6 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  private val PURPOSE_ID: String = "purposeId"
-
   protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
   def extractJwtInfo(clientAssertionRequest: ValidClientAssertionRequest): Try[ClientAssertionChecker] =
@@ -27,7 +26,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
       clientIdOpt = clientAssertionRequest.clientId.map(_.toString)
       _           = logger.debug("Getting subject claim")
       subject   <- subjectClaim(clientIdOpt, jwt.getJWTClaimsSet)
-      purposeId <- Try(Option(jwt.getJWTClaimsSet.getStringClaim(PURPOSE_ID)))
+      purposeId <- Try(Option(jwt.getJWTClaimsSet.getStringClaim(PURPOSE_ID_CLAIM)))
       kid       <- Try(jwt.getHeader.getKeyID)
     } yield ClientAssertionChecker(jwt, kid, subject, purposeId)
 
@@ -38,7 +37,7 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
         Failure(SubjectNotFound)
 
       case Success(s) if s == clientId.getOrElse(s) => Success(s)
-      case Success(s) =>
+      case Success(s)                               =>
         logger.error(s"Subject value $s is not equal to the provided client_id $clientId")
         Failure(InvalidSubject(s))
     }

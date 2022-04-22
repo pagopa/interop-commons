@@ -12,11 +12,11 @@ import javax.mail.internet.InternetAddress
 
 package object mail {
 
-  //Mock SMTP provider
+  // Mock SMTP provider
   private[mail] class MockedSMTPProvider
       extends Provider(Provider.Type.TRANSPORT, "mocked", classOf[MockTransport].getName, "Mock", null)
 
-  //Mocks mails
+  // Mocks mails
   private[mail] object MockedMailerSession {
     val mockedSession = javax.mail.Session.getDefaultInstance(new Properties() {
       {
@@ -26,7 +26,7 @@ package object mail {
     mockedSession.setProvider(new MockedSMTPProvider)
   }
 
-  //mock SMTP server setup
+  // mock SMTP server setup
   private[mail] trait MockMailerConfiguration extends MailerInstance {
     override val mailer: Mailer          = Mailer(MockedMailerSession.mockedSession)
     override val sender: InternetAddress = new InternetAddress("mock-sender@interop.pagopa.it")

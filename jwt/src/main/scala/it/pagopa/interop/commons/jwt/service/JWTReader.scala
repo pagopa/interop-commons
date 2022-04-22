@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives.{extractUri, optionalHeaderValueByNa
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.utils.AkkaUtils.getBearer
-import it.pagopa.interop.commons.utils.{BEARER, CORRELATION_ID_HEADER, SUB, UID}
+import it.pagopa.interop.commons.utils.{BEARER, CORRELATION_ID_HEADER, ORGANIZATION_ID_CLAIM, SUB, UID}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -51,12 +51,14 @@ trait JWTReader {
     * @return contexts as sequence of pairs
     */
   def OAuth2JWTValidatorAsContexts: Directive1[Seq[(String, String)]] = {
-    def bearerAsContexts(bearer: String) =
+    def bearerAsContexts(bearer: String): Try[Seq[(String, String)]] =
       for {
-        claims <- getClaims(bearer)
-        uid    <- Try(claims.getStringClaim(UID))
-        sub    <- Try(claims.getSubject)
-      } yield Seq(BEARER -> bearer, UID -> Option(uid).getOrElse(""), SUB -> sub)
+        claims         <- getClaims(bearer)
+        uid            <- Try(claims.getStringClaim(UID))
+        sub            <- Try(claims.getSubject)
+        organizationId <- Try(claims.getStringClaim(ORGANIZATION_ID_CLAIM))
+      } yield Seq(BEARER -> bearer, UID -> Option(uid).getOrElse(""), SUB -> sub) ++
+        Option(organizationId).map(o => ORGANIZATION_ID_CLAIM -> o).toSeq
 
     authenticationDirective(bearerAsContexts)
   }
@@ -66,9 +68,7 @@ trait JWTReader {
     *
     * @return JWT claims set
     */
-  def OAuth2JWTValidatorAsClaimsSet: Directive1[JWTClaimsSet] = {
-    authenticationDirective(getClaims)
-  }
+  def OAuth2JWTValidatorAsClaimsSet: Directive1[JWTClaimsSet] = authenticationDirective(getClaims)
 
   private def authenticationDirective[T](validation: String => Try[T]): Directive1[T] = {
     extractUri.flatMap { uri =>
@@ -79,11 +79,11 @@ trait JWTReader {
             header.split(" ").toList match {
               case "Bearer" :: payload :: Nil =>
                 validation.andThen(authenticationDirective(contextInfo))(payload)
-              case _ =>
+              case _                          =>
                 logger.error(s"$contextInfo - No authentication has been provided for this call")
                 reject(MalformedHeaderRejection("Authorization", "Illegal header key."))
             }
-          case None =>
+          case None         =>
             logger.error(s"$contextInfo - No authentication has been provided for this call")
             reject(AuthenticationFailedRejection(CredentialsMissing, HttpChallenge("Bearer", None)))
         }
@@ -93,7 +93,7 @@ trait JWTReader {
 
   private def authenticationDirective[T](contextInfo: String): Try[T] => Directive1[T] = {
     case Success(result) => provide(result)
-    case Failure(_) =>
+    case Failure(_)      =>
       logger.error(s"$contextInfo - Invalid authentication provided")
       reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
   }

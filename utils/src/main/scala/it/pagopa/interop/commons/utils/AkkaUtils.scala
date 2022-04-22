@@ -36,17 +36,17 @@ trait AkkaUtils {
     override def apply(credentials: Credentials): Option[Seq[(String, String)]] = Some(Seq.empty)
   }
 
-  def getBearer(contexts: Seq[(String, String)]): Try[String] =
+  def getBearer(contexts: Seq[(String, String)]): Try[String]          =
     contexts.toMap.get(BEARER).toRight(MissingBearer).toTry
   def getFutureBearer(contexts: Seq[(String, String)]): Future[String] = getBearer(contexts).toFuture
 
-  def getUid(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(UID).toRight(MissingUserId).toTry
+  def getUid(contexts: Seq[(String, String)]): Try[String] = contexts.toMap.get(UID).toRight(MissingUserId).toTry
   def getUidFuture(contexts: Seq[(String, String)]): Future[String] = getUid(contexts).toFuture
 
   def getSub(contexts: Seq[(String, String)]): Try[String]          = contexts.toMap.get(SUB).toRight(MissingSub).toTry
   def getSubFuture(contexts: Seq[(String, String)]): Future[String] = getSub(contexts).toFuture
 
-  def getClaim(contexts: Seq[(String, String)], claimName: String): Try[String] =
+  def getClaim(contexts: Seq[(String, String)], claimName: String): Try[String]          =
     contexts.toMap.get(claimName).toRight(MissingClaim(claimName)).toTry
   def getClaimFuture(contexts: Seq[(String, String)], claimName: String): Future[String] =
     getClaim(contexts, claimName).toFuture

@@ -13,7 +13,10 @@ object GenericComponentErrors {
 
   final case object MissingSub extends ComponentError("9995", "Subject has not been passed")
 
-  final case class GenericClientError(errorMessage: String) extends ComponentError("9994", errorMessage)
+  final case class MissingHeader(headerName: String)
+      extends ComponentError("9994", s"Header $headerName not existing in this request")
+
+  final case class GenericClientError(errorMessage: String) extends ComponentError("9995", errorMessage)
 
   final case class MissingClaim(claimName: String)
       extends ComponentError("9990", s"Claim $claimName has not been passed")

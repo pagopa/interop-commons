@@ -1,5 +1,8 @@
 package it.pagopa.interop.commons
 
+import it.pagopa.interop.commons.utils.errors.ComponentError
+import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingHeader}
+
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
 
@@ -13,14 +16,16 @@ package object utils {
   val ORGANIZATION: String                                 = "organization"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
-  val ADMITTABLE_HEADERS                                   = Set(CORRELATION_ID_HEADER, IP_ADDRESS)
+  val INTEROP_PRODUCT_NAME: String                         = "interop"
+  val PURPOSE_ID_CLAIM: String                             = "purposeId"
+  val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
 
-  val INTEROP_PRODUCT_NAME: String = "interop"
-
-  /** Returns all the admittable headers that can be forwarded downstream, given the request contexts passed as argument.
-    * @param contexts HTTP request contexts
-    * @return the <code>Map</code> of all the admittable headers to be forwarded downstream
-    */
-  def admittableHeaders(contexts: Seq[(String, String)]): Map[String, String] =
-    contexts.toMap.filter(k => ADMITTABLE_HEADERS.contains(k._1))
+  def extractHeaders(contexts: Seq[(String, String)]): Either[ComponentError, (String, String, Option[String])] = {
+    val contextsMap = contexts.toMap
+    for {
+      bearerToken   <- contextsMap.get(BEARER).toRight(MissingBearer)
+      correlationId <- contextsMap.get(CORRELATION_ID_HEADER).toRight(MissingHeader(CORRELATION_ID_HEADER))
+      ip = contextsMap.get(IP_ADDRESS)
+    } yield (bearerToken, correlationId, ip)
+  }
 }

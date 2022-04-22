@@ -26,7 +26,7 @@ class SessionTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
 
     "generate a valid Session Token" in {
 
-      val uid: SerializedKey = UUID.randomUUID().toString
+      val uid: SerializedKey                           = UUID.randomUUID().toString
       val organizationClaims: util.Map[String, String] = util.Map.ofEntries(
         util.Map.entry("id", "id"),
         util.Map.entry("role", "role"),
