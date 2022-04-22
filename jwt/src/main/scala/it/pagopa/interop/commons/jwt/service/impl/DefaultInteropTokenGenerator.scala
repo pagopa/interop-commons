@@ -74,7 +74,7 @@ trait DefaultInteropTokenGenerator extends InteropTokenGenerator { privateKeysHo
 
     val header: JWSHeader = new JWSHeader.Builder(seed.algorithm)
       .customParam("use", "sig")
-      .`type`(new JOSEObjectType("at+jwt"))
+      .`type`(`at+jwt`)
       .keyID(seed.kid)
       .build()
 
