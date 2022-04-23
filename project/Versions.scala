@@ -15,7 +15,7 @@ object Versions {
   lazy val lightbendLoggingVersion    = "3.9.4"
   lazy val logbackVersion             = "1.2.11"
   lazy val mockJavaMailVersion        = "1.9"
-  lazy val nimbusVersion              = "9.21"
+  lazy val nimbusVersion              = "9.22"
   lazy val openhtmltopdfVersion       = "1.0.10"
   lazy val pdfBoxVersion              = "2.0.25"
   lazy val pdfCompareVersion          = "1.1.61"
