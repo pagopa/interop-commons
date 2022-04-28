@@ -41,7 +41,7 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
 
       interopToken shouldBe a[Success[_]]
 
-      val signed = SignedJWT.parse(interopToken.get)
+      val signed = SignedJWT.parse(interopToken.get.serialized)
 
       signed.getHeader.getType.getType shouldBe "at+jwt"
       signed.getJWTClaimsSet.getSubject shouldBe clientUUID.toString
