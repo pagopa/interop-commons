@@ -13,12 +13,11 @@ final class LoggerLayout extends LayoutBase[ILoggingEvent] {
   override def doLayout(event: ILoggingEvent): String = {
     val sbuf: StringBuffer = new StringBuffer(128)
     val time: String       = cachingDateFormatter.format(event.getTimeStamp)
-    val name: String       = buildinfo.BuildInfo.name
     val level: String      = event.getLevel.toString()
     val loggerName: String = event.getLoggerName
     val message: String    = event.getFormattedMessage()
 
-    sbuf.append(s"$time [$name] $level [$loggerName] - $message")
+    sbuf.append(s"$time $level [$loggerName] - $message")
     sbuf.append(LINE_SEPARATOR)
     sbuf.toString()
   }
