@@ -10,6 +10,7 @@ object DefaultVaultClient {
   private lazy val configuration      = VaultClientConfiguration.vaultConfig
   private lazy val vaultClient: Vault = {
     val config = new VaultConfig()
+      .engineVersion(2)
       .address(configuration.address)
       .token(configuration.token)
       .sslConfig(new SslConfig().verify(configuration.sslEnabled).build())
