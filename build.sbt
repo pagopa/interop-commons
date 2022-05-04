@@ -49,12 +49,6 @@ lazy val fileManager = project
   .dependsOn(utils)
   .setupBuildInfo
 
-lazy val jwtModule = project
-  .in(file(jwtModuleName))
-  .settings(name := "interop-commons-jwt", sharedSettings, libraryDependencies ++= Dependencies.Jars.jwtDependencies)
-  .dependsOn(utils)
-  .setupBuildInfo
-
 lazy val mailManager = project
   .in(file(mailManagerModuleName))
   .settings(
@@ -74,6 +68,12 @@ lazy val vault = project
     Test / fork := true
   )
   .dependsOn(utils)
+  .setupBuildInfo
+
+lazy val jwtModule = project
+  .in(file(jwtModuleName))
+  .settings(name := "interop-commons-jwt", sharedSettings, libraryDependencies ++= Dependencies.Jars.jwtDependencies)
+  .dependsOn(utils, vault)
   .setupBuildInfo
 
 lazy val queue = project

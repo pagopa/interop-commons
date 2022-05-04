@@ -47,6 +47,9 @@ object TypeConversions {
       val decoded: Array[Byte] = Base64.getDecoder.decode(str.getBytes(StandardCharsets.UTF_8))
       new String(decoded, StandardCharsets.UTF_8)
     }
+    def encodeBase64: Try[String]             = Try {
+      Base64.getEncoder.encodeToString(str.getBytes(StandardCharsets.UTF_8))
+    }
 
     def toBase64SHA1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
     def toBase64MD5: String  = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))

@@ -1,8 +1,6 @@
 package it.pagopa.interop.commons.jwt.model
 
 import com.nimbusds.jose.JWSAlgorithm
-import com.nimbusds.jose.jwk.JWK
-import com.nimbusds.jwt.SignedJWT
 import it.pagopa.interop.commons.jwt.clientIdClaim
 
 import java.time.temporal.ChronoUnit
@@ -38,53 +36,16 @@ final case class TokenSeed(
   */
 object TokenSeed {
 
-  /** Returns a <code>TokenSeed</code>
-    * @param assertion original client assertion JWT
-    * @param key key used for token signature
-    * @param audience <code>aud</code> claim content
-    * @param customClaims map of possible custom claims in string format
-    * @param tokenIssuer <code>iss</code> claim content
-    * @param validityDurationSeconds seconds representing this token duration
-    * @return
-    */
-  def create(
-    assertion: SignedJWT,
-    key: JWK,
-    audience: List[String],
-    customClaims: Map[String, String],
-    tokenIssuer: String,
-    validityDurationSeconds: Long
-  ): Try[TokenSeed] = {
-    for {
-      issuedAt  <- Try(Instant.now(Clock.system(ZoneId.of("UTC"))))
-      algorithm <- Try(assertion.getHeader.getAlgorithm)
-      kid       <- Try(key.computeThumbprint().toString)
-      iat       <- Try(issuedAt.toEpochMilli)
-      exp       <- Try(issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
-    } yield TokenSeed(
-      id = UUID.randomUUID(),
-      algorithm = algorithm,
-      kid = kid,
-      subject = assertion.getJWTClaimsSet.getSubject,
-      issuer = tokenIssuer,
-      issuedAt = iat,
-      nbf = iat,
-      expireAt = exp,
-      audience = audience,
-      customClaims = customClaims + (clientIdClaim -> assertion.getJWTClaimsSet.getSubject)
-    )
-  }
-
-  def createInternalToken(
+  def createInternalTokenWithKid(
     algorithm: JWSAlgorithm,
-    key: JWK,
+    kid: String,
     subject: String,
     audience: List[String],
     tokenIssuer: String,
     validityDurationSeconds: Long
   ): Try[TokenSeed] = {
     for {
-      kid <- Try { key.computeThumbprint().toString }
+      kid <- Try { kid }
       issuedAt = Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
       iat <- issuedAt.map(_.toEpochMilli)
       exp <- issuedAt.map(_.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
@@ -99,6 +60,34 @@ object TokenSeed {
       expireAt = exp,
       audience = audience,
       customClaims = Map.empty
+    )
+  }
+
+  def createWithKid(
+    algorithm: JWSAlgorithm,
+    subject: String,
+    kid: String,
+    audience: List[String],
+    customClaims: Map[String, String],
+    tokenIssuer: String,
+    validityDurationSeconds: Long
+  ): Try[TokenSeed] = {
+    for {
+      issuedAt <- Try(Instant.now(Clock.system(ZoneId.of("UTC"))))
+      // algorithm <- //Try(assertion.getHeader.getAlgorithm)
+      iat      <- Try(issuedAt.toEpochMilli)
+      exp      <- Try(issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
+    } yield TokenSeed(
+      id = UUID.randomUUID(),
+      algorithm = algorithm,
+      kid = kid,
+      subject = subject,
+      issuer = tokenIssuer,
+      issuedAt = iat,
+      nbf = iat,
+      expireAt = exp,
+      audience = audience,
+      customClaims = customClaims + (clientIdClaim -> subject) // assertion.getJWTClaimsSet.getSubject)
     )
   }
 }

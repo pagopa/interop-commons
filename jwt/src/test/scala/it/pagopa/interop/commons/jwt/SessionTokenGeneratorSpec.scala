@@ -1,26 +1,40 @@
 package it.pagopa.interop.commons.jwt
 
-import com.nimbusds.jose.crypto.RSASSAVerifier
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.SignedJWT
 import it.pagopa.interop.commons.jwt.model.RSA
 import it.pagopa.interop.commons.jwt.service.impl.DefaultSessionTokenGenerator
+import it.pagopa.interop.commons.vault.service.VaultTransitService
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.util
 import java.util.UUID
-import scala.util.Success
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class SessionTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper {
+object MockSessionVaultTransitService extends VaultTransitService {
+
+  override def encryptData(keyId: String)(data: String): Future[String] = {
+    // mock signature
+    Future.successful("QEp_8a9ePDhqD-4mp-GT0BvzQKOrC8i_SBJhlAcFiqdpoRdpTBvI8IsjJj2uSLzkqZwyUY2gnSZBPNEwQOIRlg")
+  }
+
+}
+
+class SessionTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper with ScalaFutures {
 
   val rsaKey               = new RSAKeyGenerator(2048).generate
   val publicRsaKey: String = rsaKey.toPublicJWK.toJSONString
 
-  val generator = new DefaultSessionTokenGenerator with PrivateKeysHolder {
-    val RSAPrivateKeyset = Map(rsaKey.computeThumbprint().toJSONString -> rsaKey.toJSONString)
-    val ECPrivateKeyset  = Map.empty
-  }
+  val generator = new DefaultSessionTokenGenerator(
+    MockSessionVaultTransitService,
+    new PrivateKeysKidHolder {
+      val RSAPrivateKeyset = Set(rsaKey.computeThumbprint().toJSONString)
+      val ECPrivateKeyset  = Set.empty
+    }
+  )
 
   "a SessionTokenGenerator" should {
 
@@ -45,17 +59,15 @@ class SessionTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
           validityDurationInSeconds = 4000L
         )
 
-      sessionToken shouldBe a[Success[_]]
+      val result = sessionToken.futureValue
 
-      val signed = SignedJWT.parse(sessionToken.get)
+      result shouldBe a[String]
+      val signed = SignedJWT.parse(result)
 
       signed.getJWTClaimsSet.getStringClaim("uid") shouldBe uid
       signed.getJWTClaimsSet
         .getClaim("organization")
         .asInstanceOf[util.Map[String, String]] shouldBe organizationClaims
-
-      val verifier = new RSASSAVerifier(rsaKey.toRSAKey)
-      signed.verify(verifier) shouldBe true
     }
 
   }
