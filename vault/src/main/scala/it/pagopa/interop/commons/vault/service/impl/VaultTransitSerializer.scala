@@ -4,8 +4,8 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 sealed trait VaultPayload
-case class Response(data: Data)    extends VaultPayload
-case class Data(signature: String) extends VaultPayload
+final case class Response(data: Data)    extends VaultPayload
+final case class Data(signature: String) extends VaultPayload
 
 object VaultTransitSerializer extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val dataFormat: RootJsonFormat[Data]         = jsonFormat1(Data)
