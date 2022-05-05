@@ -16,7 +16,10 @@ object GenericComponentErrors {
   final case class MissingHeader(headerName: String)
       extends ComponentError("9994", s"Header $headerName not existing in this request")
 
-  final case class GenericClientError(errorMessage: String) extends ComponentError("9995", errorMessage)
+  final case class GenericClientError(errorMessage: String) extends ComponentError("9993", errorMessage)
+
+  final case class ThirdPartyCallError(serviceName: String, errorMessage: String)
+      extends ComponentError("9992", s"Error while invoking $serviceName external service -> $errorMessage")
 
   final case class MissingClaim(claimName: String)
       extends ComponentError("9990", s"Claim $claimName has not been passed")

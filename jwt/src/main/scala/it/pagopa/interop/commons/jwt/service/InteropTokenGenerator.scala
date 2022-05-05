@@ -1,8 +1,8 @@
 package it.pagopa.interop.commons.jwt.service
 
-import it.pagopa.interop.commons.jwt.model.{JWTAlgorithmType, Token}
+import it.pagopa.interop.commons.jwt.model.Token
 
-import scala.util.Try
+import scala.concurrent.Future
 
 /** Generates JWT token for Interop consumers
   */
@@ -22,10 +22,9 @@ trait InteropTokenGenerator {
     customClaims: Map[String, String],
     tokenIssuer: String,
     validityDurationInSeconds: Long
-  ): Try[Token]
+  ): Future[Token]
 
   /** Returns an internal JWT token.
-    * @param jwtAlgorithmType - Algorithm type, either [[it.pagopa.interop.commons.jwt.model.RSA]] or [[it.pagopa.interop.commons.jwt.model.EC]]
     * @param subject token <code>sub</code>
     * @param audience token <code>aud</code>
     * @param tokenIssuer token <code>iss</code>
@@ -33,10 +32,9 @@ trait InteropTokenGenerator {
     * @return
     */
   def generateInternalToken(
-    jwtAlgorithmType: JWTAlgorithmType,
     subject: String,
     audience: List[String],
     tokenIssuer: String,
     secondsDuration: Long
-  ): Try[Token]
+  ): Future[Token]
 }

@@ -98,17 +98,19 @@ interop-commons {
     address = ${VAULT_ADDR}
     token = ${VAULT_TOKEN}
     sslEnabled = ${VAULT_SSL_ENABLED}
+    signature-route = ${VAULT_SIGNATURE_ROUTE}
     }
   }
 ```
 
 Where:
 
-| Variable name           | Variable type         | Notes                                         |
-|-------------------------|-----------------------|-----------------------------------------------|
-| **VAULT_ADDR** | String                | URL address of the Vault                      |
-| **VAULT_TOKEN**            | String                | Token for accessing the Vault                 |
-| **VAULT_SSL_ENABLED**            | Boolean, default true | Flag stating if the Vault client MUST use SSL |
+| Variable name             | Variable type         | Notes                                                   |
+|---------------------------|-----------------------|---------------------------------------------------------|
+| **VAULT_ADDR**            | String                | URL address of the Vault                                |
+| **VAULT_TOKEN**           | String                | Token for accessing the Vault                           |
+| **VAULT_SSL_ENABLED**     | Boolean, default true | Flag stating if the Vault client MUST use SSL           |
+| **VAULT_SIGNATURE_ROUTE** | String                | Relative path to the Vault endpoint used for signatures |
 
 ### JWT Module
 This is the HOCON configuration object for the module:

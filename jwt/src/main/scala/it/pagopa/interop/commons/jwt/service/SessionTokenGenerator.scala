@@ -1,9 +1,8 @@
 package it.pagopa.interop.commons.jwt.service
 
-import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.jwt.model.JWTAlgorithmType
 
-import scala.util.Try
+import scala.concurrent.Future
 
 /** Generates JWT token for Interop consumers
   */
@@ -23,6 +22,6 @@ trait SessionTokenGenerator {
     audience: Set[String],
     tokenIssuer: String,
     validityDurationInSeconds: Long
-  ): Try[String]
+  ): Future[String]
 
 }

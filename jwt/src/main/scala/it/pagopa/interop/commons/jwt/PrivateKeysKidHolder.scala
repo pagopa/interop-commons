@@ -8,28 +8,28 @@ import it.pagopa.interop.commons.jwt.model.{EC, JWTAlgorithmType, RSA}
 
 import scala.util.{Random, Try}
 
-trait PrivateKeysHolder {
+trait PrivateKeysKidHolder {
 
   /** Private keyset for RSA signatures
     */
-  val RSAPrivateKeyset: Map[KID, SerializedKey]
+  val RSAPrivateKeyset: Set[KID]
 
-  /** Private keyset for RSA signatures
+  /** Private keyset for EC signatures
     */
-  val ECPrivateKeyset: Map[KID, SerializedKey]
+  val ECPrivateKeyset: Set[KID]
 
-  private[jwt] final def getPrivateKeyByAlgorithmType(algorithmType: JWTAlgorithmType): Try[JWK] =
+  private[jwt] final def getPrivateKeyKidByAlgorithmType(algorithmType: JWTAlgorithmType): Try[String] =
     algorithmType match {
-      case RSA => getPrivateKeyByAlgorithm(JWSAlgorithm.RS256)
-      case EC  => getPrivateKeyByAlgorithm(JWSAlgorithm.ES256)
+      case RSA => getPrivateKeyKidByAlgorithm(JWSAlgorithm.RS256)
+      case EC  => getPrivateKeyKidByAlgorithm(JWSAlgorithm.ES256)
     }
 
-  /* Returns a random private key picked from the available keyset according to the specified algorithm
+  /* Returns a random private key kid picked from the available keyset according to the specified algorithm
    * @param algorithm JWS Algorithm type
    * @return JWK of the specific algorithm type
    */
-  private[jwt] final def getPrivateKeyByAlgorithm(algorithm: JWSAlgorithm): Try[JWK] = {
-    val keys: Try[Map[KID, SerializedKey]] = Try {
+  private[jwt] final def getPrivateKeyKidByAlgorithm(algorithm: JWSAlgorithm): Try[String] = {
+    val keys: Try[Set[KID]] = Try {
       algorithm match {
         case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => RSAPrivateKeyset
         case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => RSAPrivateKeyset
@@ -38,7 +38,7 @@ trait PrivateKeysHolder {
       }
     }
 
-    val randomKey: Try[(String, String)] = keys.flatMap(ks =>
+    val randomKey: Try[String] = keys.flatMap(ks =>
       Random
         .shuffle(ks)
         .take(1)
@@ -47,9 +47,7 @@ trait PrivateKeysHolder {
         .toTry
     )
 
-    randomKey.flatMap { case (k, v) =>
-      Try { JWK.parse(v) }
-    }
+    randomKey
   }
 
   /* Returns a <code>JWSSigner</code> for the specified algorithm and key

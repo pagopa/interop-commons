@@ -1,19 +1,25 @@
 package it.pagopa.interop.commons.jwt.service.impl
 
-import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner}
-import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.PrivateKeysHolder
+import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
+import com.nimbusds.jwt.JWTClaimsSet
+import it.pagopa.interop.commons.jwt.PrivateKeysKidHolder
 import it.pagopa.interop.commons.jwt.model.{EC, JWTAlgorithmType, RSA, SessionTokenSeed}
 import it.pagopa.interop.commons.jwt.service.SessionTokenGenerator
+import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
+import it.pagopa.interop.commons.vault.service.VaultTransitService
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
+import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.SeqHasAsJava
+import scala.language.postfixOps
 import scala.util.Try
 
 /** Default implementation for the generation of consumer Interop tokens
   */
-trait DefaultSessionTokenGenerator extends SessionTokenGenerator { privateKeysHolder: PrivateKeysHolder =>
+class DefaultSessionTokenGenerator(val vaultTransitService: VaultTransitService, val kidHolder: PrivateKeysKidHolder)(
+  implicit ec: ExecutionContext
+) extends SessionTokenGenerator {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   /** Generates Interop token
@@ -31,26 +37,28 @@ trait DefaultSessionTokenGenerator extends SessionTokenGenerator { privateKeysHo
     audience: Set[String],
     tokenIssuer: String,
     validityDurationInSeconds: Long
-  ): Try[String] = {
+  ): Future[String] = {
     for {
-      interopPrivateKey <- getPrivateKeyByAlgorithmType(jwtAlgorithmType)
-      seed              <- SessionTokenSeed.create(
-        key = interopPrivateKey,
-        audience = audience,
-        algorithm = getAlgorithm(jwtAlgorithmType),
-        tokenIssuer = tokenIssuer,
-        validityDurationSeconds = validityDurationInSeconds,
-        claimsSet = claimsSet
-      )
-      interopJWT        <- jwtFromSessionTokenSeed(seed)
-      tokenSigner       <- getSigner(seed.algorithm, interopPrivateKey)
-      signedInteropJWT  <- signToken(interopJWT, tokenSigner)
-      serializedToken   <- Try(signedInteropJWT.serialize())
-      _ = logger.debug("Session Token generated")
-    } yield serializedToken
+      interopPrivateKeyKid <- kidHolder.getPrivateKeyKidByAlgorithmType(jwtAlgorithmType).toFuture
+      seed                 <- SessionTokenSeed
+        .createWithKid(
+          kid = interopPrivateKeyKid,
+          audience = audience,
+          algorithm = getAlgorithm(jwtAlgorithmType),
+          tokenIssuer = tokenIssuer,
+          validityDurationSeconds = validityDurationInSeconds,
+          claimsSet = claimsSet
+        )
+        .toFuture
+      interopJWT           <- serializedJWTFromSessionTokenSeed(seed).toFuture
+      encodedJWT           <- interopJWT.encodeBase64.toFuture
+      signature            <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)
+      signedInteropJWT = s"$interopJWT.$signature"
+      _                = logger.debug("Session Token generated")
+    } yield signedInteropJWT
   }
 
-  private def jwtFromSessionTokenSeed(seed: SessionTokenSeed): Try[SignedJWT] = Try {
+  private def serializedJWTFromSessionTokenSeed(seed: SessionTokenSeed): Try[String] = Try {
     val issuedAt: Date       = new Date(seed.issuedAt)
     val notBeforeTime: Date  = new Date(seed.notBefore)
     val expirationTime: Date = new Date(seed.expireAt)
@@ -73,12 +81,7 @@ trait DefaultSessionTokenGenerator extends SessionTokenGenerator { privateKeysHo
       .foldLeft(builder)((jwtBuilder, k) => jwtBuilder.claim(k._1, k._2))
       .build()
 
-    new SignedJWT(header, payload)
-  }
-
-  private def signToken(jwt: SignedJWT, signer: JWSSigner): Try[SignedJWT] = Try {
-    val _ = jwt.sign(signer)
-    jwt
+    s"${header.toBase64URL}.${payload.toPayload.toBase64URL}"
   }
 
   private def getAlgorithm(algorithmType: JWTAlgorithmType): JWSAlgorithm = algorithmType match {
