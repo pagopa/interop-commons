@@ -1,33 +1,27 @@
 package it.pagopa.interop.commons.logging
 
-import ch.qos.logback.classic.PatternLayout
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.CoreConstants
+import ch.qos.logback.classic.spi.{ILoggingEvent, IThrowableProxy, ThrowableProxyUtil}
+import ch.qos.logback.core.CoreConstants.LINE_SEPARATOR
+import ch.qos.logback.core.LayoutBase
 import ch.qos.logback.core.util.CachingDateFormatter
+import ch.qos.logback.classic.Level
 
-/** Defines the Logback Pattern Layout for Interop
-  */
-final class LoggerLayout extends PatternLayout {
+final class LoggerLayout extends LayoutBase[ILoggingEvent] {
 
   val cachingDateFormatter = new CachingDateFormatter("yyyy-MM-dd HH:mm:ss.SSS")
-  final val EMPTY_SPACE    = " "
 
   override def doLayout(event: ILoggingEvent): String = {
-    val sbuf = new StringBuffer(128)
-    sbuf.append(cachingDateFormatter.format(event.getTimeStamp))
-    sbuf.append(EMPTY_SPACE)
-    sbuf.append(withinBrackets(buildinfo.BuildInfo.name))
-    sbuf.append(EMPTY_SPACE)
-    sbuf.append(event.getLevel)
-    sbuf.append(EMPTY_SPACE)
-    sbuf.append(withinBrackets(event.getThreadName))
-    sbuf.append(EMPTY_SPACE)
-    sbuf.append(withinBrackets(event.getLoggerName))
-    sbuf.append(" - ")
-    sbuf.append(event.getFormattedMessage())
-    sbuf.append(CoreConstants.LINE_SEPARATOR)
+    val sbuf: StringBuffer                      = new StringBuffer(128)
+    val time: String                            = cachingDateFormatter.format(event.getTimeStamp)
+    val level: String                           = event.getLevel.toString()
+    val loggerName: String                      = event.getLoggerName
+    val message: String                         = event.getFormattedMessage()
+    val throwableProxy: Option[IThrowableProxy] = Option(event.getThrowableProxy())
+
+    sbuf.append(s"$time $level [$loggerName] - $message")
+    sbuf.append(LINE_SEPARATOR)
+    throwableProxy.foreach(x => sbuf.append(ThrowableProxyUtil.asString(x)))
     sbuf.toString()
   }
 
-  private def withinBrackets(str: String) = s"[$str]"
 }
