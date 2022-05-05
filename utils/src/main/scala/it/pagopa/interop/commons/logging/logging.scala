@@ -88,17 +88,11 @@ package object logging {
     (wrappingDirective: Directive1[Seq[(String, String)]]) =>
       withLoggingAttributesGenerator(isInternetFacing)(wrappingDirective)
 
-  def renderBuildInfo(buildInfo: BuildInfo.type): String = List(
-    ("name: ", buildInfo.name.some),
-    ("version: ", buildInfo.version.some),
-    ("interfaceVersion: ", buildInfo.interfaceVersion.some),
-    ("currentBranch: ", buildInfo.currentBranch),
-    ("ciBuildNumber: ", buildInfo.ciBuildNumber),
-    ("commitSha: ", buildInfo.commitSha),
-    ("builtAtString: ", buildInfo.builtAtString.some),
-    ("builtAtMillis: ", buildInfo.builtAtMillis.toString.some),
-    ("scalaVersion: ", buildInfo.scalaVersion.some),
-    ("sbtVersion: ", buildInfo.sbtVersion.some)
-  ).collect { case (k, Some(v)) => s"$k$v" }.mkString("[Build Info] ", ", ", "")
+  def renderBuildInfo(buildInfo: BuildInfo.type): String = buildInfo.toMap
+    .collect {
+      case (k, v: Option[_]) if v.isDefined => s"$k: ${v.get}"
+      case (k, v)                           => s"$k: $v"
+    }
+    .mkString("[Build Info] ", ", ", "")
 
 }
