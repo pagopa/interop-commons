@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import it.pagopa.interop.commons.utils.TypeConversions.OptionOps
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyCallError
 import it.pagopa.interop.commons.vault.VaultConfig
 import it.pagopa.interop.commons.vault.service.VaultTransitService
@@ -43,7 +44,12 @@ class VaultTransitServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSy
           entity.discardBytes()
           Future.failed(ThirdPartyCallError("Vault", s"service returned ${statusCode.intValue()}"))
       }
-      .map(_.data.signature.split(":").last)
+      .flatMap(
+        _.data.signature
+          .split(":")
+          .lastOption
+          .toFuture(ThirdPartyCallError("Vault", "service returned not valid signature"))
+      )
   }
 
 }

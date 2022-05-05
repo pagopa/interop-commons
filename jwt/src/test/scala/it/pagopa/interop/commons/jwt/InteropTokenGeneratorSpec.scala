@@ -12,6 +12,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import com.nimbusds.jwt.SignedJWT
 
 object MockVaultTransitService extends VaultTransitService {
 
@@ -45,10 +46,23 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
       val assertion = createMockJWT(ecKey, issuerUUID, clientUUID.toString, List("test"), "EC")
 
       val interopToken = generator
-        .generate(clientAssertion = assertion, audience = List("pippo"), customClaims = Map.empty, issuerUUID, 3600L)
+        .generate(
+          clientAssertion = assertion,
+          audience = List("test"),
+          customClaims = Map("testClaim" -> "hello world"),
+          issuerUUID,
+          3600L
+        )
 
       val signed: Token = interopToken.futureValue
       signed shouldBe a[Token]
+
+      val signedJWT = SignedJWT.parse(signed.serialized)
+
+      signedJWT.getHeader.getType.getType shouldBe "at+jwt"
+      signedJWT.getJWTClaimsSet.getSubject shouldBe clientUUID.toString
+      signedJWT.getJWTClaimsSet.getStringClaim("testClaim") shouldBe "hello world"
+      signedJWT.getJWTClaimsSet.getStringClaim("client_id") shouldBe clientUUID.toString
     }
 
   }

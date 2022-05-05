@@ -50,7 +50,7 @@ class DefaultSessionTokenGenerator(val vaultTransitService: VaultTransitService,
           claimsSet = claimsSet
         )
         .toFuture
-      interopJWT           <- jwtFromSessionTokenSeed(seed).toFuture
+      interopJWT           <- serializedJWTFromSessionTokenSeed(seed).toFuture
       encodedJWT           <- interopJWT.encodeBase64.toFuture
       signature            <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)
       signedInteropJWT = s"$interopJWT.$signature"
@@ -58,7 +58,7 @@ class DefaultSessionTokenGenerator(val vaultTransitService: VaultTransitService,
     } yield signedInteropJWT
   }
 
-  private def jwtFromSessionTokenSeed(seed: SessionTokenSeed): Try[String] = Try {
+  private def serializedJWTFromSessionTokenSeed(seed: SessionTokenSeed): Try[String] = Try {
     val issuedAt: Date       = new Date(seed.issuedAt)
     val notBeforeTime: Date  = new Date(seed.notBefore)
     val expirationTime: Date = new Date(seed.expireAt)

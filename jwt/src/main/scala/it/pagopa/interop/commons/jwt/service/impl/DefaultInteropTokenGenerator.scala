@@ -33,7 +33,7 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
       interopPrivateKeyKid <- kidHolder
         .getPrivateKeyKidByAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
         .toFuture
-      tokenSeed            <- TokenSeed
+      tokenSeed = TokenSeed
         .createWithKid(
           clientAssertionToken.getHeader.getAlgorithm,
           clientAssertionToken.getJWTClaimsSet.getSubject,
@@ -43,8 +43,7 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
           tokenIssuer,
           validityDurationInSeconds
         )
-        .toFuture
-      interopJWT           <- jwtFromSeed(tokenSeed).toFuture
+      interopJWT <- jwtFromSeed(tokenSeed).toFuture
       serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
       encodedJWT <- serializedToken.encodeBase64.toFuture
       signature  <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)
@@ -66,7 +65,7 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
   ): Future[Token] =
     for {
       interopPrivateKeyKid <- kidHolder.getPrivateKeyKidByAlgorithmType(EC).toFuture
-      tokenSeed            <- TokenSeed
+      tokenSeed = TokenSeed
         .createInternalTokenWithKid(
           algorithm = JWSAlgorithm.ES256,
           kid = interopPrivateKeyKid,
@@ -75,8 +74,7 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
           tokenIssuer = tokenIssuer,
           validityDurationSeconds = secondsDuration
         )
-        .toFuture
-      interopJWT           <- jwtFromSeed(tokenSeed).toFuture
+      interopJWT <- jwtFromSeed(tokenSeed).toFuture
       serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
       encodedJWT <- serializedToken.encodeBase64.toFuture
       signature  <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)

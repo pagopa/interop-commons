@@ -6,7 +6,6 @@ import it.pagopa.interop.commons.jwt.clientIdClaim
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import java.util.UUID
-import scala.util.Try
 
 /** Data model for JWT tokens
   * @param id token identifier claim - <code>jit</code>
@@ -43,21 +42,17 @@ object TokenSeed {
     audience: List[String],
     tokenIssuer: String,
     validityDurationSeconds: Long
-  ): Try[TokenSeed] = {
-    for {
-      kid <- Try { kid }
-      issuedAt = Try { Instant.now(Clock.system(ZoneId.of("UTC"))) }
-      iat <- issuedAt.map(_.toEpochMilli)
-      exp <- issuedAt.map(_.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
-    } yield TokenSeed(
+  ): TokenSeed = {
+    val issuedAt = Instant.now(Clock.system(ZoneId.of("UTC")))
+    TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,
       kid = kid,
       subject = subject,
       issuer = tokenIssuer,
-      issuedAt = iat,
-      nbf = iat,
-      expireAt = exp,
+      issuedAt = issuedAt.toEpochMilli,
+      nbf = issuedAt.toEpochMilli,
+      expireAt = issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli,
       audience = audience,
       customClaims = Map.empty
     )
@@ -71,21 +66,17 @@ object TokenSeed {
     customClaims: Map[String, String],
     tokenIssuer: String,
     validityDurationSeconds: Long
-  ): Try[TokenSeed] = {
-    for {
-      issuedAt <- Try(Instant.now(Clock.system(ZoneId.of("UTC"))))
-      // algorithm <- //Try(assertion.getHeader.getAlgorithm)
-      iat      <- Try(issuedAt.toEpochMilli)
-      exp      <- Try(issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli)
-    } yield TokenSeed(
+  ): TokenSeed = {
+    val issuedAt = Instant.now(Clock.system(ZoneId.of("UTC")))
+    TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,
       kid = kid,
       subject = subject,
       issuer = tokenIssuer,
-      issuedAt = iat,
-      nbf = iat,
-      expireAt = exp,
+      issuedAt = issuedAt.toEpochMilli,
+      nbf = issuedAt.toEpochMilli,
+      expireAt = issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli,
       audience = audience,
       customClaims = customClaims + (clientIdClaim -> subject) // assertion.getJWTClaimsSet.getSubject)
     )
