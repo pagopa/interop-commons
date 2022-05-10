@@ -39,6 +39,20 @@ final case class SQSSimpleHandler(queueAccountInfo: QueueAccountInfo, queueUrl: 
   }
 
   /**
+    * Deletes the SQS message given its receiptHandle
+    * @param receiptHandle
+    * @return
+    */
+  def deleteMessage(receiptHandle: String): Future[Unit] = Future {
+    val deleteMessageRequest: DeleteMessageRequest = DeleteMessageRequest
+      .builder()
+      .queueUrl(queueUrl)
+      .receiptHandle(receiptHandle)
+      .build()
+    sqsClient.deleteMessage(deleteMessageRequest)
+  }.void
+
+  /**
     * Processes a maximum number of messages with a defined visibility timeout and process each of them 
     * with the <code>fn</code> function.
     *
@@ -52,14 +66,14 @@ final case class SQSSimpleHandler(queueAccountInfo: QueueAccountInfo, queueUrl: 
     * @tparam T
     * type representing the domain model payload
     * @return
-    * sequence of processed messages
+    * sequence of processed messages with corresponding receipt handle
     */
   def processMessages[T, V](maxNumberOfMessages: Int, visibilityTimeout: Int)(
     fn: T => Future[V]
-  )(implicit jsonReader: JsonReader[T]): Future[List[V]] = for {
+  )(implicit jsonReader: JsonReader[T]): Future[List[SQSDequeuedMessage[V]]] = for {
     messagesAndReceiptHandles <- deserializeMessages(maxNumberOfMessages, visibilityTimeout)
     result                    <- messagesAndReceiptHandles.traverse { case (message, handle) =>
-      handleMessageAndDelete(fn)(message, handle)
+      handleMessage(fn)(message, handle)
     }
   } yield result
 
@@ -86,17 +100,8 @@ final case class SQSSimpleHandler(queueAccountInfo: QueueAccountInfo, queueUrl: 
     sqsClient.receiveMessage(receiveMessageRequest).messages().asScala.toList
   }
 
-  private def deleteMessage(handle: String): Future[Unit] = Future {
-    val deleteMessageRequest: DeleteMessageRequest = DeleteMessageRequest
-      .builder()
-      .queueUrl(queueUrl)
-      .receiptHandle(handle)
-      .build()
-    sqsClient.deleteMessage(deleteMessageRequest)
-  }.void
-
-  private def handleMessageAndDelete[T, V](
+  private def handleMessage[T, V](
     processMessageBody: T => Future[V]
-  )(message: T, receiptHandle: String): Future[V] =
-    processMessageBody(message).flatMap(v => deleteMessage(receiptHandle).as(v))
+  )(message: T, receiptHandle: String): Future[SQSDequeuedMessage[V]] =
+    processMessageBody(message).map(v => SQSDequeuedMessage(v, receiptHandle))
 }
