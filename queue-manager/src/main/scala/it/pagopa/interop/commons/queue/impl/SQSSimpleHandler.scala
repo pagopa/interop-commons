@@ -40,7 +40,7 @@ final case class SQSSimpleHandler(queueAccountInfo: QueueAccountInfo, queueUrl: 
 
   /**
     * Processes a maximum number of messages with a defined visibility timeout and process each of them 
-    * with the <code>processMessage</code> function.
+    * with the <code>fn</code> function.
     *
     * @param maxNumberOfMessages
     * maximum number of messages processed
