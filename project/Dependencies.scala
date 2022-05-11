@@ -52,7 +52,6 @@ object Dependencies {
   private[this] object aws {
     lazy val awsNamespace = "software.amazon.awssdk"
     lazy val s3           = awsNamespace % "s3"       % awsSdkVersion
-    lazy val dynamodb     = awsNamespace % "dynamodb" % awsDynamoDBVersion
     lazy val sqs          = awsNamespace % "sqs"      % awsSqsVersion
   }
 

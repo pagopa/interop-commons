@@ -1,13 +1,10 @@
 package it.pagopa.interop.commons.files.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.interop.commons.files.StorageConfiguration.storageAccountInfo
 import it.pagopa.interop.commons.files.service.{FileManager, StorageFilePath}
 import org.slf4j.{Logger, LoggerFactory}
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.sync.{RequestBody, ResponseTransformer}
-import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model._
 import software.amazon.awssdk.services.s3.{S3Client, S3Configuration}
 
@@ -21,17 +18,11 @@ final class S3ManagerImpl extends FileManager {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  lazy val s3Client: S3Client = {
-    val awsCredentials =
-      AwsBasicCredentials.create(storageAccountInfo.applicationId, storageAccountInfo.applicationSecret)
-    val s3             = S3Client
+  lazy val s3Client: S3Client =
+    S3Client
       .builder()
-      .region(Region.EU_CENTRAL_1) // TODO This should be configurable
-      .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
       .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
       .build()
-    s3
-  }
 
   override def store(
     containerPath: String,
