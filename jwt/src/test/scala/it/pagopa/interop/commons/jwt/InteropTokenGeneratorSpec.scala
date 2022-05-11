@@ -16,7 +16,7 @@ import com.nimbusds.jwt.SignedJWT
 
 object MockVaultTransitService extends VaultTransitService {
 
-  override def encryptData(keyId: String)(data: String): Future[String] = {
+  override def encryptData(keyId: String, signatureAlgorithm: Option[String])(data: String): Future[String] = {
     // mock signature
     Future.successful("QEp_8a9ePDhqD-4mp-GT0BvzQKOrC8i_SBJhlAcFiqdpoRdpTBvI8IsjJj2uSLzkqZwyUY2gnSZBPNEwQOIRlg")
   }
