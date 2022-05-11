@@ -46,7 +46,8 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
       serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
       encodedJWT <- serializedToken.encodeBase64.toFuture
-      signature  <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)
+      signatureAlgorithm = kidHolder.getPrivateKeyKidSignatureAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
+      signature <- vaultTransitService.encryptData(interopPrivateKeyKid, signatureAlgorithm)(encodedJWT)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Token generated")
     } yield Token(
@@ -77,7 +78,7 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
       serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
       encodedJWT <- serializedToken.encodeBase64.toFuture
-      signature  <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)
+      signature  <- vaultTransitService.encryptData(interopPrivateKeyKid, EC.signatureAlgorithm)(encodedJWT)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Interop internal Token generated")
     } yield Token(
