@@ -21,11 +21,11 @@ class VaultTransitServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSy
   override def encryptData(keyId: String, signatureAlgorithm: Option[String] = None)(data: String): Future[String] = {
     implicit val executionContext: ExecutionContextExecutor = as.getDispatcher
 
-    val signature = signatureAlgorithm.map(s => s"""signature_algorithm: "$s",""").getOrElse("")
+    val signature = signatureAlgorithm.map(s => s"""signature_algorithm": "$s",""").getOrElse("")
 
     val payload = s"""{
                      |  "input": "$data",
-                     |  $signature
+                     |  "$signature
                      |  "marshaling_algorithm": "jws"
                      |}""".stripMargin
 
