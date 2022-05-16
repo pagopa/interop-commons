@@ -24,6 +24,14 @@ trait PrivateKeysKidHolder {
       case EC  => getPrivateKeyKidByAlgorithm(JWSAlgorithm.ES256)
     }
 
+  private[jwt] final def getPrivateKeyKidSignatureAlgorithm(algorithm: JWSAlgorithm): Option[String] =
+    algorithm match {
+      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => RSA.signatureAlgorithm
+      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => RSA.signatureAlgorithm
+      case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => EC.signatureAlgorithm
+      case JWSAlgorithm.EdDSA                                                                 => EC.signatureAlgorithm
+    }
+
   /* Returns a random private key kid picked from the available keyset according to the specified algorithm
    * @param algorithm JWS Algorithm type
    * @return JWK of the specific algorithm type

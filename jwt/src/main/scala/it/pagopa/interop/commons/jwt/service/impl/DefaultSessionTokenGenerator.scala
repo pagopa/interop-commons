@@ -52,7 +52,9 @@ class DefaultSessionTokenGenerator(val vaultTransitService: VaultTransitService,
         .toFuture
       interopJWT           <- serializedJWTFromSessionTokenSeed(seed).toFuture
       encodedJWT           <- interopJWT.encodeBase64.toFuture
-      signature            <- vaultTransitService.encryptData(interopPrivateKeyKid)(encodedJWT)
+      signature <- vaultTransitService.encryptData(interopPrivateKeyKid, jwtAlgorithmType.signatureAlgorithm)(
+        encodedJWT
+      )
       signedInteropJWT = s"$interopJWT.$signature"
       _                = logger.debug("Session Token generated")
     } yield signedInteropJWT

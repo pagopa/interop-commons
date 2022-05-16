@@ -18,11 +18,14 @@ class VaultTransitServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSy
   private[this] def vaultHeaders: Seq[HttpHeader] =
     Seq(headers.RawHeader("X-Vault-Token", vaultConfig.token))
 
-  override def encryptData(keyId: String)(data: String): Future[String] = {
+  override def encryptData(keyId: String, signatureAlgorithm: Option[String] = None)(data: String): Future[String] = {
     implicit val executionContext: ExecutionContextExecutor = as.getDispatcher
+
+    val signature = signatureAlgorithm.map(s => s"""signature_algorithm: "$s",""").getOrElse("")
 
     val payload = s"""{
                      |  "input": "$data",
+                     |  $signature
                      |  "marshaling_algorithm": "jws"
                      |}""".stripMargin
 
