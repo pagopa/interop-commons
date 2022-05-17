@@ -1,10 +1,11 @@
 package it.pagopa.interop.commons.jwt
 
-import com.nimbusds.jose.jwk.JWKSet
+import cats.implicits.toTraverseOps
+import com.nimbusds.jose.jwk.{JWK, JWKSet}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.net.URL
-import scala.jdk.CollectionConverters.IterableHasAsScala
+import scala.jdk.CollectionConverters.{IterableHasAsScala, SeqHasAsJava, SetHasAsJava}
 import scala.util.Try
 
 /** Models an entity for loading public keys from a remote well known endpoint
@@ -13,7 +14,7 @@ import scala.util.Try
   * @param readTimeout The URL read timeout, in milliseconds. If zero no (infinite) timeout.
   * @param sizeLimit The read size limit, in bytes. If zero no limit.
   */
-final case class JWTWellKnownReader(url: String, connectTimeout: Int, readTimeout: Int, sizeLimit: Int) {
+final case class JWTWellKnownReader(urls: List[String], connectTimeout: Int, readTimeout: Int, sizeLimit: Int) {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -22,12 +23,20 @@ final case class JWTWellKnownReader(url: String, connectTimeout: Int, readTimeou
     */
   def loadKeyset(): Try[Map[KID, SerializedKey]] = {
     logger.debug("Getting key set from well-known url...")
-    for {
-      wellKnownURL <- Try { new URL(url) }
-      keyset       <- Try { JWKSet.load(wellKnownURL, connectTimeout, readTimeout, sizeLimit) }
-      _              = logger.debug("Public KeySet loaded")
-      serializedKeys = keyset.getKeys.asScala.toList.map(f => (f.getKeyID, f.toJSONString)).toMap
-      _              = logger.debug("Public KeySet serialized")
-    } yield serializedKeys
+    urls.traverse(getKeySet).map { keySets =>
+      val keys: List[JWK]                                   = keySets.foldLeft(List.empty[JWK])((acc, b) => b ++ acc)
+      logger.debug("Public KeySet loaded")
+      val serializedKeys: Map[SerializedKey, SerializedKey] = keys.map(f => (f.getKeyID, f.toJSONString)).toMap
+      logger.debug("Public KeySet serialized")
+      serializedKeys
+    }
+
   }
+
+  private def getKeySet(url: String): Try[List[JWK]] = Try {
+    val wellKnownURL = new URL(url)
+    val jwkSet       = JWKSet.load(wellKnownURL, connectTimeout, readTimeout, sizeLimit)
+    jwkSet.getKeys.asScala.toList
+  }
+
 }
