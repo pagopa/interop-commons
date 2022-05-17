@@ -119,7 +119,7 @@ This is the HOCON configuration object for the module:
 interop-commons {
   jwt {
     public-keys {
-      url = ${WELL_KNOWN_URL}
+      urls = ${WELL_KNOWN_URLS}
       size-limit = ${SIZE_LIMIT}
       connection-timeout = ${CONNECTION_TIMEOUT}
       read-timeout = ${READ_TIMEOUT}
