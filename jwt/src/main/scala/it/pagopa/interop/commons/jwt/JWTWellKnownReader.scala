@@ -23,20 +23,20 @@ final case class JWTWellKnownReader(urls: List[String], connectTimeout: Int, rea
     */
   def loadKeyset(): Try[Map[KID, SerializedKey]] = {
     logger.debug("Getting key set from well-known url...")
-    urls.traverse(getKeySet).map { keySets =>
-      val keys: List[JWK]                                   = keySets.foldLeft(List.empty[JWK])((acc, b) => b ++ acc)
-      logger.debug("Public KeySet loaded")
-      val serializedKeys: Map[SerializedKey, SerializedKey] = keys.map(f => (f.getKeyID, f.toJSONString)).toMap
-      logger.debug("Public KeySet serialized")
-      serializedKeys
-    }
-
+    urls.flatTraverse(getKeySet).map(createSerializedKeys)
   }
 
   private def getKeySet(url: String): Try[List[JWK]] = Try {
     val wellKnownURL = new URL(url)
     val jwkSet       = JWKSet.load(wellKnownURL, connectTimeout, readTimeout, sizeLimit)
     jwkSet.getKeys.asScala.toList
+  }
+
+  private def createSerializedKeys(keySets: List[JWK]): Map[SerializedKey, SerializedKey] = {
+    logger.debug("Public KeySet loaded")
+    val serializedKeys: Map[SerializedKey, SerializedKey] = keySets.map(f => (f.getKeyID, f.toJSONString)).toMap
+    logger.debug("Public KeySet serialized")
+    serializedKeys
   }
 
 }
