@@ -72,7 +72,13 @@ lazy val vault = project
 
 lazy val jwtModule = project
   .in(file(jwtModuleName))
-  .settings(name := "interop-commons-jwt", sharedSettings, libraryDependencies ++= Dependencies.Jars.jwtDependencies)
+  .settings(
+    name        := "interop-commons-jwt",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.jwtDependencies,
+    Test / fork := true,
+    Test / javaOptions += "-Dconfig.file=src/test/resources/reference.conf"
+  )
   .dependsOn(utils, vault)
   .setupBuildInfo
 
