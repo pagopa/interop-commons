@@ -9,7 +9,7 @@ final object JWTConfiguration {
 
   /** Returns the jwtReader instance for loading public keys
     */
-  val jwtReader: JWTWellKnownReader =
+  lazy val jwtReader: JWTWellKnownReader =
     JWTWellKnownReader(
       urls = config.getString("interop-commons.jwt.public-keys.urls").split(",").toList.filter(_.nonEmpty),
       connectTimeout = config.getInt("interop-commons.jwt.public-keys.connection-timeout"),
@@ -17,7 +17,7 @@ final object JWTConfiguration {
       sizeLimit = config.getInt("interop-commons.jwt.public-keys.size-limit")
     )
 
-  val jwtInternalTokenConfig: JWTInternalTokenConfig = JWTInternalTokenConfig(
+  lazy val jwtInternalTokenConfig: JWTInternalTokenConfig = JWTInternalTokenConfig(
     issuer = config.getString("interop-commons.jwt.internal-token.issuer"),
     subject = config.getString("interop-commons.jwt.internal-token.subject"),
     audience = Set(config.getString("interop-commons.jwt.internal-token.audience")),
