@@ -54,7 +54,7 @@ package object jwt {
     * @param contexts request context attributes
     * @return true if at least an admittable roles exist for this request, false otherwise
     */
-  def hasPermissions(admittedRoles: String*)(implicit contexts: Seq[(String, String)]) =
+  def hasPermissions(admittedRoles: String*)(implicit contexts: Seq[(String, String)]): Boolean =
     admittedRoles.distinct match {
       case Nil => false
       case x   =>
