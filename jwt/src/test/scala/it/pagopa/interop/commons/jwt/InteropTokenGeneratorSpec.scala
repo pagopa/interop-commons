@@ -51,7 +51,8 @@ class InteropTokenGeneratorSpec extends AnyWordSpecLike with Matchers with JWTMo
           audience = List("test"),
           customClaims = Map("testClaim" -> "hello world"),
           issuerUUID,
-          3600L
+          3600L,
+          false
         )
 
       val signed: Token = interopToken.futureValue

@@ -2,7 +2,7 @@ package it.pagopa.interop.commons.jwt.service.impl
 
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.PrivateKeysKidHolder
+import it.pagopa.interop.commons.jwt.{M2M_ROLES, PrivateKeysKidHolder}
 import it.pagopa.interop.commons.jwt.model.{EC, Token, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
 import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
@@ -26,20 +26,22 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
-    validityDurationInSeconds: Long
+    validityDurationInSeconds: Long,
+    isM2M: Boolean
   ): Future[Token] =
     for {
       clientAssertionToken <- Try(SignedJWT.parse(clientAssertion)).toFuture
       interopPrivateKeyKid <- kidHolder
         .getPrivateKeyKidByAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
         .toFuture
-      tokenSeed = TokenSeed
+      customClaimsMap = if (isM2M) customClaims ++ M2M_ROLES else customClaims
+      tokenSeed       = TokenSeed
         .createWithKid(
           clientAssertionToken.getHeader.getAlgorithm,
           clientAssertionToken.getJWTClaimsSet.getSubject,
           interopPrivateKeyKid,
           audience,
-          customClaims,
+          customClaimsMap,
           tokenIssuer,
           validityDurationInSeconds
         )

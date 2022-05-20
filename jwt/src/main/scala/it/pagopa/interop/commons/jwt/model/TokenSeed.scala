@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons.jwt.model
 
 import com.nimbusds.jose.JWSAlgorithm
-import it.pagopa.interop.commons.jwt.clientIdClaim
+import it.pagopa.interop.commons.jwt.{M2M_ROLES, clientIdClaim}
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -54,7 +54,7 @@ object TokenSeed {
       nbf = issuedAt.toEpochMilli,
       expireAt = issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli,
       audience = audience,
-      customClaims = Map.empty
+      customClaims = M2M_ROLES
     )
   }
 
@@ -68,6 +68,7 @@ object TokenSeed {
     validityDurationSeconds: Long
   ): TokenSeed = {
     val issuedAt = Instant.now(Clock.system(ZoneId.of("UTC")))
+
     TokenSeed(
       id = UUID.randomUUID(),
       algorithm = algorithm,

@@ -21,8 +21,17 @@ package object jwt {
   type KID           = String
   type SerializedKey = String
 
-  final val clientIdClaim = "client_id"
-  final val typClaim      = "typ"
+  final val clientIdClaim     = "client_id"
+  final val typClaim          = "typ"
+  final val roleClaim         = "role"
+  final val organizationClaim = "organization"
+
+  final val ADMIN_ROLE    = "admin"
+  final val SECURITY_ROLE = "security"
+  final val API_ROLE      = "api"
+  final val M2M_ROLE      = "m2m"
+
+  final val M2M_ROLES = Map("role" -> M2M_ROLE)
 
   private[jwt] def rsaVerifier(jwkKey: String): Try[RSASSAVerifier] = {
     Try {
@@ -53,18 +62,22 @@ package object jwt {
         x.intersect(requestRoles).size > 0
     }
 
-  def getUserRoles(claims: JWTClaimsSet): Try[Set[String]] = Try {
-    val roles: Iterator[AnyRef] =
-      claims.getJSONObjectClaim("organization").get("roles").asInstanceOf[JSONArray].iterator().asScala
-    val roleSetOpt              = roles.foldLeft(Set.empty[Option[String]])((set, item) =>
-      set + Option(item.asInstanceOf[JSONObject].getAsString("role"))
-    )
+  private[jwt] def getUserRoles(claims: JWTClaimsSet): Set[String] = {
+    val roleSetOpt = Try {
+      val roles: Iterator[AnyRef] =
+        claims.getJSONObjectClaim(organizationClaim).get("roles").asInstanceOf[JSONArray].iterator().asScala
+      roles.foldLeft(Set.empty[Option[String]])((set, item) =>
+        set + Option(item.asInstanceOf[JSONObject].getAsString(roleClaim))
+      )
+    }.getOrElse(Set.empty)
 
-    roleSetOpt.flatten
+    val interopRoleClaim = Option(claims.getStringClaim(roleClaim))
+    (roleSetOpt + interopRoleClaim).flatten
+
   }
 
   def getUserRolesAsString(claims: JWTClaimsSet): Try[String] = Try {
-    getUserRoles(claims).getOrElse(Seq.empty).mkString(",")
+    getUserRoles(claims).mkString(",")
   }
 
   /**
