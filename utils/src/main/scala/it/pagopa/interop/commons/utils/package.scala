@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons
 
 import it.pagopa.interop.commons.utils.errors.ComponentError
-import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingHeader, MissingUserId}
+import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingHeader}
 
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
