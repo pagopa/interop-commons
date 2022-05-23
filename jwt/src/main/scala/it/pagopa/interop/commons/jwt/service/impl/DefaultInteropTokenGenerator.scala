@@ -2,7 +2,7 @@ package it.pagopa.interop.commons.jwt.service.impl
 
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.{M2M_ROLES, PrivateKeysKidHolder}
+import it.pagopa.interop.commons.jwt.{INTEROP_TOKEN_ROLES, PrivateKeysKidHolder}
 import it.pagopa.interop.commons.jwt.model.{EC, Token, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
 import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
@@ -34,7 +34,7 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
       interopPrivateKeyKid <- kidHolder
         .getPrivateKeyKidByAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
         .toFuture
-      customClaimsMap = if (isM2M) customClaims ++ M2M_ROLES else customClaims
+      customClaimsMap = if (isM2M) customClaims ++ INTEROP_TOKEN_ROLES else customClaims
       tokenSeed       = TokenSeed
         .createWithKid(
           clientAssertionToken.getHeader.getAlgorithm,

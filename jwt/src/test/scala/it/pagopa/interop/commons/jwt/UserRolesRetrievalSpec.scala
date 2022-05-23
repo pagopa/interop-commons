@@ -103,7 +103,7 @@ class UserRolesRetrievalSpec extends AnyWordSpecLike with Matchers {
 
   "a check on admittable roles" should {
 
-    "return true if no admittable roles are defined" in {
+    "return false if no admittable roles are defined" in {
       hasPermissions()(Seq(USER_ROLES -> "a,b,c")) shouldBe false
     }
 
@@ -111,7 +111,7 @@ class UserRolesRetrievalSpec extends AnyWordSpecLike with Matchers {
       hasPermissions("hello", "there")(Seq(USER_ROLES -> "admin,operator,api")) shouldBe false
     }
 
-    "return false when there is a match between admittable roles and provided ones" in {
+    "return true when there is a match between admittable roles and provided ones" in {
       hasPermissions("hello", "admin")(Seq(USER_ROLES -> "admin,operator,api")) shouldBe true
     }
   }
