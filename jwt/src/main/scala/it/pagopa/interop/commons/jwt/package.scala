@@ -30,8 +30,10 @@ package object jwt {
   final val SECURITY_ROLE = "security"
   final val API_ROLE      = "api"
   final val M2M_ROLE      = "m2m"
+  final val INTERNAL_ROLE = "internal"
 
-  final val INTEROP_TOKEN_ROLES = Map("role" -> M2M_ROLE)
+  final val M2M_ROLES      = Map("role" -> M2M_ROLE)
+  final val INTERNAL_ROLES = Map("role" -> INTERNAL_ROLE)
 
   private[jwt] def rsaVerifier(jwkKey: String): Try[RSASSAVerifier] = {
     Try {

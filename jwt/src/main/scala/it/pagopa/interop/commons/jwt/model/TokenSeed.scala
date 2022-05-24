@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons.jwt.model
 
 import com.nimbusds.jose.JWSAlgorithm
-import it.pagopa.interop.commons.jwt.{INTEROP_TOKEN_ROLES, clientIdClaim}
+import it.pagopa.interop.commons.jwt.{INTERNAL_ROLES, clientIdClaim}
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -54,7 +54,7 @@ object TokenSeed {
       nbf = issuedAt.toEpochMilli,
       expireAt = issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli,
       audience = audience,
-      customClaims = INTEROP_TOKEN_ROLES
+      customClaims = INTERNAL_ROLES
     )
   }
 

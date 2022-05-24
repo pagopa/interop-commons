@@ -21,7 +21,7 @@ object GenericComponentErrors {
   final case class ThirdPartyCallError(serviceName: String, errorMessage: String)
       extends ComponentError("9992", s"Error while invoking $serviceName external service -> $errorMessage")
 
- case object OperationForbidden extends ComponentError("9991", "Insufficient privileges")
+  case object OperationForbidden extends ComponentError("9991", "Insufficient privileges")
 
   final case class MissingClaim(claimName: String)
       extends ComponentError("9990", s"Claim $claimName has not been passed")
