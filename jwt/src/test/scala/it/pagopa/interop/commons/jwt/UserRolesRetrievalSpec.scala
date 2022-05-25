@@ -80,9 +80,9 @@ class UserRolesRetrievalSpec extends AnyWordSpecLike with Matchers {
 
       val jwt                  = SignedJWT.parse(s)
       val claims: JWTClaimsSet = jwt.getJWTClaimsSet
-      val roles: Try[String]   = getUserRolesAsString(claims)
+      val roles: String        = getUserRoles(claims).mkString(",")
 
-      roles shouldBe Success("productRole,pippoRole,testRole")
+      roles shouldBe "productRole,pippoRole,testRole"
 
     }
 

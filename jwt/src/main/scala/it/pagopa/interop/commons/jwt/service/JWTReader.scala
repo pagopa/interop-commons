@@ -5,7 +5,7 @@ import akka.http.scaladsl.server.AuthenticationFailedRejection.{CredentialsMissi
 import akka.http.scaladsl.server.Directives.{extractUri, optionalHeaderValueByName, provide, reject}
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
-import it.pagopa.interop.commons.jwt.getUserRolesAsString
+import it.pagopa.interop.commons.jwt.getUserRoles
 import it.pagopa.interop.commons.utils.AkkaUtils.getBearer
 import it.pagopa.interop.commons.utils.{BEARER, CORRELATION_ID_HEADER, ORGANIZATION_ID_CLAIM, SUB, UID, USER_ROLES}
 import org.slf4j.{Logger, LoggerFactory}
@@ -58,7 +58,7 @@ trait JWTReader {
         uid            <- Try(claims.getStringClaim(UID))
         sub            <- Try(claims.getSubject)
         organizationId <- Try(claims.getStringClaim(ORGANIZATION_ID_CLAIM))
-        userRoles      <- getUserRolesAsString(claims)
+        userRoles = getUserRoles(claims).mkString(",")
       } yield Seq(BEARER -> bearer, UID -> Option(uid).getOrElse(""), SUB -> sub, USER_ROLES -> userRoles) ++
         Option(organizationId).map(o => ORGANIZATION_ID_CLAIM -> o).toSeq
 

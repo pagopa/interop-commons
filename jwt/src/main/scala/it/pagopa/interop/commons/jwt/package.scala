@@ -11,8 +11,11 @@ import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.utils.USER_ROLES
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.jdk.CollectionConverters.IteratorHasAsScala
-import scala.util.Try
+import scala.jdk.CollectionConverters._
+import scala.util.{Try, Failure, Success}
+import cats.syntax.all._
+import it.pagopa.interop.commons.utils.errors.GenericComponentErrors._
+import it.pagopa.interop.commons.utils.TypeConversions._
 
 package object jwt {
 
@@ -35,20 +38,17 @@ package object jwt {
   final val M2M_ROLES      = Map("role" -> M2M_ROLE)
   final val INTERNAL_ROLES = Map("role" -> INTERNAL_ROLE)
 
-  private[jwt] def rsaVerifier(jwkKey: String): Try[RSASSAVerifier] = {
-    Try {
-      val jwk: JWK  = JWK.parse(jwkKey)
-      val publicKey = jwk.toRSAKey
-      new RSASSAVerifier(publicKey)
-    }
+  private[jwt] def rsaVerifier(jwkKey: String): Try[RSASSAVerifier] = Try {
+    val jwk: JWK  = JWK.parse(jwkKey)
+    val publicKey = jwk.toRSAKey
+    new RSASSAVerifier(publicKey)
   }
 
-  private[jwt] def ecVerifier(jwkKey: String): Try[ECDSAVerifier] =
-    Try {
-      val jwk: JWK  = JWK.parse(jwkKey)
-      val publicKey = jwk.toECKey
-      new ECDSAVerifier(publicKey)
-    }
+  private[jwt] def ecVerifier(jwkKey: String): Try[ECDSAVerifier] = Try {
+    val jwk: JWK  = JWK.parse(jwkKey)
+    val publicKey = jwk.toECKey
+    new ECDSAVerifier(publicKey)
+  }
 
   /**
     * Checks if the implicit contexts of a request contain at least one admittable role
@@ -60,26 +60,40 @@ package object jwt {
     admittedRoles.distinct match {
       case Nil => false
       case x   =>
-        val requestRoles = contexts.toMap.get(USER_ROLES).map(_.split(",")).getOrElse(Array.empty)
+        val requestRoles: Array[String] = contexts.toMap.get(USER_ROLES).map(_.split(",")).getOrElse(Array.empty)
         x.intersect(requestRoles).size > 0
     }
 
-  private[jwt] def getUserRoles(claims: JWTClaimsSet): Set[String] = {
-    val roleSetOpt = Try {
-      val roles: Iterator[AnyRef] =
-        claims.getJSONObjectClaim(organizationClaim).get("roles").asInstanceOf[JSONArray].iterator().asScala
-      roles.foldLeft(Set.empty[Option[String]])((set, item) =>
-        set + Option(item.asInstanceOf[JSONObject].getAsString(roleClaim))
-      )
-    }.getOrElse(Set.empty)
+  // Sadly getJSONObjectClaim both throws and returns null, so it requires a lot of handling
+  private def getOrganizationRolesClaimSafe(claims: JWTClaimsSet): Try[JSONArray] = for {
+    nullableOrgClaimsMap <- Try(claims.getJSONObjectClaim(organizationClaim)).as(MissingClaim(organizationClaim))
+    orgClaims            <- Option(nullableOrgClaimsMap).toTry(MissingClaim(organizationClaim))
+    orgClaimsMap = orgClaims.asScala.toMap
+    roles          <- orgClaimsMap.get("roles").toTry(MissingClaim("roles in organization"))
+    rolesJsonArray <- Try(roles.asInstanceOf[JSONArray]).as(GenericError("Roles in context are not in json format"))
+  } yield rolesJsonArray
 
-    val interopRoleClaim = Option(claims.getStringClaim(roleClaim))
-    (roleSetOpt + interopRoleClaim).flatten
+  private def getInteropRoleClaimSafe(claims: JWTClaimsSet): Option[String] =
+    Try(claims.getStringClaim(roleClaim)).toOption.flatMap(Option(_))
 
-  }
+  def getUserRoles(claims: JWTClaimsSet): Set[String] = {
+    val maybeRoles: Try[List[String]] = for {
+      roles <- getOrganizationRolesClaimSafe(claims)
+      rolesObjList = roles.iterator.asScala.toList
+      rolesList <- rolesObjList
+        .traverse(r => Try(r.asInstanceOf[JSONObject]))
+        .as(GenericError("Roles in context are not in json format"))
+      roles     <- rolesList.traverse(r => Try(r.getAsString(roleClaim)))
+    } yield roles
 
-  def getUserRolesAsString(claims: JWTClaimsSet): Try[String] = Try {
-    getUserRoles(claims).mkString(",")
+    val roles: Set[String] = maybeRoles match {
+      case Failure(e)         =>
+        logger.warn("Error while extracting userRoles from claims", e)
+        Set.empty[String]
+      case Success(rolesList) => rolesList.toSet
+    }
+
+    getInteropRoleClaimSafe(claims).fold(roles)(roles + _)
   }
 
   /**

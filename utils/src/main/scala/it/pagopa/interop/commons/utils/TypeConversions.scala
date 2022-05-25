@@ -19,7 +19,12 @@ object TypeConversions {
   }
 
   implicit class TryOps[A](val tryOp: Try[A]) extends AnyVal {
-    def toFuture: Future[A] = tryOp.fold(e => Future.failed(e), a => Future.successful(a))
+    def toFuture: Future[A]                        = tryOp.fold(e => Future.failed(e), a => Future.successful(a))
+    def leftMap(f: Throwable => Throwable): Try[A] = tryOp match {
+      case Failure(e)     => Failure(f(e))
+      case x @ Success(_) => x
+    }
+    def as(e: Throwable): Try[A]                   = tryOp.leftMap(_ => e)
   }
 
   implicit class OptionOps[A](val option: Option[A]) extends AnyVal {
