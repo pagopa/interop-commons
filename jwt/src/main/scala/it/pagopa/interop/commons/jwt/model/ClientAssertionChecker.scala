@@ -9,7 +9,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.util.{Failure, Try}
 
 final class ClientAssertionChecker private (
-  private val jwt: SignedJWT,
+  val jwt: SignedJWT,
   val kid: String,
   val subject: String,
   val purposeId: Option[String]
