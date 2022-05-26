@@ -52,12 +52,12 @@ interop-commons {
 
 Where:
 
-| Variable name                  | Variable type | Notes                                                                    |
-|--------------------------------| ------------- |--------------------------------------------------------------------------|
-| **STORAGE_TYPE**               | String | Admittable values are: `File`, `S3`, `BlobStorage`                       |
-| **STORAGE_ENDPOINT**           | String | Defines the remote endpoint to connect to                                |
-| **STORAGE_APPLICATION_ID**     | String | Defines the user credential to access the remote endpoint                |
-| **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint                  |
+| Variable name                  | Variable type | Notes                                                                            |
+|--------------------------------| ------------- |----------------------------------------------------------------------------------|
+| **STORAGE_TYPE**               | String | Admittable values are: `File`, `S3`, `BlobStorage`                               |
+| **STORAGE_ENDPOINT**           | String | Defines the remote endpoint to connect to                                        |
+| **STORAGE_APPLICATION_ID**     | String | Defines the user credential to access the remote endpoint (not required for AWS) |
+| **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint (not required for AWS)                         |
 
 ### Mail Manager Module
 This is the HOCON configuration object for the module:
