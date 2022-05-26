@@ -51,8 +51,9 @@ object Dependencies {
 
   private[this] object aws {
     lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val s3           = awsNamespace % "s3"       % awsSdkVersion
-    lazy val sqs          = awsNamespace % "sqs"      % awsSqsVersion
+    lazy val s3           = awsNamespace % "s3"  % awsSdkVersion
+    lazy val sqs          = awsNamespace % "sqs" % awsSqsVersion
+    lazy val sts          = awsNamespace % "sts" % awsSqsVersion // Required to use IAM role on container
   }
 
   private[this] object courier {
@@ -129,6 +130,7 @@ object Dependencies {
     lazy val fileDependencies: Seq[ModuleID] =
       Seq(
         aws.s3               % Compile,
+        aws.sts              % Compile,
         azure.storageBlob    % Compile,
         commons.fileUpload   % Compile,
         jsoup.jsoup          % Compile,
@@ -146,7 +148,7 @@ object Dependencies {
 
     lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
 
-    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, spray.spray % Compile)
+    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, aws.sts % Compile, spray.spray % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
