@@ -21,13 +21,20 @@ class VaultTransitServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSy
   override def encryptData(keyId: String, signatureAlgorithm: Option[String] = None)(data: String): Future[String] = {
     implicit val executionContext: ExecutionContextExecutor = as.getDispatcher
 
-    val signature = signatureAlgorithm.map(s => s"""signature_algorithm: "$s",""").getOrElse("")
-
-    val payload = s"""{
-                     |  "input": "$data",
-                     |  $signature
-                     |  "marshaling_algorithm": "jws"
-                     |}""".stripMargin
+    val payload = signatureAlgorithm
+      .map { signature =>
+        s"""{
+           |  "input": "$data",
+           |  "signature_algorithm": "$signature",
+           |  "marshaling_algorithm": "jws"
+           |}""".stripMargin
+      }
+      .getOrElse {
+        s"""{
+           |  "input": "$data",
+           |  "marshaling_algorithm": "jws"
+           |}""".stripMargin
+      }
 
     val httpEntity = HttpEntity(ContentTypes.`application/json`, payload)
 
