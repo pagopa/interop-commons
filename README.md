@@ -147,3 +147,8 @@ Where:
 | **JWT_SUBJECT**          | String             | The subject of the internal interop token                                                    |
 | **JWT_AUDIENCE**         | String             | The only audience of the internal token |
 | **JWT_DURATION_SECONDS** | Long               | The token validity in seconds                                 |
+
+
+### AWS
+AWS credentials are implicitly derived by the SDK as per [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html)  
+:warning: When running locally it is possible that the library will use default credentials in your `~/.aws/credentials` file. To avoid unwanted behaviours, remember to set AWS credentials environment variables
