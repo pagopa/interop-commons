@@ -22,7 +22,7 @@ object StorageConfiguration {
 
   /** Returns storage account configuration data
     */
-  val storageAccountInfo: StorageAccountInfo = StorageAccountInfo(
+  lazy val storageAccountInfo: StorageAccountInfo = StorageAccountInfo(
     applicationId = config.getString("interop-commons.storage.application.id"),
     applicationSecret = config.getString("interop-commons.storage.application.secret"),
     endpoint = config.getString("interop-commons.storage.endpoint")
