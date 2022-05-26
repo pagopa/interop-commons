@@ -18,7 +18,7 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
 
   implicit private val messageReader: JsonReader[Message] = Message.messageReader(f)
 
-  private val sqsClient: SqsClient = SqsClient.builder().build()
+  private val sqsClient: SqsClient = SqsClient.create()
 
   private def rawReceiveN(n: Int): Future[List[SQSMessage]] = Future {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest

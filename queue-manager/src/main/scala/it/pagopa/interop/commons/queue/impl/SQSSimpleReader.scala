@@ -13,7 +13,7 @@ final case class SQSSimpleReader(queueUrl: String)(implicit ec: ExecutionContext
 
   final case class MessageWithHandle[T: JsonReader](message: T, handle: String)
 
-  private val sqsClient: SqsClient = SqsClient.builder().build()
+  private val sqsClient: SqsClient = SqsClient.create()
 
   def receiveN[T: JsonReader](n: Int): Future[List[MessageWithHandle[T]]] = receiveMessageAndHandleN(n)
 

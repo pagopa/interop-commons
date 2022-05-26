@@ -20,7 +20,7 @@ final class SQSWriter(queueUrl: String)(f: PartialFunction[ProjectableEvent, JsV
   private val CONSTANT_MESSAGE_GROUP_ID: String = "message_group_all_notification"
   implicit private val w: JsonWriter[Message]   = Message.messageWriter(f)
 
-  private val sqsClient: SqsClient = SqsClient.builder().build()
+  private val sqsClient: SqsClient = SqsClient.create()
 
   override def send(message: Message): Future[String] = Future {
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
