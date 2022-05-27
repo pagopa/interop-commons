@@ -14,6 +14,7 @@ trait InteropTokenGenerator {
     * @param customClaims map containing possible custom claims to add to the token
     * @param tokenIssuer value to set to the <code>iss</code> claim
     * @param validityDurationInSeconds long value representing the token duration
+    * @param isM2M <code>true</code> if the token MUST be generated for a machine to machine flow
     * @return generated serialized token
     */
   def generate(
@@ -21,7 +22,8 @@ trait InteropTokenGenerator {
     audience: List[String],
     customClaims: Map[String, String],
     tokenIssuer: String,
-    validityDurationInSeconds: Long
+    validityDurationInSeconds: Long,
+    isM2M: Boolean
   ): Future[Token]
 
   /** Returns an internal JWT token.

@@ -14,6 +14,7 @@ package object utils {
   val BEARER: String                                       = "bearer"
   val UID: String                                          = "uid"
   val ORGANIZATION: String                                 = "organization"
+  val USER_ROLES: String                                   = "user-roles"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
   val INTEROP_PRODUCT_NAME: String                         = "interop"
@@ -28,4 +29,5 @@ package object utils {
       ip = contextsMap.get(IP_ADDRESS)
     } yield (bearerToken, correlationId, ip)
   }
+
 }
