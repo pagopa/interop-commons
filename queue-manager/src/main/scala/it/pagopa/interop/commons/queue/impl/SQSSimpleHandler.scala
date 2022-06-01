@@ -1,8 +1,6 @@
 package it.pagopa.interop.commons.queue.impl
 
 import cats.implicits.{toFunctorOps, toTraverseOps}
-import it.pagopa.interop.commons.queue.QueueAccountInfo
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.{
   DeleteMessageRequest,
@@ -16,16 +14,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.{Failure, Success, Try}
 
-final case class SQSSimpleHandler(queueAccountInfo: QueueAccountInfo, queueUrl: String)(implicit ec: ExecutionContext) {
+final case class SQSSimpleHandler(queueUrl: String)(implicit ec: ExecutionContext) {
 
-  private val awsCredentials: AwsBasicCredentials =
-    AwsBasicCredentials.create(queueAccountInfo.accessKeyId, queueAccountInfo.secretAccessKey)
-
-  private val sqsClient: SqsClient = SqsClient
-    .builder()
-    .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
-    .region(queueAccountInfo.region)
-    .build()
+  private val sqsClient: SqsClient = SqsClient.create()
 
   def send[T: JsonWriter](message: T): Future[String] = Future {
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
