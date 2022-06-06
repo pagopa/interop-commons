@@ -1,7 +1,7 @@
-package it.pagopa.interop.commons.vault.service.impl
+package it.pagopa.interop.commons.signer.service.impl
 
 import com.bettercloud.vault.response.LogicalResponse
-import it.pagopa.interop.commons.vault.service.{VaultClientInstance, VaultService}
+import it.pagopa.interop.commons.signer.service.{VaultClientInstance, VaultService}
 
 import scala.jdk.CollectionConverters.MapHasAsScala
 

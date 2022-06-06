@@ -1,44 +1,39 @@
-package it.pagopa.interop.commons.vault.service.impl
+package it.pagopa.interop.commons.signer.service.impl
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import it.pagopa.interop.commons.signer.VaultConfig
+import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
+import it.pagopa.interop.commons.signer.service.SignerService
+import it.pagopa.interop.commons.signer.service.impl.VaultTransitSerializer._
 import it.pagopa.interop.commons.utils.TypeConversions.OptionOps
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyCallError
-import it.pagopa.interop.commons.vault.VaultConfig
-import it.pagopa.interop.commons.vault.service.VaultTransitService
-import it.pagopa.interop.commons.vault.service.impl.VaultTransitSerializer._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.language.postfixOps
 
-class VaultTransitServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSystem) extends VaultTransitService {
+class VaultTransitSignerServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSystem) extends SignerService {
 
   private[this] def vaultHeaders: Seq[HttpHeader] =
     Seq(headers.RawHeader("X-Vault-Token", vaultConfig.token))
 
-  override def encryptData(keyId: String, signatureAlgorithm: Option[String] = None)(data: String): Future[String] = {
+  override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     implicit val executionContext: ExecutionContextExecutor = as.getDispatcher
 
-    val payload = signatureAlgorithm
-      .map { signature =>
-        s"""{
-           |  "input": "$data",
-           |  "signature_algorithm": "$signature",
-           |  "marshaling_algorithm": "jws"
-           |}""".stripMargin
-      }
-      .getOrElse {
-        s"""{
-           |  "input": "$data",
-           |  "marshaling_algorithm": "jws"
-           |}""".stripMargin
-      }
+    val payload: String = signatureAlgorithm match {
+      case SignatureAlgorithm.RSAPkcs1Sha256 | SignatureAlgorithm.RSAPkcs1Sha384 | SignatureAlgorithm.RSAPkcs1Sha512 =>
+        s"""{"input": "$data", "signature_algorithm": "pkcs1v15", "marshaling_algorithm": "jws"}"""
+      case SignatureAlgorithm.RSAPssSha256 | SignatureAlgorithm.RSAPssSha384 | SignatureAlgorithm.RSAPssSha512       =>
+        s"""{"input": "$data", "signature_algorithm": "pss", "marshaling_algorithm": "jws"}"""
+      case _ => s"""{"input": "$data", "marshaling_algorithm": "jws"}"""
+
+    }
 
     val httpEntity = HttpEntity(ContentTypes.`application/json`, payload)
 
-    val responseF = Http().singleRequest(
+    val response: Future[HttpResponse] = Http().singleRequest(
       HttpRequest(
         uri = vaultConfig.encryptionEndpoint(keyId),
         method = HttpMethods.POST,
@@ -47,7 +42,7 @@ class VaultTransitServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSy
       )
     )
 
-    responseF
+    response
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Response]
         case HttpResponse(statusCode, _, entity, _)     =>

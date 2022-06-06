@@ -1,9 +1,9 @@
-package it.pagopa.interop.commons.vault
+package it.pagopa.interop.commons.signer
 
 import com.bettercloud.vault.{Vault, VaultConfig}
 import com.dimafeng.testcontainers.{ForAllTestContainer, VaultContainer}
-import it.pagopa.interop.commons.vault.service.impl.DefaultVaultService
-import it.pagopa.interop.commons.vault.service.{VaultClientInstance, VaultService}
+import it.pagopa.interop.commons.signer.service.impl.DefaultVaultService
+import it.pagopa.interop.commons.signer.service.{VaultClientInstance, VaultService}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike

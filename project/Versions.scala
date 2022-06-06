@@ -27,5 +27,6 @@ object Versions {
   lazy val vaultDriverVersion         = "5.1.0"
   lazy val awsDynamoDBVersion         = "2.17.157"
   lazy val awsSqsVersion              = "2.17.160"
+  lazy val awsKmsVersion              = "2.17.201"
   lazy val sprayJsonVersion           = "1.3.6"
 }
