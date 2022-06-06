@@ -1,43 +1,24 @@
 package it.pagopa.interop.commons.queue.impl
 
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.sqs.SqsClient
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-import scala.concurrent.ExecutionContext
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
-import scala.concurrent.Future
-import it.pagopa.interop.commons.queue.message.ProjectableEvent
-import scala.jdk.CollectionConverters._
-import software.amazon.awssdk.services.sqs.model.{Message => SQSMessage}
-import it.pagopa.interop.commons.queue.QueueAccountInfo
-import it.pagopa.interop.commons.queue.message.Message
 import cats.syntax.all._
 import it.pagopa.interop.commons.queue.QueueReader
-import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
-import spray.json.RootJsonFormat
-import scala.util.Try
+import it.pagopa.interop.commons.queue.message.{Message, ProjectableEvent}
+import software.amazon.awssdk.services.sqs.SqsClient
+import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, ReceiveMessageRequest, Message => SQSMessage}
 import spray.json._
-import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest
-import it.pagopa.interop.commons.queue.QueueConfiguration
-import scala.util.Failure
-import scala.util.Success
 
-final class SQSReader(queueAccountInfo: QueueAccountInfo, queueUrl: String, visibilityTimeout: Integer)(
+import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters._
+import scala.util.{Failure, Success, Try}
+
+final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
   f: PartialFunction[String, JsValue => ProjectableEvent]
 )(implicit ec: ExecutionContext)
     extends QueueReader {
 
   implicit private val messageReader: JsonReader[Message] = Message.messageReader(f)
 
-  private val awsCredentials: AwsBasicCredentials =
-    AwsBasicCredentials.create(queueAccountInfo.accessKeyId, queueAccountInfo.secretAccessKey)
-
-  private val sqsClient: SqsClient = SqsClient
-    .builder()
-    .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
-    .region(queueAccountInfo.region)
-    .build()
+  private val sqsClient: SqsClient = SqsClient.create()
 
   private def rawReceiveN(n: Int): Future[List[SQSMessage]] = Future {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
@@ -49,12 +30,8 @@ final class SQSReader(queueAccountInfo: QueueAccountInfo, queueUrl: String, visi
     sqsClient.receiveMessage(receiveMessageRequest).messages().asScala.toList
   }
 
-  private def rawReceiveBodyAndHandleN(n: Int): Future[List[(String, String)]] = for {
-    messages <- rawReceiveN(n)
-  } yield messages.map(m => (m.body(), m.receiptHandle()))
-
   private def toMessage(s: String): Future[Message] = Try(s.parseJson) match {
-    case Failure(_)    => Future.failed(new DeserializationException(s"Not a valid json: $s"))
+    case Failure(_)    => Future.failed(DeserializationException(s"Not a valid json: $s"))
     case Success(json) => Future.fromTry(Try(json.convertTo[Message]))
   }
 

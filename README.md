@@ -52,12 +52,12 @@ interop-commons {
 
 Where:
 
-| Variable name                  | Variable type | Notes                                                                    |
-|--------------------------------| ------------- |--------------------------------------------------------------------------|
-| **STORAGE_TYPE**               | String | Admittable values are: `File`, `S3`, `BlobStorage`                       |
-| **STORAGE_ENDPOINT**           | String | Defines the remote endpoint to connect to                                |
-| **STORAGE_APPLICATION_ID**     | String | Defines the user credential to access the remote endpoint                |
-| **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint                  |
+| Variable name                  | Variable type | Notes                                                                            |
+|--------------------------------| ------------- |----------------------------------------------------------------------------------|
+| **STORAGE_TYPE**               | String | Admittable values are: `File`, `S3`, `BlobStorage`                               |
+| **STORAGE_ENDPOINT**           | String | Defines the remote endpoint to connect to                                        |
+| **STORAGE_APPLICATION_ID**     | String | Defines the user credential to access the remote endpoint (not required for AWS) |
+| **STORAGE_APPLICATION_SECRET** | String | Defines the user password to access the remote endpoint (not required for AWS)                         |
 
 ### Mail Manager Module
 This is the HOCON configuration object for the module:
@@ -147,3 +147,8 @@ Where:
 | **JWT_SUBJECT**          | String             | The subject of the internal interop token                                                    |
 | **JWT_AUDIENCE**         | String             | The only audience of the internal token |
 | **JWT_DURATION_SECONDS** | Long               | The token validity in seconds                                 |
+
+
+### AWS
+AWS credentials are implicitly derived by the SDK as per [AWS documentation](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html)  
+:warning: When running locally it is possible that the library will use default credentials in your `~/.aws/credentials` file. To avoid unwanted behaviours, remember to set AWS credentials environment variables

@@ -8,10 +8,10 @@ import it.pagopa.interop.commons.signer.VaultConfig
 import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 import it.pagopa.interop.commons.signer.service.SignerService
 import it.pagopa.interop.commons.signer.service.impl.VaultTransitSerializer._
-import it.pagopa.interop.commons.utils.TypeConversions.OptionOps
+import it.pagopa.interop.commons.utils.TypeConversions.{OptionOps, StringOps, TryOps}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyCallError
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.language.postfixOps
 
 class VaultTransitSignerServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSystem) extends SignerService {
@@ -22,25 +22,18 @@ class VaultTransitSignerServiceImpl(val vaultConfig: VaultConfig)(implicit as: A
   override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     implicit val executionContext: ExecutionContextExecutor = as.getDispatcher
 
-    val payload: String = signatureAlgorithm match {
-      case SignatureAlgorithm.RSAPkcs1Sha256 | SignatureAlgorithm.RSAPkcs1Sha384 | SignatureAlgorithm.RSAPkcs1Sha512 =>
-        s"""{"input": "$data", "signature_algorithm": "pkcs1v15", "marshaling_algorithm": "jws"}"""
-      case SignatureAlgorithm.RSAPssSha256 | SignatureAlgorithm.RSAPssSha384 | SignatureAlgorithm.RSAPssSha512       =>
-        s"""{"input": "$data", "signature_algorithm": "pss", "marshaling_algorithm": "jws"}"""
-      case _ => s"""{"input": "$data", "marshaling_algorithm": "jws"}"""
-
-    }
-
-    val httpEntity = HttpEntity(ContentTypes.`application/json`, payload)
-
-    val response: Future[HttpResponse] = Http().singleRequest(
-      HttpRequest(
-        uri = vaultConfig.encryptionEndpoint(keyId),
-        method = HttpMethods.POST,
-        entity = httpEntity,
-        headers = vaultHeaders
+    val response: Future[HttpResponse] = for {
+      payload <- createPayload(signatureAlgorithm, data)
+      httpEntity = HttpEntity(ContentTypes.`application/json`, payload)
+      response <- Http().singleRequest(
+        HttpRequest(
+          uri = vaultConfig.encryptionEndpoint(keyId),
+          method = HttpMethods.POST,
+          entity = httpEntity,
+          headers = vaultHeaders
+        )
       )
-    )
+    } yield response
 
     response
       .flatMap {
@@ -55,6 +48,19 @@ class VaultTransitSignerServiceImpl(val vaultConfig: VaultConfig)(implicit as: A
           .lastOption
           .toFuture(ThirdPartyCallError("Vault", "service returned not valid signature"))
       )
+  }
+
+  private def createPayload(signatureAlgorithm: SignatureAlgorithm, data: String)(implicit
+    ec: ExecutionContext
+  ): Future[String] = data.encodeBase64.toFuture.map { encodedData =>
+    signatureAlgorithm match {
+      case SignatureAlgorithm.RSAPkcs1Sha256 | SignatureAlgorithm.RSAPkcs1Sha384 | SignatureAlgorithm.RSAPkcs1Sha512 =>
+        s"""{"input": "$encodedData", "signature_algorithm": "pkcs1v15", "marshaling_algorithm": "jws"}"""
+      case SignatureAlgorithm.RSAPssSha256 | SignatureAlgorithm.RSAPssSha384 | SignatureAlgorithm.RSAPssSha512       =>
+        s"""{"input": "$encodedData", "signature_algorithm": "pss", "marshaling_algorithm": "jws"}"""
+      case _ => s"""{"input": "$encodedData", "marshaling_algorithm": "jws"}"""
+
+    }
   }
 
 }

@@ -5,15 +5,16 @@ import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.jwt.PrivateKeysKidHolder
 import it.pagopa.interop.commons.jwt.model.SessionTokenSeed
 import it.pagopa.interop.commons.jwt.service.SessionTokenGenerator
+import it.pagopa.interop.commons.signer.errors.JWSAlgorithmNotFound
 import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 import it.pagopa.interop.commons.signer.service.SignerService
-import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
+import it.pagopa.interop.commons.utils.TypeConversions.TryOps
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.SeqHasAsJava
-import scala.language.postfixOps
+
 import scala.util.Try
 
 /** Default implementation for the generation of consumer Interop tokens
@@ -53,8 +54,7 @@ class DefaultSessionTokenGenerator(val signerService: SignerService, val kidHold
         )
         .toFuture
       interopJWT           <- serializedJWTFromSessionTokenSeed(seed).toFuture
-      encodedJWT           <- interopJWT.encodeBase64.toFuture
-      signature            <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(encodedJWT)
+      signature            <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(interopJWT)
       signedInteropJWT = s"$interopJWT.$signature"
       _                = logger.debug("Session Token generated")
     } yield signedInteropJWT
@@ -96,6 +96,6 @@ class DefaultSessionTokenGenerator(val signerService: SignerService, val kidHold
     case SignatureAlgorithm.ECSha256       => Future.successful(JWSAlgorithm.ES256)
     case SignatureAlgorithm.ECSha384       => Future.successful(JWSAlgorithm.ES384)
     case SignatureAlgorithm.ECSha512       => Future.successful(JWSAlgorithm.ES512)
-    case SignatureAlgorithm.Empty          => Future.failed(new RuntimeException)
+    case SignatureAlgorithm.Empty          => Future.failed(JWSAlgorithmNotFound)
   }
 }

@@ -68,10 +68,10 @@ class DefaultInteropTokenGenerator(val signerService: SignerService, val kidHold
     secondsDuration: Long
   ): Future[Token] =
     for {
-      interopPrivateKeyKid <- kidHolder.getPrivateKeyKidByAlgorithm(JWSAlgorithm.ES256).toFuture
+      interopPrivateKeyKid <- kidHolder.getPrivateKeyKidByAlgorithm(JWSAlgorithm.RS256).toFuture
       tokenSeed = TokenSeed
         .createInternalTokenWithKid(
-          algorithm = JWSAlgorithm.ES256,
+          algorithm = JWSAlgorithm.RS256,
           kid = interopPrivateKeyKid,
           subject = subject,
           audience = audience,
@@ -80,8 +80,7 @@ class DefaultInteropTokenGenerator(val signerService: SignerService, val kidHold
         )
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
       serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
-      encodedJWT <- serializedToken.encodeBase64.toFuture
-      signature  <- signerService.signData(interopPrivateKeyKid, SignatureAlgorithm.ECSha256)(encodedJWT)
+      signature <- signerService.signData(interopPrivateKeyKid, SignatureAlgorithm.RSAPkcs1Sha256)(serializedToken)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Interop internal Token generated")
     } yield Token(
