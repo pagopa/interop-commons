@@ -51,10 +51,10 @@ object Dependencies {
 
   private[this] object aws {
     lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val kms          = awsNamespace % "kms" % awsKmsVersion
-    lazy val s3           = awsNamespace % "s3"  % awsSdkVersion
-    lazy val sqs          = awsNamespace % "sqs" % awsSqsVersion
-    lazy val sts          = awsNamespace % "sts" % awsSqsVersion // Required to use IAM role on container
+    lazy val kms          = awsNamespace % "kms" % awsVersion
+    lazy val s3           = awsNamespace % "s3"  % awsVersion
+    lazy val sqs          = awsNamespace % "sqs" % awsVersion
+    lazy val sts          = awsNamespace % "sts" % awsVersion // Required to use IAM role on container
   }
 
   private[this] object courier {

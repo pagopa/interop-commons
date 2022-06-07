@@ -13,7 +13,7 @@ import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{existentials, postfixOps}
 
-final case class KMSSignerServiceImpl(implicit as: ActorSystem) extends SignerService {
+final case class KMSSignerServiceImpl()(implicit as: ActorSystem) extends SignerService {
   implicit val ex: ExecutionContext       = as.dispatcher
   lazy val kmsAsyncClient: KmsAsyncClient = KmsAsyncClient.builder().build()
 

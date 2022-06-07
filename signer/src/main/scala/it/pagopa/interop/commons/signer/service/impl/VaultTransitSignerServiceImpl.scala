@@ -14,7 +14,8 @@ import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyC
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.language.postfixOps
 
-final case class VaultTransitSignerServiceImpl(val vaultConfig: VaultConfig)(implicit as: ActorSystem) extends SignerService {
+final case class VaultTransitSignerServiceImpl(vaultConfig: VaultConfig)(implicit as: ActorSystem)
+    extends SignerService {
 
   private[this] def vaultHeaders: Seq[HttpHeader] =
     Seq(headers.RawHeader("X-Vault-Token", vaultConfig.token))
