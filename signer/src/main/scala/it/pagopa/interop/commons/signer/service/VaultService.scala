@@ -1,4 +1,4 @@
-package it.pagopa.interop.commons.vault.service
+package it.pagopa.interop.commons.signer.service
 
 import com.bettercloud.vault.Vault
 

@@ -1,4 +1,4 @@
-package it.pagopa.interop.commons.vault.service.impl
+package it.pagopa.interop.commons.signer.service.impl
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}

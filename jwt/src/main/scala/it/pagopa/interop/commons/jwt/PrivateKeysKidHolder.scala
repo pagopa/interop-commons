@@ -4,7 +4,7 @@ import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer, RSASSASigner}
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jose.{JWSAlgorithm, JWSSigner}
 import it.pagopa.interop.commons.jwt.errors.PrivateKeyNotFound
-import it.pagopa.interop.commons.jwt.model.{EC, JWTAlgorithmType, RSA}
+import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 
 import scala.util.{Random, Try}
 
@@ -18,18 +18,45 @@ trait PrivateKeysKidHolder {
     */
   val ECPrivateKeyset: Set[KID]
 
-  private[jwt] final def getPrivateKeyKidByAlgorithmType(algorithmType: JWTAlgorithmType): Try[String] =
-    algorithmType match {
-      case RSA => getPrivateKeyKidByAlgorithm(JWSAlgorithm.RS256)
-      case EC  => getPrivateKeyKidByAlgorithm(JWSAlgorithm.ES256)
+  private[jwt] final def getPrivateKeyKidBySignatureAlgorithm(signatureAlgorithm: SignatureAlgorithm): Try[String] = {
+    val keys: Try[Set[KID]] = Try {
+      signatureAlgorithm match {
+        case SignatureAlgorithm.RSAPssSha256   => RSAPrivateKeyset
+        case SignatureAlgorithm.RSAPssSha384   => RSAPrivateKeyset
+        case SignatureAlgorithm.RSAPssSha512   => RSAPrivateKeyset
+        case SignatureAlgorithm.RSAPkcs1Sha256 => RSAPrivateKeyset
+        case SignatureAlgorithm.RSAPkcs1Sha384 => RSAPrivateKeyset
+        case SignatureAlgorithm.RSAPkcs1Sha512 => RSAPrivateKeyset
+        case SignatureAlgorithm.ECSha256       => ECPrivateKeyset
+        case SignatureAlgorithm.ECSha384       => ECPrivateKeyset
+        case SignatureAlgorithm.ECSha512       => ECPrivateKeyset
+        case SignatureAlgorithm.Empty          => Set.empty
+      }
     }
 
-  private[jwt] final def getPrivateKeyKidSignatureAlgorithm(algorithm: JWSAlgorithm): Option[String] =
+    val randomKey: Try[String] = keys.flatMap(ks =>
+      Random
+        .shuffle(ks)
+        .take(1)
+        .headOption
+        .toRight(PrivateKeyNotFound("Interop private key not found"))
+        .toTry
+    )
+
+    randomKey
+  }
+
+  private[jwt] final def getPrivateKeyKidSignatureAlgorithm(algorithm: JWSAlgorithm): SignatureAlgorithm =
     algorithm match {
-      case JWSAlgorithm.RS256 | JWSAlgorithm.RS384 | JWSAlgorithm.RS512                       => RSA.signatureAlgorithm
-      case JWSAlgorithm.PS256 | JWSAlgorithm.PS384 | JWSAlgorithm.PS256                       => RSA.signatureAlgorithm
-      case JWSAlgorithm.ES256 | JWSAlgorithm.ES384 | JWSAlgorithm.ES512 | JWSAlgorithm.ES256K => EC.signatureAlgorithm
-      case JWSAlgorithm.EdDSA                                                                 => EC.signatureAlgorithm
+      case JWSAlgorithm.RS256 => SignatureAlgorithm.RSAPkcs1Sha256
+      case JWSAlgorithm.RS384 => SignatureAlgorithm.RSAPkcs1Sha384
+      case JWSAlgorithm.RS512 => SignatureAlgorithm.RSAPkcs1Sha512
+      case JWSAlgorithm.PS256 => SignatureAlgorithm.RSAPssSha256
+      case JWSAlgorithm.PS384 => SignatureAlgorithm.RSAPssSha384
+      case JWSAlgorithm.PS512 => SignatureAlgorithm.RSAPssSha512
+      case JWSAlgorithm.ES256 => SignatureAlgorithm.ECSha256
+      case JWSAlgorithm.ES384 => SignatureAlgorithm.ECSha384
+      case JWSAlgorithm.ES512 => SignatureAlgorithm.ECSha512
     }
 
   /* Returns a random private key kid picked from the available keyset according to the specified algorithm

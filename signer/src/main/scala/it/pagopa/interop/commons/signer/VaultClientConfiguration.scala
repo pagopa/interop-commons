@@ -1,4 +1,4 @@
-package it.pagopa.interop.commons.vault
+package it.pagopa.interop.commons.signer
 
 import com.typesafe.config.{Config, ConfigFactory}
 
