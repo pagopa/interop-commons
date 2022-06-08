@@ -63,7 +63,7 @@ final case class SQSSimpleHandler(queueUrl: String)(implicit ec: ExecutionContex
     fn: T => Future[V]
   )(implicit jsonReader: JsonReader[T]): Future[List[SQSDequeuedMessage[V]]] = for {
     messagesAndReceiptHandles <- deserializeMessages(maxNumberOfMessages, visibilityTimeout)
-    result                    <- messagesAndReceiptHandles.traverse { case (message, handle) =>
+    result                    <- Future.traverse(messagesAndReceiptHandles) { case (message, handle) =>
       handleMessage(fn)(message, handle)
     }
   } yield result
@@ -73,7 +73,7 @@ final case class SQSSimpleHandler(queueUrl: String)(implicit ec: ExecutionContex
   ): Future[List[(T, String)]] = for {
     messages <- rawReceiveN(n, visibilityTimeout)
     bodyAndHandle = messages.map(m => (m.body(), m.receiptHandle()))
-    messagesAndHandles <- bodyAndHandle.traverse { case (body, handle) => toMessage(body).map((_, handle)) }
+    messagesAndHandles <- Future.traverse(bodyAndHandle) { case (body, handle) => toMessage(body).map((_, handle)) }
   } yield messagesAndHandles
 
   private def toMessage[T](s: String)(implicit jsonReader: JsonReader[T]): Future[T] = Try(s.parseJson) match {
