@@ -5,7 +5,6 @@ import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import it.pagopa.interop.commons.jwt.model.{Token, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
 import it.pagopa.interop.commons.jwt.{M2M_ROLES, PrivateKeysKidHolder}
-import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 import it.pagopa.interop.commons.signer.service.SignerService
 import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
 import org.slf4j.{Logger, LoggerFactory}
