@@ -13,21 +13,25 @@ import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{existentials, postfixOps}
 import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
-import software.amazon.awssdk.services.kms.KmsClient
-import software.amazon.awssdk.http.SdkHttpClient
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
+import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 
-final case class KMSSignerServiceImpl()(implicit as: ActorSystem) extends SignerService {
-  implicit val ex: ExecutionContext = as.dispatcher
-  private val kmsClient: KmsClient  = KmsClient.builder().build()
+final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit as: ActorSystem) extends SignerService {
+  implicit val ex: ExecutionContext          = as.dispatcher
+  private val httpClient: SdkAsyncHttpClient = NettyNioAsyncHttpClient.builder().maxConcurrency(maxConcurrency).build()
+  private val kmsAsyncClient: KmsAsyncClient = KmsAsyncClient.builder().httpClient(httpClient).build()
 
-  override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = Future {
+  override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     val request = createRequest(keyId, signatureAlgorithm, data)
-    kmsClient.sign(request)
-  }.map { signResponse =>
-    val bytes: SdkBytes         = signResponse.signature()
-    val base64Signature: String = Base64.getEncoder.encodeToString(bytes.asByteArray())
-    toJWSEncoding(base64Signature)
-  }.recoverWith(ex => Future.failed(ThirdPartyCallError("KMS", ex.getMessage)))
+
+    toScala(kmsAsyncClient.sign(request))
+      .map { signResponse =>
+        val bytes: SdkBytes         = signResponse.signature()
+        val base64Signature: String = Base64.getEncoder.encodeToString(bytes.asByteArray())
+        toJWSEncoding(base64Signature)
+      }
+      .recoverWith(ex => Future.failed(ThirdPartyCallError("KMS", ex.getMessage)))
+  }
 
   private def toJWSEncoding(base64Text: String): String =
     base64Text
