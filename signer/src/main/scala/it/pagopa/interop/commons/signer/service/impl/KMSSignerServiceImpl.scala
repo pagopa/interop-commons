@@ -12,10 +12,15 @@ import java.util.Base64
 import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{existentials, postfixOps}
+import software.amazon.awssdk.http.async.SdkAsyncHttpClient
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 
-final case class KMSSignerServiceImpl()(implicit as: ActorSystem) extends SignerService {
-  implicit val ex: ExecutionContext     = as.dispatcher
-  private val kmsClient: KmsAsyncClient = KmsAsyncClient.builder().build()
+final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit as: ActorSystem, blockingEc: ExecutionContext)
+    extends SignerService {
+
+  private val asyncHttpClient: SdkAsyncHttpClient =
+    NettyNioAsyncHttpClient.builder().maxConcurrency(maxConcurrency).build()
+  private val kmsClient: KmsAsyncClient           = KmsAsyncClient.builder().httpClient(asyncHttpClient).build()
 
   override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     val request = createRequest(keyId, signatureAlgorithm, data)
