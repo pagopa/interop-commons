@@ -145,7 +145,13 @@ object Dependencies {
     lazy val mailDependencies: Seq[ModuleID] = Seq(courier.mail % Compile, courier.testMocking % Test)
 
     lazy val signerDependencies: Seq[ModuleID] =
-      Seq(aws.kms, vault.driver % Compile, testContainers.scalatest % Test, testContainers.vault % Test)
+      Seq(
+        aws.kms                  % Compile,
+        aws.sts                  % Compile,
+        vault.driver             % Compile,
+        testContainers.scalatest % Test,
+        testContainers.vault     % Test
+      )
 
     lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
 
