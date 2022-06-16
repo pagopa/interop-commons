@@ -47,9 +47,8 @@ class DefaultInteropTokenGenerator(val signerService: SignerService, val kidHold
         )
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
       serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
-      encodedJWT <- serializedToken.encodeBase64.toFuture
       signatureAlgorithm = kidHolder.getPrivateKeyKidSignatureAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
-      signature <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(encodedJWT)
+      signature <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Token generated")
     } yield Token(
