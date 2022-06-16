@@ -42,8 +42,8 @@ package object logging {
     * @param ctxs contexts to be logged
     * @return logging directive
     */
-  def logHttp(ctxs: Seq[(String, String)]): Directive0 = {
-    val contextStr = contexts(ctxs.toMap)
+  def logHttp(enabled: Boolean)(implicit ctxs: Seq[(String, String)]): Directive0 = if (enabled) {
+    val contextStr: String = contexts(ctxs.toMap)
 
     def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
       case RouteResult.Complete(res) =>
@@ -53,7 +53,7 @@ package object logging {
     }
 
     DebuggingDirectives.logRequestResult(logWithoutBody _)
-  }
+  } else Directive.Empty
 
   /** Generates a wrapping directive with logging context attributes with given configurations
     *
