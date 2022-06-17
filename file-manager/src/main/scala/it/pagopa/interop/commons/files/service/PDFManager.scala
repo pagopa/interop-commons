@@ -1,6 +1,7 @@
 package it.pagopa.interop.commons.files.service
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
+import it.pagopa.interop.commons.files.model.PDFConfiguration
 import it.pagopa.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.jsoup.Jsoup
@@ -25,7 +26,9 @@ trait PDFManager {
     * @tparam T result type (e.g.: byte array, file, etc).
     * @return
     */
-  def getPDF[O <: OutputStream, T](htmlTemplate: String, customData: Map[String, String])(streamOp: O => T) = { o: O =>
+  def getPDF[O <: OutputStream, T](htmlTemplate: String, customData: Map[String, String], configs: PDFConfiguration)(
+    streamOp: O => T
+  ): O => Try[T] = { o: O =>
     Using(o) { stream =>
       logger.debug("Getting PDF for HTML template...")
       val compiledHTML = TextTemplate(htmlTemplate, customData).toText
@@ -35,6 +38,8 @@ trait PDFManager {
       builder.useFastMode
       builder.withW3cDocument(dom, null)
       builder.toStream(stream)
+      configs.fonts.foreach(font => builder.useFont(new File(font.filePath), font.familyName))
+      // TODO Use font cache
       builder.run()
       logger.debug("PDF stream properly retrieved")
       streamOp(stream)
@@ -48,7 +53,7 @@ trait PDFManager {
     */
   def getPDFAsByteArray(htmlTemplate: String, customData: Map[String, String]): Try[Array[Byte]] = {
     def toByteArray =
-      getPDF[ByteArrayOutputStream, Array[Byte]](htmlTemplate, customData) { stream => stream.toByteArray }
+      getPDF[ByteArrayOutputStream, Array[Byte]](htmlTemplate, customData, PDFConfiguration.empty)(_.toByteArray)
     toByteArray(new ByteArrayOutputStream())
   }
 
@@ -57,9 +62,17 @@ trait PDFManager {
     * @param customData Map of data to be replaced in the template
     * @return array of byte representing the PDF
     */
-  def getPDFAsFile(destination: Path, htmlTemplate: String, customData: Map[String, String]): Try[File] = {
+  def getPDFAsFile(destination: Path, htmlTemplate: String, customData: Map[String, String]): Try[File] =
+    getPDFAsFileWithConfigs(destination, htmlTemplate, customData, PDFConfiguration.empty)
+
+  def getPDFAsFileWithConfigs(
+    destination: Path,
+    htmlTemplate: String,
+    customData: Map[String, String],
+    configs: PDFConfiguration
+  ): Try[File] = {
     def toFile =
-      getPDF[FileOutputStream, Unit](htmlTemplate, customData) { _ => () }
+      getPDF[FileOutputStream, Unit](htmlTemplate, customData, configs) { _ => () }
     toFile(new FileOutputStream(destination.toFile)).map(_ => destination.toFile)
   }
 
