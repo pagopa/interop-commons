@@ -43,6 +43,8 @@ final case class SQSHandler(queueUrl: String)(implicit ec: ExecutionContext) {
     result             <- Future.traverse(messagesAndHandles) { case (m, h) => toJson(m).flatMap(fn).map((_, h)) }
   } yield result
 
+  /** Fetches 10 messages at time until it reaches `chunkSize` and gives you back 
+    * both the deserialized messages and the handles. Runs until the queue is empty*/
   def processAllMessages[T: JsonReader](chunkSize: Int, visibilityTimeout: Int)(
     fn: (List[T], List[String]) => Future[Unit]
   ): Future[Unit] = {
