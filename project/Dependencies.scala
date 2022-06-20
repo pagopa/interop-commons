@@ -101,9 +101,10 @@ object Dependencies {
 
   private[this] object openhtmltopdf {
     lazy val namespace = "com.openhtmltopdf"
-    lazy val core      = namespace % "openhtmltopdf-core"   % openhtmltopdfVersion
-    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox" % openhtmltopdfVersion
-    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"  % openhtmltopdfVersion
+    lazy val core      = namespace % "openhtmltopdf-core"        % openhtmltopdfVersion
+    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox"      % openhtmltopdfVersion
+    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"       % openhtmltopdfVersion
+    lazy val svg       = namespace % "openhtmltopdf-svg-support" % openhtmltopdfVersion
   }
 
   private[this] object lightbend {
@@ -138,6 +139,7 @@ object Dependencies {
         openhtmltopdf.core   % Compile,
         openhtmltopdf.pdfbox % Compile,
         openhtmltopdf.slf4j  % Compile,
+        openhtmltopdf.svg    % Compile,
         pdfbox.lib           % Compile,
         pdfcompare.lib       % Test
       )
