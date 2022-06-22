@@ -5,6 +5,8 @@ import com.openhtmltopdf.svgsupport.BatikSVGDrawer
 import it.pagopa.interop.commons.files.model.PDFConfiguration
 import it.pagopa.interop.commons.utils.model.TextTemplate
 import org.apache.commons.io.output.ByteArrayOutputStream
+import org.jsoup.Jsoup
+import org.jsoup.helper.W3CDom
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{File, FileOutputStream, OutputStream}
@@ -31,16 +33,14 @@ trait PDFManager {
     Using(o) { stream =>
       logger.debug("Getting PDF for HTML template...")
       val compiledHTML = TextTemplate(htmlTemplate, customData).toText
-//      val doc          = Jsoup.parse(compiledHTML, "UTF-8")
-//      val dom          = W3CDom.convert(doc)
+      val doc          = Jsoup.parse(compiledHTML, "UTF-8")
+      val dom          = W3CDom.convert(doc)
       val builder      = new PdfRendererBuilder
       builder.useFastMode
-//      builder.withW3cDocument(dom, null)
       builder.useProtocolsStreamImplementation(new ClassPathStreamFactory(), "classpath")
-      builder.withHtmlContent(compiledHTML, configs.resourcesBaseUrl.orNull)
+      builder.withW3cDocument(dom, configs.resourcesBaseUrl.map(url => s"classpath:$url").orNull)
       builder.useSVGDrawer(new BatikSVGDrawer())
       builder.toStream(stream)
-//      configs.fonts.foreach(font => builder.useFont(new File(font.filePath), font.familyName))
       builder.run()
       logger.debug("PDF stream properly retrieved")
       streamOp(stream)

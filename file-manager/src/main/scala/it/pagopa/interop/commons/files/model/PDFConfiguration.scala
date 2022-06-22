@@ -1,7 +1,8 @@
 package it.pagopa.interop.commons.files.model
 
-final case class PDFFontConfig(filePath: String, familyName: String)
-final case class PDFConfiguration(fonts: List[PDFFontConfig], resourcesBaseUrl: Option[String])
+// Url must begin and end with the separator "/"
+final case class PDFConfiguration(resourcesBaseUrl: Option[String])
+
 object PDFConfiguration {
-  val empty: PDFConfiguration = PDFConfiguration(fonts = List.empty, resourcesBaseUrl = None)
+  val empty: PDFConfiguration = PDFConfiguration(resourcesBaseUrl = None)
 }
