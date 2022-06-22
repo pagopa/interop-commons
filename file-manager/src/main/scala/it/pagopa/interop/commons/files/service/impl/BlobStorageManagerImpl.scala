@@ -12,6 +12,7 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
 import scala.concurrent.ExecutionContextExecutor
+import com.azure.core.util.BinaryData
 
 final class BlobStorageManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
@@ -41,10 +42,18 @@ final class BlobStorageManagerImpl(blockingExecutionContext: ExecutionContextExe
     blobKey
   }(blockingExecutionContext)
 
-  override def store(
+  override def storeBytes(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = ???
+  )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = Future {
+    val blobKey                = createBlobKey(resourceId.toString, path = path, fileName = fileName)
+    logger.debug("Storing file id {} at path {}", resourceId.toString, blobKey)
+    val blobContainerClient    = azureBlobClient.getBlobContainerClient(containerPath)
+    val blobClient: BlobClient = blobContainerClient.getBlobClient(blobKey)
+    blobClient.upload(BinaryData.fromBytes(fileContents))
+    logger.debug("File {} stored", resourceId.toString)
+    blobKey
+  }(blockingExecutionContext)
 
   override def copy(
     containerPath: String,

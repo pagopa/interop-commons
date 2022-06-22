@@ -63,7 +63,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     asyncClient.putObject(putObjectRequest, asyncRequestBody).toScala.map(_ => key)(blockingExecutionContext)
   }
 
-  override def store(
+  override def storeBytes(
     containerPath: String,
     path: String
   )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = {

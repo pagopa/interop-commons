@@ -24,7 +24,7 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     Files.move(fileParts._2.toPath(), destPath, StandardCopyOption.REPLACE_EXISTING).toAbsolutePath().toString()
   }
 
-  override def store(
+  override def storeBytes(
     containerPath: String,
     path: String
   )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = Future {

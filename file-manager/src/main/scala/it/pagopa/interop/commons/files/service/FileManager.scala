@@ -15,7 +15,7 @@ trait FileManager {
 
   def store(containerPath: String, path: String)(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
 
-  def store(
+  def storeBytes(
     containerPath: String,
     path: String
   )(resourceId: UUID, fileName: String, fileContent: Array[Byte]): Future[StorageFilePath]
