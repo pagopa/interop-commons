@@ -5,10 +5,10 @@ import com.typesafe.config.{Config, ConfigFactory}
 case class StorageAccountInfo(applicationId: String, applicationSecret: String, endpoint: String)
 
 object StorageConfiguration {
-  private lazy val config: Config =
+  private val config: Config =
     ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
 
-  lazy val maxConcurrency: Int = Option(config.getInt("interop-commons.storage.max-concurrency")).getOrElse(50)
+  val maxConcurrency: Int = config.getInt("interop-commons.storage.max-concurrency")
 
   lazy val storageAccountInfo: StorageAccountInfo = StorageAccountInfo(
     applicationId = config.getString("interop-commons.storage.application.id"),
