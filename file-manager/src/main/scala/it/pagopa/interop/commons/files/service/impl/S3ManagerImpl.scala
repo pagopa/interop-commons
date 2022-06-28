@@ -20,7 +20,7 @@ import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import scala.concurrent.ExecutionContext
 import software.amazon.awssdk.core.async.AsyncRequestBody
-import scala.compat.java8.FutureConverters._
+import scala.jdk.FutureConverters._
 import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
 import it.pagopa.interop.commons.files.StorageConfiguration
 import java.util.function.Consumer
@@ -60,7 +60,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     logger.debug("Storing resource {} at path {}", resourceId.toString, key)
     val putObjectRequest: PutObjectRequest = PutObjectRequest.builder.bucket(containerPath).key(key).build
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromFile(fileParts._2)
-    asyncClient.putObject(putObjectRequest, asyncRequestBody).toScala.map(_ => key)(blockingExecutionContext)
+    asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.map(_ => key)(blockingExecutionContext)
   }
 
   override def storeBytes(
@@ -71,7 +71,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     logger.debug("Storing resource {} at path {}", resourceId.toString, key)
     val putObjectRequest: PutObjectRequest = PutObjectRequest.builder.bucket(containerPath).key(key).build
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromBytes(fileContents)
-    asyncClient.putObject(putObjectRequest, asyncRequestBody).toScala.map(_ => key)(blockingExecutionContext)
+    asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.map(_ => key)(blockingExecutionContext)
   }
 
   override def copy(
@@ -87,7 +87,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
       .destinationBucket(container)
       .build()
 
-    asyncClient.copyObject(copyObjRequest).toScala.map(_ => key)(blockingExecutionContext)
+    asyncClient.copyObject(copyObjRequest).asScala.map(_ => key)(blockingExecutionContext)
   }
 
   override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = {
@@ -95,7 +95,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     val getObjectRequest: GetObjectRequest = GetObjectRequest.builder.bucket(containerPath).key(filePath).build
 
     val s3Object: Future[ResponseBytes[GetObjectResponse]] =
-      asyncClient.getObject(getObjectRequest, AsyncResponseTransformer.toBytes[GetObjectResponse]).toScala
+      asyncClient.getObject(getObjectRequest, AsyncResponseTransformer.toBytes[GetObjectResponse]).asScala
 
     s3Object.map(response => {
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
@@ -113,7 +113,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
           .key(path)
           .build()
       )
-      .toScala
+      .asScala
       .map(_.deleteMarker().booleanValue())(blockingExecutionContext)
   }
 
