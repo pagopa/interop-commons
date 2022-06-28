@@ -10,21 +10,45 @@ import software.amazon.awssdk.services.sqs.model.{
 }
 import spray.json.{JsonWriter, _}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.{Failure, Success, Try}
+import software.amazon.awssdk.http.async.SdkAsyncHttpClient
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
+import java.util.function.Consumer
+import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
+import java.util.concurrent.Executor
+import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
+import scala.jdk.FutureConverters._
+import com.typesafe.config.ConfigFactory
 
-final case class SQSHandler(queueUrl: String)(implicit ec: ExecutionContext) {
+final case class SQSHandler(queueUrl: String)(blockingExecutionContext: ExecutionContextExecutor) {
 
-  private val sqsClient: SqsClient = SqsClient.create()
+  private implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
-  def send[T: JsonWriter](message: T): Future[String] = Future {
+  private lazy val concurrency: Int =
+    ConfigFactory.defaultApplication().getInt("interop-commons.queue-manager.max-concurrency")
+
+  private val asyncHttpClient: SdkAsyncHttpClient =
+    NettyNioAsyncHttpClient.builder().maxConcurrency(concurrency).build()
+
+  private val advancedOptions: Consumer[ClientAsyncConfiguration.Builder] =
+    new Consumer[ClientAsyncConfiguration.Builder] {
+      override def accept(t: ClientAsyncConfiguration.Builder): Unit =
+        t.advancedOption[Executor](SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingExecutionContext)
+    }
+
+  private val sqsClient: SqsAsyncClient =
+    SqsAsyncClient.builder().httpClient(asyncHttpClient).asyncConfiguration(advancedOptions).build()
+
+  def send[T: JsonWriter](message: T): Future[String] = {
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
       .builder()
       .queueUrl(queueUrl)
       .messageBody(message.toJson.compactPrint)
       .build()
-    sqsClient.sendMessage(sendMsgRequest).messageId()
+    sqsClient.sendMessage(sendMsgRequest).asScala.map(_.messageId())
   }
 
   def deleteMessage(receiptHandle: String): Future[Unit] = Future {
@@ -33,8 +57,8 @@ final case class SQSHandler(queueUrl: String)(implicit ec: ExecutionContext) {
       .queueUrl(queueUrl)
       .receiptHandle(receiptHandle)
       .build()
-    sqsClient.deleteMessage(deleteMessageRequest)
-  }.void
+    sqsClient.deleteMessage(deleteMessageRequest).asScala.void
+  }
 
   /** Fetches 10 messages at time until it reaches `chunkSize` and gives you back 
     * both the raw messages and the handles. Runs until the queue is empty*/
@@ -85,14 +109,14 @@ final case class SQSHandler(queueUrl: String)(implicit ec: ExecutionContext) {
   private def rawReceiveNBodyAndHandle(n: Int, visibilityTimeout: Int): Future[List[(String, String)]] =
     rawReceiveN(n, visibilityTimeout).map(_.map(m => (m.body(), m.receiptHandle())))
 
-  private def rawReceiveN(n: Int, visibilityTimeout: Int): Future[List[Message]] = Future {
+  private def rawReceiveN(n: Int, visibilityTimeout: Int): Future[List[Message]] = {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
       .queueUrl(queueUrl)
       .maxNumberOfMessages(n)
       .visibilityTimeout(visibilityTimeout)
       .build()
-    sqsClient.receiveMessage(receiveMessageRequest).messages().asScala.toList
+    sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.toList)
   }
 
 }
