@@ -40,10 +40,10 @@ object Dependencies {
 
   }
 
-  private[this] object azure {
-    lazy val azureNamespace = "com.azure"
-    lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
-  }
+  // private[this] object azure {
+  //   lazy val azureNamespace = "com.azure"
+  //   lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
+  // }
 
   private[this] object spray {
     lazy val spray = "io.spray" %% "spray-json" % sprayJsonVersion
@@ -133,7 +133,6 @@ object Dependencies {
       Seq(
         aws.s3               % Compile,
         aws.sts              % Compile,
-        azure.storageBlob    % Compile,
         commons.fileUpload   % Compile,
         jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,

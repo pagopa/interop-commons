@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons.files.service
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.interop.commons.files.service.impl.{BlobStorageManagerImpl, FileManagerImpl, S3ManagerImpl}
+import it.pagopa.interop.commons.files.service.impl.{FileManagerImpl, S3ManagerImpl}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.util.UUID
@@ -33,13 +33,11 @@ trait FileManager {
 object FileManager {
 
   sealed trait Kind
-  final object File        extends Kind
-  final object BlobStorage extends Kind
-  final object S3          extends Kind
+  final object File extends Kind
+  final object S3   extends Kind
 
   def get(kind: FileManager.Kind)(blockingExecutionContext: ExecutionContextExecutor): FileManager = kind match {
-    case File        => new FileManagerImpl(blockingExecutionContext)
-    case BlobStorage => new BlobStorageManagerImpl(blockingExecutionContext)
-    case S3          => new S3ManagerImpl(blockingExecutionContext)
+    case File => new FileManagerImpl(blockingExecutionContext)
+    case S3   => new S3ManagerImpl(blockingExecutionContext)
   }
 }
