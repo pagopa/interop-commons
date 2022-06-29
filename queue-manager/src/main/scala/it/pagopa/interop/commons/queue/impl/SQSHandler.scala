@@ -27,8 +27,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
 
   private implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
-  private lazy val concurrency: Int =
-    ConfigFactory.defaultApplication().getInt("interop-commons.queue-manager.max-concurrency")
+  private lazy val concurrency: Int = ConfigFactory.load().getInt("interop-commons.queue-manager.max-concurrency")
 
   private val asyncHttpClient: SdkAsyncHttpClient =
     NettyNioAsyncHttpClient.builder().maxConcurrency(concurrency).build()
