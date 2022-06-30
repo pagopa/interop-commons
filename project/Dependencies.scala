@@ -40,11 +40,6 @@ object Dependencies {
 
   }
 
-  // private[this] object azure {
-  //   lazy val azureNamespace = "com.azure"
-  //   lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
-  // }
-
   private[this] object spray {
     lazy val spray = "io.spray" %% "spray-json" % sprayJsonVersion
   }
