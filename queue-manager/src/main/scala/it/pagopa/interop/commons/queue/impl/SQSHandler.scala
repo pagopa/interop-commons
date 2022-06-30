@@ -8,7 +8,7 @@ import software.amazon.awssdk.services.sqs.model.{
   ReceiveMessageRequest,
   SendMessageRequest
 }
-import spray.json.{JsonWriter, _}
+import spray.json._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
@@ -97,10 +97,10 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
     fn: T => Future[V]
   ): Future[List[(V, String)]] = for {
     messagesAndHandles <- rawReceiveNBodyAndHandle(maxNumberOfMessages, visibilityTimeout)
-    result             <- Future.traverse(messagesAndHandles) { case (m, h) => toJson(m).flatMap(fn).map((_, h)) }
+    result             <- Future.traverse(messagesAndHandles) { case (m, h) => deserialize(m).flatMap(fn).map((_, h)) }
   } yield result
 
-  private def toJson[T: JsonReader](s: String): Future[T] = Try(s.parseJson) match {
+  private def deserialize[T: JsonReader](s: String): Future[T] = Try(s.parseJson) match {
     case Failure(_)    => Future.failed(DeserializationException(s"Not a valid json: $s"))
     case Success(json) => Future.fromTry(Try(json.convertTo[T]))
   }
