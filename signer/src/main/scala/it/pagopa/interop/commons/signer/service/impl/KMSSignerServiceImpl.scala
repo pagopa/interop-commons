@@ -9,7 +9,7 @@ import software.amazon.awssdk.services.kms.KmsAsyncClient
 import software.amazon.awssdk.services.kms.model.{SignRequest, SigningAlgorithmSpec}
 
 import java.util.Base64
-import scala.jdk.FutureConverters._
+import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{existentials, postfixOps}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
@@ -24,9 +24,7 @@ final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit as: ActorSys
 
   override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     val request = createRequest(keyId, signatureAlgorithm, data)
-    kmsClient
-      .sign(request)
-      .asScala
+    toScala(kmsClient.sign(request))
       .map { signResponse =>
         val bytes: SdkBytes         = signResponse.signature()
         val base64Signature: String = Base64.getEncoder.encodeToString(bytes.asByteArray())
