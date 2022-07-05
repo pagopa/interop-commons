@@ -52,9 +52,13 @@ trait PDFManager {
     * @param customData Map of data to be replaced in the template
     * @return array of byte representing the PDF
     */
-  def getPDFAsByteArray(htmlTemplate: String, customData: Map[String, String]): Try[Array[Byte]] = {
+  def getPDFAsByteArray(
+    htmlTemplate: String,
+    customData: Map[String, String],
+    configs: PDFConfiguration
+  ): Try[Array[Byte]] = {
     def toByteArray =
-      getPDF[ByteArrayOutputStream, Array[Byte]](htmlTemplate, customData, PDFConfiguration.empty)(_.toByteArray)
+      getPDF[ByteArrayOutputStream, Array[Byte]](htmlTemplate, customData, configs)(_.toByteArray)
     toByteArray(new ByteArrayOutputStream())
   }
 

@@ -1,6 +1,7 @@
 package it.pagopa.interop.commons.files
 
 import de.redsix.pdfcompare.{CompareResult, PdfComparator}
+import it.pagopa.interop.commons.files.model.PDFConfiguration
 import it.pagopa.interop.commons.files.service.PDFManager
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -44,7 +45,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
         )
 
       val generatedPDF: File = File.createTempFile("byte-array-output", "pdf")
-      Files.write(generatedPDF.toPath, PDFManager.getPDFAsByteArray(pdfTemplate, data).get)
+      Files.write(generatedPDF.toPath, PDFManager.getPDFAsByteArray(pdfTemplate, data, PDFConfiguration.empty).get)
 
       val result: CompareResult = new PdfComparator(expectedPDF, generatedPDF).compare()
       result.isEqual shouldBe true
