@@ -1,9 +1,10 @@
 import ProjectSettings.ProjectFrom
 
-ThisBuild / scalaVersion     := "2.13.8"
-ThisBuild / organization     := "it.pagopa"
-ThisBuild / organizationName := "Pagopa S.p.A."
-ThisBuild / version          := ComputeVersion.version
+ThisBuild / scalaVersion      := "2.13.8"
+ThisBuild / organization      := "it.pagopa"
+ThisBuild / organizationName  := "Pagopa S.p.A."
+ThisBuild / version           := ComputeVersion.version
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val fileManagerModuleName = "file-manager"
 val mailManagerModuleName = "mail-manager"
