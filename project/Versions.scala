@@ -5,7 +5,7 @@ object Versions {
   lazy val apacheCommonsTextVersion   = "1.9"
   lazy val catsVersion                = "2.7.0"
   lazy val commonsFileUploadVersion   = "1.4"
-  lazy val courierVersion             = "3.1.0"
+  lazy val courierVersion             = "3.2.0"
   lazy val httpJson4sVersion          = "1.38.2"
   lazy val jacksonVersion             = "2.11.4"
   lazy val json4sVersion              = "4.0.3"
