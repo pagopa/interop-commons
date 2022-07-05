@@ -1,5 +1,7 @@
 package it.pagopa.interop.commons
 
+import buildinfo.BuildInfo
+import cats.syntax.all._
 import akka.event.Logging
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
@@ -16,17 +18,13 @@ package object logging {
 
   private val config: Config            = ConfigFactory.load()
   private val isInternetFacing: Boolean =
-    if (config.hasPath("interop-commons.isInternetFacing"))
-      config.getBoolean("interop-commons.isInternetFacing")
-    else
-      false
-
-  @inline private def optToLog(opt: Option[String]): String = opt.getOrElse("")
+    if (config.hasPath("interop-commons.isInternetFacing")) config.getBoolean("interop-commons.isInternetFacing")
+    else false
 
   private def contexts(values: Map[String, String]): String = {
-    val ipAddress     = optToLog(values.get(IP_ADDRESS))
-    val subject       = optToLog(values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)))
-    val correlationId = optToLog(values.get(CORRELATION_ID_HEADER))
+    val ipAddress: String     = values.getOrElse(IP_ADDRESS, "")
+    val subject: String       = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
+    val correlationId: String = values.getOrElse(CORRELATION_ID_HEADER, "")
     s"[$ipAddress] [$subject] [$correlationId]"
   }
 
@@ -34,8 +32,8 @@ package object logging {
     */
   implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
-      val fieldsMap = fields.toMap
-      s"[${optToLog(fieldsMap.get(UID))}] [${optToLog(fieldsMap.get(CORRELATION_ID_HEADER))}] - $originalMsg"
+      val fieldsMap: Map[String, String] = fields.toMap
+      s"[${fieldsMap.getOrElse(UID, "")}] [${fieldsMap.getOrElse(CORRELATION_ID_HEADER, "")}] - $originalMsg"
     }
   }
 
@@ -44,8 +42,8 @@ package object logging {
     * @param ctxs contexts to be logged
     * @return logging directive
     */
-  def logHttp(ctxs: Seq[(String, String)]): Directive0 = {
-    val contextStr = contexts(ctxs.toMap)
+  def logHttp(enabled: Boolean)(implicit ctxs: Seq[(String, String)]): Directive0 = if (enabled) {
+    val contextStr: String = contexts(ctxs.toMap)
 
     def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
       case RouteResult.Complete(res) =>
@@ -55,7 +53,7 @@ package object logging {
     }
 
     DebuggingDirectives.logRequestResult(logWithoutBody _)
-  }
+  } else Directive.Empty
 
   /** Generates a wrapping directive with logging context attributes with given configurations
     *
@@ -89,5 +87,12 @@ package object logging {
   val withLoggingAttributes: Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] =
     (wrappingDirective: Directive1[Seq[(String, String)]]) =>
       withLoggingAttributesGenerator(isInternetFacing)(wrappingDirective)
+
+  def renderBuildInfo(buildInfo: BuildInfo.type): String = buildInfo.toMap
+    .collect {
+      case (k, v: Option[_]) if v.isDefined => s"$k: ${v.get}"
+      case (k, v)                           => s"$k: $v"
+    }
+    .mkString("[Build Info] ", ", ", "")
 
 }

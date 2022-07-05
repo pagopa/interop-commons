@@ -40,20 +40,16 @@ object Dependencies {
 
   }
 
-  private[this] object azure {
-    lazy val azureNamespace = "com.azure"
-    lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
-  }
-
   private[this] object spray {
     lazy val spray = "io.spray" %% "spray-json" % sprayJsonVersion
   }
 
   private[this] object aws {
     lazy val awsNamespace = "software.amazon.awssdk"
-    lazy val s3           = awsNamespace % "s3"       % awsSdkVersion
-    lazy val dynamodb     = awsNamespace % "dynamodb" % awsDynamoDBVersion
-    lazy val sqs          = awsNamespace % "sqs"      % awsSqsVersion
+    lazy val kms          = awsNamespace % "kms" % awsVersion
+    lazy val s3           = awsNamespace % "s3"  % awsVersion
+    lazy val sqs          = awsNamespace % "sqs" % awsVersion
+    lazy val sts          = awsNamespace % "sts" % awsVersion // Required to use IAM role on container
   }
 
   private[this] object courier {
@@ -100,9 +96,10 @@ object Dependencies {
 
   private[this] object openhtmltopdf {
     lazy val namespace = "com.openhtmltopdf"
-    lazy val core      = namespace % "openhtmltopdf-core"   % openhtmltopdfVersion
-    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox" % openhtmltopdfVersion
-    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"  % openhtmltopdfVersion
+    lazy val core      = namespace % "openhtmltopdf-core"        % openhtmltopdfVersion
+    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox"      % openhtmltopdfVersion
+    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"       % openhtmltopdfVersion
+    lazy val svg       = namespace % "openhtmltopdf-svg-support" % openhtmltopdfVersion
   }
 
   private[this] object lightbend {
@@ -130,24 +127,31 @@ object Dependencies {
     lazy val fileDependencies: Seq[ModuleID] =
       Seq(
         aws.s3               % Compile,
-        azure.storageBlob    % Compile,
+        aws.sts              % Compile,
         commons.fileUpload   % Compile,
         jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,
         openhtmltopdf.pdfbox % Compile,
         openhtmltopdf.slf4j  % Compile,
+        openhtmltopdf.svg    % Compile,
         pdfbox.lib           % Compile,
         pdfcompare.lib       % Test
       )
 
     lazy val mailDependencies: Seq[ModuleID] = Seq(courier.mail % Compile, courier.testMocking % Test)
 
-    lazy val vaultDependencies: Seq[ModuleID] =
-      Seq(vault.driver % Compile, testContainers.scalatest % Test, testContainers.vault % Test)
+    lazy val signerDependencies: Seq[ModuleID] =
+      Seq(
+        aws.kms                  % Compile,
+        aws.sts                  % Compile,
+        vault.driver             % Compile,
+        testContainers.scalatest % Test,
+        testContainers.vault     % Test
+      )
 
     lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
 
-    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, spray.spray % Compile)
+    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, aws.sts % Compile, spray.spray % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy

@@ -19,7 +19,12 @@ object TypeConversions {
   }
 
   implicit class TryOps[A](val tryOp: Try[A]) extends AnyVal {
-    def toFuture: Future[A] = tryOp.fold(e => Future.failed(e), a => Future.successful(a))
+    def toFuture: Future[A]                        = tryOp.fold(e => Future.failed(e), a => Future.successful(a))
+    def leftMap(f: Throwable => Throwable): Try[A] = tryOp match {
+      case Failure(e)     => Failure(f(e))
+      case x @ Success(_) => x
+    }
+    def as(e: Throwable): Try[A]                   = tryOp.leftMap(_ => e)
   }
 
   implicit class OptionOps[A](val option: Option[A]) extends AnyVal {
@@ -46,6 +51,9 @@ object TypeConversions {
     def decodeBase64: Try[String]             = Try {
       val decoded: Array[Byte] = Base64.getDecoder.decode(str.getBytes(StandardCharsets.UTF_8))
       new String(decoded, StandardCharsets.UTF_8)
+    }
+    def encodeBase64: Try[String]             = Try {
+      Base64.getEncoder.encodeToString(str.getBytes(StandardCharsets.UTF_8))
     }
 
     def toBase64SHA1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))

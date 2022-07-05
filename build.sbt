@@ -8,14 +8,14 @@ ThisBuild / version          := ComputeVersion.version
 val fileManagerModuleName = "file-manager"
 val mailManagerModuleName = "mail-manager"
 val jwtModuleName         = "jwt"
-val vaultModuleName       = "vault"
+val signerModuleName      = "signer"
 val utilsModuleName       = "utils"
 val queueModuleName       = "queue-manager"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
 cleanFiles += baseDirectory.value / jwtModuleName / "target"
-cleanFiles += baseDirectory.value / vaultModuleName / "target"
+cleanFiles += baseDirectory.value / signerModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
 
@@ -49,12 +49,6 @@ lazy val fileManager = project
   .dependsOn(utils)
   .setupBuildInfo
 
-lazy val jwtModule = project
-  .in(file(jwtModuleName))
-  .settings(name := "interop-commons-jwt", sharedSettings, libraryDependencies ++= Dependencies.Jars.jwtDependencies)
-  .dependsOn(utils)
-  .setupBuildInfo
-
 lazy val mailManager = project
   .in(file(mailManagerModuleName))
   .settings(
@@ -62,18 +56,30 @@ lazy val mailManager = project
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.mailDependencies
   )
-  .dependsOn(utils, fileManager)
+  .dependsOn(utils)
   .setupBuildInfo
 
-lazy val vault = project
-  .in(file(vaultModuleName))
+lazy val signer = project
+  .in(file(signerModuleName))
   .settings(
-    name        := "interop-commons-vault",
+    name        := "interop-commons-signer",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.vaultDependencies,
+    libraryDependencies ++= Dependencies.Jars.signerDependencies,
     Test / fork := true
   )
   .dependsOn(utils)
+  .setupBuildInfo
+
+lazy val jwtModule = project
+  .in(file(jwtModuleName))
+  .settings(
+    name        := "interop-commons-jwt",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.jwtDependencies,
+    Test / fork := true,
+    Test / javaOptions += "-Dconfig.file=src/test/resources/reference.conf"
+  )
+  .dependsOn(utils, signer)
   .setupBuildInfo
 
 lazy val queue = project
@@ -86,5 +92,5 @@ lazy val queue = project
   .setupBuildInfo
 
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, vault, jwtModule, queue)
+  .aggregate(utils, fileManager, mailManager, signer, jwtModule, queue)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)
