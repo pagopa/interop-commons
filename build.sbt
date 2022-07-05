@@ -56,7 +56,7 @@ lazy val mailManager = project
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.mailDependencies
   )
-  .dependsOn(utils, fileManager)
+  .dependsOn(utils)
   .setupBuildInfo
 
 lazy val signer = project
