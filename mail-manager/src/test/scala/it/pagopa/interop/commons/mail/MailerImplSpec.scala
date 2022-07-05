@@ -5,8 +5,10 @@ import it.pagopa.interop.commons.mail.service.InteropMailer
 import it.pagopa.interop.commons.mail.service.impl.DefaultInteropMailer
 import it.pagopa.interop.commons.utils.model.TextTemplate
 import org.jvnet.mock_javamail.Mailbox
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.util.UUID
@@ -15,6 +17,8 @@ import javax.mail.internet.MimeMultipart
 class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
   val mailer: InteropMailer = new DefaultInteropMailer with MockMailerConfiguration
+
+  val timeout: Timeout = Timeout(Span(3, Seconds))
 
   "a MailSender" should {
     "send templated text email" in {
@@ -28,12 +32,12 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
         body = TextTemplate("This is the UUID token ${token}", Map("token" -> uuidToken.toString)),
         attachments = Seq.empty
       )
-      mailer.sendWithTemplate(mailData).futureValue
+      mailer.sendWithTemplate(mailData).futureValue(timeout)
 
       val milanInbox = Mailbox.get("legal@comune.milano.it")
       milanInbox.size shouldBe 1
       val milanMsg   = milanInbox.get(0)
-      milanMsg.getContent shouldBe s"This is the UUID token ${uuidToken}"
+      milanMsg.getContent shouldBe s"This is the UUID token $uuidToken"
       milanMsg.getSubject shouldBe "Interop - Onboarding Comune di Milano"
     }
 
@@ -46,7 +50,7 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
         body = "Attachment ahead",
         attachments = Seq(MailAttachment("attachment", tempFile, mimeType))
       )
-      mailer.send(mailData).futureValue
+      mailer.send(mailData).futureValue(timeout)
 
       val bolognaInbox = Mailbox.get("legal@comune.bologna.it")
       bolognaInbox.size shouldBe 1

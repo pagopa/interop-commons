@@ -88,7 +88,7 @@ package object jwt {
 
     val roles: Set[String] = maybeRoles match {
       case Failure(e)         =>
-        logger.warn("Error while extracting userRoles from claims", e)
+        logger.warn(s"Unable to extract userRoles from claims: ${e.getMessage()}")
         Set.empty[String]
       case Success(rolesList) => rolesList.toSet
     }

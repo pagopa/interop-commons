@@ -2,11 +2,11 @@ package it.pagopa.interop.commons.jwt.service.impl
 
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.{M2M_ROLES, PrivateKeysKidHolder}
-import it.pagopa.interop.commons.jwt.model.{EC, Token, TokenSeed}
+import it.pagopa.interop.commons.jwt.model.{Token, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
+import it.pagopa.interop.commons.jwt.{M2M_ROLES, PrivateKeysKidHolder}
+import it.pagopa.interop.commons.signer.service.SignerService
 import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
-import it.pagopa.interop.commons.vault.service.VaultTransitService
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
@@ -16,8 +16,8 @@ import scala.util.Try
 
 /** Default implementation for the generation of consumer Interop tokens
   */
-class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService, val kidHolder: PrivateKeysKidHolder)(
-  implicit ec: ExecutionContext
+class DefaultInteropTokenGenerator(val signerService: SignerService, val kidHolder: PrivateKeysKidHolder)(implicit
+  ec: ExecutionContext
 ) extends InteropTokenGenerator {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -46,10 +46,9 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
           validityDurationInSeconds
         )
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
-      serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
-      encodedJWT <- serializedToken.encodeBase64.toFuture
+      serializedToken    = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
       signatureAlgorithm = kidHolder.getPrivateKeyKidSignatureAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
-      signature <- vaultTransitService.encryptData(interopPrivateKeyKid, signatureAlgorithm)(encodedJWT)
+      signature <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Token generated")
     } yield Token(
@@ -57,7 +56,13 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
       jti = interopJWT.getJWTClaimsSet.getJWTID,
       iat = interopJWT.getJWTClaimsSet.getIssueTime.getTime / 1000,
       exp = interopJWT.getJWTClaimsSet.getExpirationTime.getTime / 1000,
-      nbf = interopJWT.getJWTClaimsSet.getNotBeforeTime.getTime / 1000
+      nbf = interopJWT.getJWTClaimsSet.getNotBeforeTime.getTime / 1000,
+      expIn = validityDurationInSeconds,
+      alg = clientAssertionToken.getHeader.getAlgorithm.getName,
+      kid = interopPrivateKeyKid,
+      aud = audience,
+      sub = clientAssertionToken.getJWTClaimsSet.getSubject,
+      iss = tokenIssuer
     )
 
   override def generateInternalToken(
@@ -67,10 +72,11 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
     secondsDuration: Long
   ): Future[Token] =
     for {
-      interopPrivateKeyKid <- kidHolder.getPrivateKeyKidByAlgorithmType(EC).toFuture
+      algorithm            <- Future.successful(JWSAlgorithm.RS256)
+      interopPrivateKeyKid <- kidHolder.getPrivateKeyKidByAlgorithm(algorithm).toFuture
       tokenSeed = TokenSeed
         .createInternalTokenWithKid(
-          algorithm = JWSAlgorithm.ES256,
+          algorithm = algorithm,
           kid = interopPrivateKeyKid,
           subject = subject,
           audience = audience,
@@ -78,9 +84,9 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
           validityDurationSeconds = secondsDuration
         )
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
-      serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
-      encodedJWT <- serializedToken.encodeBase64.toFuture
-      signature  <- vaultTransitService.encryptData(interopPrivateKeyKid, EC.signatureAlgorithm)(encodedJWT)
+      serializedToken    = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
+      signatureAlgorithm = kidHolder.getPrivateKeyKidSignatureAlgorithm(algorithm)
+      signature <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Interop internal Token generated")
     } yield Token(
@@ -88,7 +94,13 @@ class DefaultInteropTokenGenerator(val vaultTransitService: VaultTransitService,
       jti = interopJWT.getJWTClaimsSet.getJWTID,
       iat = interopJWT.getJWTClaimsSet.getIssueTime.getTime / 1000,
       exp = interopJWT.getJWTClaimsSet.getExpirationTime.getTime / 1000,
-      nbf = interopJWT.getJWTClaimsSet.getNotBeforeTime.getTime / 1000
+      nbf = interopJWT.getJWTClaimsSet.getNotBeforeTime.getTime / 1000,
+      expIn = secondsDuration,
+      alg = algorithm.getName,
+      kid = interopPrivateKeyKid,
+      aud = audience,
+      sub = subject,
+      iss = tokenIssuer
     )
 
   private def jwtFromSeed(seed: TokenSeed): Try[SignedJWT] = Try {

@@ -4,7 +4,7 @@ import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import it.pagopa.interop.commons.jwt.model.Token
 import it.pagopa.interop.commons.jwt.service.impl.DefaultInteropTokenGenerator
-import it.pagopa.interop.commons.vault.service.VaultTransitService
+import it.pagopa.interop.commons.signer.service.SignerService
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -13,10 +13,11 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import com.nimbusds.jwt.SignedJWT
+import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 
-object MockVaultTransitService extends VaultTransitService {
+object MockVaultTransitService extends SignerService {
 
-  override def encryptData(keyId: String, signatureAlgorithm: Option[String])(data: String): Future[String] = {
+  override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     // mock signature
     Future.successful("QEp_8a9ePDhqD-4mp-GT0BvzQKOrC8i_SBJhlAcFiqdpoRdpTBvI8IsjJj2uSLzkqZwyUY2gnSZBPNEwQOIRlg")
   }

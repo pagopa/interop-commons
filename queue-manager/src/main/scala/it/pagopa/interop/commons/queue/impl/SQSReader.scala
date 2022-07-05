@@ -38,7 +38,7 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
   private def receiveMessageAndHandleN(n: Int): Future[List[(Message, String)]] = for {
     messages <- rawReceiveN(n)
     bodyAndHandle = messages.map(m => (m.body(), m.receiptHandle()))
-    messagesAndHandles <- bodyAndHandle.traverse { case (body, handle) => toMessage(body).map((_, handle)) }
+    messagesAndHandles <- Future.traverse(bodyAndHandle) { case (body, handle) => toMessage(body).map((_, handle)) }
   } yield messagesAndHandles
 
   override def receiveN(n: Int): Future[List[Message]] = for {
@@ -59,7 +59,9 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
 
   override def handleN[V](n: Int)(f: Message => Future[V]): Future[List[V]] = for {
     messagesAndHandles <- receiveMessageAndHandleN(n)
-    result <- messagesAndHandles.traverse { case (message, handle) => handleMessageAndDelete(f)(message, handle) }
+    result             <- Future.traverse(messagesAndHandles) { case (message, handle) =>
+      handleMessageAndDelete(f)(message, handle)
+    }
   } yield result
 
   override def handle[V](f: Message => Future[V]): Future[Unit] = {
