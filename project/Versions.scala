@@ -18,7 +18,7 @@ object Versions {
   lazy val pdfBoxVersion              = "2.0.26"
   lazy val pdfCompareVersion          = "1.1.61"
   lazy val s3Persistence              = "1.1.74"
-  lazy val scalatestVersion           = "3.2.11"
+  lazy val scalatestVersion           = "3.2.12"
   lazy val testContainersScalaVersion = "0.40.8"
   lazy val swaggerValidatorVersion    = "2.27.4"
   lazy val typesafeConfigVersion      = "1.4.2"
