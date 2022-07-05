@@ -40,11 +40,6 @@ object Dependencies {
 
   }
 
-  private[this] object azure {
-    lazy val azureNamespace = "com.azure"
-    lazy val storageBlob    = azureNamespace % "azure-storage-blob" % azureStorageBlobVersion
-  }
-
   private[this] object spray {
     lazy val spray = "io.spray" %% "spray-json" % sprayJsonVersion
   }
@@ -101,9 +96,10 @@ object Dependencies {
 
   private[this] object openhtmltopdf {
     lazy val namespace = "com.openhtmltopdf"
-    lazy val core      = namespace % "openhtmltopdf-core"   % openhtmltopdfVersion
-    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox" % openhtmltopdfVersion
-    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"  % openhtmltopdfVersion
+    lazy val core      = namespace % "openhtmltopdf-core"        % openhtmltopdfVersion
+    lazy val pdfbox    = namespace % "openhtmltopdf-pdfbox"      % openhtmltopdfVersion
+    lazy val slf4j     = namespace % "openhtmltopdf-slf4j"       % openhtmltopdfVersion
+    lazy val svg       = namespace % "openhtmltopdf-svg-support" % openhtmltopdfVersion
   }
 
   private[this] object lightbend {
@@ -132,12 +128,12 @@ object Dependencies {
       Seq(
         aws.s3               % Compile,
         aws.sts              % Compile,
-        azure.storageBlob    % Compile,
         commons.fileUpload   % Compile,
         jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,
         openhtmltopdf.pdfbox % Compile,
         openhtmltopdf.slf4j  % Compile,
+        openhtmltopdf.svg    % Compile,
         pdfbox.lib           % Compile,
         pdfcompare.lib       % Test
       )
