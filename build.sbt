@@ -11,6 +11,7 @@ val jwtModuleName         = "jwt"
 val signerModuleName      = "signer"
 val utilsModuleName       = "utils"
 val queueModuleName       = "queue-manager"
+val cqrsModuleName        = "cqrs"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
@@ -91,6 +92,16 @@ lazy val queue = project
   )
   .setupBuildInfo
 
+lazy val cqrs = project
+  .in(file(cqrsModuleName))
+  .settings(
+    name := "interop-commons-cqrs",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.cqrsDependencies
+  )
+  .dependsOn(utils)
+  .setupBuildInfo
+
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, signer, jwtModule, queue)
+  .aggregate(utils, fileManager, mailManager, signer, jwtModule, queue, cqrs)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)

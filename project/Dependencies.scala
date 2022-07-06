@@ -28,15 +28,19 @@ object Dependencies {
   }
 
   private[this] object akka {
-    lazy val namespace     = "com.typesafe.akka"
-    lazy val actorTyped    = namespace           %% "akka-actor-typed"     % akkaVersion
-    lazy val http          = namespace           %% "akka-http"            % akkaHttpVersion
-    lazy val httpJson      = namespace           %% "akka-http-spray-json" % akkaHttpVersion
-    lazy val httpJson4s    = "de.heikoseeberger" %% "akka-http-json4s"     % akkaHttpJson4sVersion
-    lazy val slf4j         = namespace           %% "akka-slf4j"           % akkaVersion
-    lazy val stream        = namespace           %% "akka-stream"          % akkaVersion
-    lazy val httpTestkit   = namespace           %% "akka-http-testkit"    % akkaHttpVersion
-    lazy val streamTestkit = namespace           %% "akka-stream-testkit"  % akkaVersion
+    lazy val namespace              = "com.typesafe.akka"
+    lazy val actorTyped             = namespace            %% "akka-actor-typed"             % akkaVersion
+    lazy val http                   = namespace            %% "akka-http"                    % akkaHttpVersion
+    lazy val httpJson               = namespace            %% "akka-http-spray-json"         % akkaHttpVersion
+    lazy val httpJson4s             = "de.heikoseeberger"  %% "akka-http-json4s"             % akkaHttpJson4sVersion
+    lazy val slf4j                  = namespace            %% "akka-slf4j"                   % akkaVersion
+    lazy val stream                 = namespace            %% "akka-stream"                  % akkaVersion
+    lazy val httpTestkit            = namespace            %% "akka-http-testkit"            % akkaHttpVersion
+    lazy val streamTestkit          = namespace            %% "akka-stream-testkit"          % akkaVersion
+    lazy val projectionSlick        = "com.lightbend.akka" %% "akka-projection-slick"        % slickProjectionVersion
+    lazy val persistenceJdbc        = "com.lightbend.akka" %% "akka-persistence-jdbc"        % jdbcPersistenceVersion
+    lazy val persistenceQuery       = namespace            %% "akka-persistence-query"       % akkaVersion
+    lazy val projectionEventSourced = "com.lightbend.akka" %% "akka-projection-eventsourced" % projectionVersion
 
   }
 
@@ -111,6 +115,10 @@ object Dependencies {
     lazy val logging = "com.typesafe.scala-logging" %% "scala-logging" % lightbendLoggingVersion
   }
 
+  private[this] object mongodb {
+    lazy val scalaDriver = "org.mongodb.scala" %% "mongo-scala-driver" % mongodbScalaDriverVersion
+  }
+
   private[this] object atlassian {
     lazy val namespace        = "com.atlassian.oai"
     lazy val swaggerValidator = namespace % "swagger-request-validator-core" % swaggerValidatorVersion
@@ -158,6 +166,16 @@ object Dependencies {
     lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
 
     lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, aws.sts % Compile, spray.spray % Compile)
+
+    lazy val cqrsDependencies: Seq[ModuleID] = Seq(
+      akka.projectionSlick        % Compile,
+      akka.actorTyped             % Compile,
+      akka.persistenceJdbc        % Compile,
+      akka.persistenceQuery       % Compile,
+      akka.projectionEventSourced % Compile,
+      mongodb.scalaDriver         % Compile,
+      spray.spray                 % Compile
+    )
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
