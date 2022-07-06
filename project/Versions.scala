@@ -8,7 +8,7 @@ object Versions {
   lazy val courierVersion             = "3.2.0"
   lazy val httpJson4sVersion          = "1.38.2"
   lazy val jacksonVersion             = "2.11.4"
-  lazy val json4sVersion              = "4.0.3"
+  lazy val json4sVersion              = "4.0.4"
   lazy val jsoupVersion               = "1.15.2"
   lazy val lightbendLoggingVersion    = "3.9.5"
   lazy val logbackVersion             = "1.2.11"
@@ -23,6 +23,6 @@ object Versions {
   lazy val swaggerValidatorVersion    = "2.28.2"
   lazy val typesafeConfigVersion      = "1.4.2"
   lazy val vaultDriverVersion         = "5.1.0"
-  lazy val awsVersion                 = "2.17.224"
+  lazy val awsVersion                 = "2.17.225"
   lazy val sprayJsonVersion           = "1.3.6"
 }
