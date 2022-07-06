@@ -1,6 +1,5 @@
 package it.pagopa.interop.commons.signer.service.impl
 
-import akka.actor.ActorSystem
 import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 import it.pagopa.interop.commons.signer.service.SignerService
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyCallError
@@ -11,11 +10,10 @@ import software.amazon.awssdk.services.kms.model.{SignRequest, SigningAlgorithmS
 import java.util.Base64
 import scala.jdk.FutureConverters._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.{existentials, postfixOps}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 
-final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit as: ActorSystem, blockingEc: ExecutionContext)
+final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit blockingEc: ExecutionContext)
     extends SignerService {
 
   private val asyncHttpClient: SdkAsyncHttpClient =

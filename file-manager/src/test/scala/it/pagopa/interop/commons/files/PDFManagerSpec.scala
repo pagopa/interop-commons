@@ -10,6 +10,7 @@ import java.io.File
 import java.nio.file.Files
 import scala.io.Source
 import scala.util.Success
+import de.redsix.pdfcompare.CompareResultImpl
 
 class PDFManagerSpec extends AnyWordSpecLike with Matchers {
 
@@ -30,7 +31,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
       val generatedPDF: File = File.createTempFile("output", "pdf")
       PDFManager.getPDFAsFile(generatedPDF.toPath, pdfTemplate, data) shouldBe a[Success[_]]
 
-      val result: CompareResult = new PdfComparator(expectedPDF, generatedPDF).compare()
+      val result: CompareResult = new PdfComparator[CompareResultImpl](expectedPDF, generatedPDF).compare()
       result.isEqual shouldBe true
 
       generatedPDF.deleteOnExit()
@@ -47,7 +48,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
       val generatedPDF: File = File.createTempFile("byte-array-output", "pdf")
       Files.write(generatedPDF.toPath, PDFManager.getPDFAsByteArray(pdfTemplate, data, PDFConfiguration.empty).get)
 
-      val result: CompareResult = new PdfComparator(expectedPDF, generatedPDF).compare()
+      val result: CompareResult = new PdfComparator[CompareResultImpl](expectedPDF, generatedPDF).compare()
       result.isEqual shouldBe true
       generatedPDF.deleteOnExit()
     }
@@ -60,7 +61,7 @@ class PDFManagerSpec extends AnyWordSpecLike with Matchers {
     val generatedPDF: File = File.createTempFile("output", "pdf")
     PDFManager.getPDFAsFile(generatedPDF.toPath, pdfTemplate, data) shouldBe a[Success[_]]
 
-    val result: CompareResult = new PdfComparator(expectedPDF, generatedPDF).compare()
+    val result: CompareResult = new PdfComparator[CompareResultImpl](expectedPDF, generatedPDF).compare()
     result.isEqual shouldBe false
 
     generatedPDF.deleteOnExit()

@@ -5,8 +5,6 @@ import it.pagopa.interop.commons.utils.USER_ROLES
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import scala.util.{Success, Try}
-
 class UserRolesRetrievalSpec extends AnyWordSpecLike with Matchers {
 
   "a JWT containing" should {

@@ -5,7 +5,7 @@ import com.nimbusds.jose.jwk.{JWK, JWKSet}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.net.URL
-import scala.jdk.CollectionConverters.{IterableHasAsScala, SeqHasAsJava, SetHasAsJava}
+import scala.jdk.CollectionConverters.IterableHasAsScala
 import scala.util.Try
 
 /** Models an entity for loading public keys from a remote well known endpoint

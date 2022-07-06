@@ -6,7 +6,6 @@ import it.pagopa.interop.commons.files.service.impl.{FileManagerImpl, S3ManagerI
 import java.io.{ByteArrayOutputStream, File}
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
 import scala.concurrent.ExecutionContextExecutor
 
 trait FileManager {

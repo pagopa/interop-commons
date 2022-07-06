@@ -10,6 +10,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpecLike
+import it.pagopa.interop.commons.MockMailerConfiguration
 
 import java.util.UUID
 import javax.mail.internet.MimeMultipart
