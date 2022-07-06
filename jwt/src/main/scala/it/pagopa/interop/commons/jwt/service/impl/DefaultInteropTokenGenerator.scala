@@ -6,7 +6,7 @@ import it.pagopa.interop.commons.jwt.model.{Token, TokenSeed}
 import it.pagopa.interop.commons.jwt.service.InteropTokenGenerator
 import it.pagopa.interop.commons.jwt.{M2M_ROLES, PrivateKeysKidHolder}
 import it.pagopa.interop.commons.signer.service.SignerService
-import it.pagopa.interop.commons.utils.TypeConversions.{StringOps, TryOps}
+import it.pagopa.interop.commons.utils.TypeConversions.TryOps
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.Date
@@ -46,9 +46,9 @@ class DefaultInteropTokenGenerator(val signerService: SignerService, val kidHold
           validityDurationInSeconds
         )
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
-      serializedToken    = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
-      signatureAlgorithm = kidHolder.getPrivateKeyKidSignatureAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
-      signature <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
+      serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
+      signatureAlgorithm <- kidHolder.getPrivateKeyKidSignatureAlgorithm(clientAssertionToken.getHeader.getAlgorithm)
+      signature          <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Token generated")
     } yield Token(
@@ -84,9 +84,9 @@ class DefaultInteropTokenGenerator(val signerService: SignerService, val kidHold
           validityDurationSeconds = secondsDuration
         )
       interopJWT <- jwtFromSeed(tokenSeed).toFuture
-      serializedToken    = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
-      signatureAlgorithm = kidHolder.getPrivateKeyKidSignatureAlgorithm(algorithm)
-      signature <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
+      serializedToken = s"${interopJWT.getHeader.toBase64URL}.${interopJWT.getJWTClaimsSet.toPayload.toBase64URL}"
+      signatureAlgorithm <- kidHolder.getPrivateKeyKidSignatureAlgorithm(algorithm)
+      signature          <- signerService.signData(interopPrivateKeyKid, signatureAlgorithm)(serializedToken)
       signedInteropJWT = s"$serializedToken.$signature"
       _                = logger.debug("Interop internal Token generated")
     } yield Token(

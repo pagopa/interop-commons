@@ -1,7 +1,6 @@
 package it.pagopa.interop.commons.queue.impl
 
-import cats.implicits.{toFunctorOps, toTraverseOps}
-import software.amazon.awssdk.services.sqs.SqsClient
+import cats.implicits.toFunctorOps
 import software.amazon.awssdk.services.sqs.model.{
   DeleteMessageRequest,
   Message,
@@ -16,9 +15,7 @@ import scala.util.{Failure, Success, Try}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import java.util.function.Consumer
 import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
-import java.util.concurrent.Executor
 import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
 import scala.jdk.FutureConverters._
 import com.typesafe.config.ConfigFactory
@@ -32,14 +29,13 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
   private val asyncHttpClient: SdkAsyncHttpClient =
     NettyNioAsyncHttpClient.builder().maxConcurrency(concurrency).build()
 
-  private val advancedOptions: Consumer[ClientAsyncConfiguration.Builder] =
-    new Consumer[ClientAsyncConfiguration.Builder] {
-      override def accept(t: ClientAsyncConfiguration.Builder): Unit =
-        t.advancedOption[Executor](SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingExecutionContext)
-    }
+  private val asyncConfiguration: ClientAsyncConfiguration = ClientAsyncConfiguration
+    .builder()
+    .advancedOption(SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingExecutionContext)
+    .build()
 
   private val sqsClient: SqsAsyncClient =
-    SqsAsyncClient.builder().httpClient(asyncHttpClient).asyncConfiguration(advancedOptions).build()
+    SqsAsyncClient.builder().httpClient(asyncHttpClient).asyncConfiguration(asyncConfiguration).build()
 
   def send[T: JsonWriter](message: T): Future[String] = {
     val sendMsgRequest: SendMessageRequest = SendMessageRequest
@@ -50,7 +46,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
     sqsClient.sendMessage(sendMsgRequest).asScala.map(_.messageId())
   }
 
-  def deleteMessage(receiptHandle: String): Future[Unit] = Future {
+  def deleteMessage(receiptHandle: String): Future[Unit] = {
     val deleteMessageRequest: DeleteMessageRequest = DeleteMessageRequest
       .builder()
       .queueUrl(queueUrl)
@@ -73,7 +69,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
 
   private def loop[T](getMessages: => Future[List[(T, String)]])(chunkSize: Int, acc: List[(T, String)])(
     fn: (List[T], List[String]) => Future[Unit]
-  ) = innerLoop(accumulateMessages(getMessages)(chunkSize, Nil))(fn)
+  ) = innerLoop(accumulateMessages(getMessages)(chunkSize, acc))(fn)
 
   private def innerLoop[T](
     accumulatedMessages: => Future[List[(T, String)]]

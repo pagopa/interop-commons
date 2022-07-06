@@ -4,18 +4,15 @@ import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.commons.files.service.FileManager
 import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.core.ResponseBytes
-import software.amazon.awssdk.core.sync.{RequestBody, ResponseTransformer}
 import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.{S3Client, S3Configuration}
+import software.amazon.awssdk.services.s3.S3Configuration
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
 
 import cats.implicits._
-import java.io.{ByteArrayOutputStream, File, InputStream}
-import java.nio.file.Paths
+import java.io.{ByteArrayOutputStream, File}
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Try
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import scala.concurrent.ExecutionContext
@@ -23,11 +20,9 @@ import software.amazon.awssdk.core.async.AsyncRequestBody
 import scala.jdk.FutureConverters._
 import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
 import it.pagopa.interop.commons.files.StorageConfiguration
-import java.util.function.Consumer
 import java.util.concurrent.Executor
 import scala.concurrent.ExecutionContextExecutor
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
-import java.util.concurrent.CompletableFuture
 
 final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
@@ -37,17 +32,17 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
   private val serviceConf: S3Configuration        = S3Configuration.builder().pathStyleAccessEnabled(true).build()
   private val asyncHttpClient: SdkAsyncHttpClient =
     NettyNioAsyncHttpClient.builder().maxConcurrency(StorageConfiguration.maxConcurrency).build()
-  private val advancedOptions: Consumer[ClientAsyncConfiguration.Builder] =
-    new Consumer[ClientAsyncConfiguration.Builder] {
-      override def accept(t: ClientAsyncConfiguration.Builder): Unit =
-        t.advancedOption[Executor](SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingExecutionContext)
-    }
+  private val asyncConfiguration: ClientAsyncConfiguration =
+    ClientAsyncConfiguration
+      .builder()
+      .advancedOption[Executor](SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingExecutionContext)
+      .build()
 
   private val asyncClient: S3AsyncClient = S3AsyncClient
     .builder()
     .serviceConfiguration(serviceConf)
     .httpClient(asyncHttpClient)
-    .asyncConfiguration(advancedOptions)
+    .asyncConfiguration(asyncConfiguration)
     .build()
 
   private def s3Key(path: String, resourceId: String, fileName: String): String =

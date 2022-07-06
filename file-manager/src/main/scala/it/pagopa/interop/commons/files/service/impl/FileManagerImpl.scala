@@ -3,11 +3,10 @@ package it.pagopa.interop.commons.files.service.impl
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.commons.files.service.FileManager
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream, InputStream}
+import java.io.{ByteArrayOutputStream, File, FileInputStream}
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Try
 import scala.concurrent.ExecutionContextExecutor
 
 final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {

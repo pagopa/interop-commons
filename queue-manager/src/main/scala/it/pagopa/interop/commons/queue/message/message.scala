@@ -3,8 +3,6 @@ package it.pagopa.interop.commons.queue.message
 import java.util.UUID
 import spray.json._
 import spray.json.DefaultJsonProtocol._
-import scala.util.Try
-import Message._
 
 trait ProjectableEvent
 
