@@ -8,7 +8,7 @@ import scala.util.Try
   */
 trait ClientAssertionValidator {
 
-  /** Extracts a [[it.pagopa.interop.commons.jwt.model.ClientAssertionChecker]] given a [[it.pagopa.interop.commons.jwt.model.ClientAssertionRequest]]
+  /** Extracts a [[it.pagopa.interop.commons.jwt.model.ClientAssertionChecker]] given a [[it.pagopa.interop.commons.jwt.model.ValidClientAssertionRequest]]
     *
     * @param clientAssertionRequest payload containing client assertion
     * @return a [[it.pagopa.interop.commons.jwt.model.ClientAssertionChecker]] if the provided jwt is valid

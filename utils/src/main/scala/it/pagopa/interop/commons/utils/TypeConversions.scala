@@ -59,11 +59,11 @@ object TypeConversions {
     def toBase64SHA1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
     def toBase64MD5: String  = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))
 
-    /** Replaces string variables in the format <code>${VARIABLE}</code>
+    /** Replaces string variables in the format <code>\${VARIABLE}</code>
       * with the corresponding VARIABLE value as defined in <code>variables</code> input map.<br>
       * E.g.: invoking the following:
       * <br>
-      * <code>"hello ${there}".interpolate(Map("there" -> "friend"))</code>
+      * <code>"hello \${there}".interpolate(Map("there" -> "friend"))</code>
       * <br>will return:<br>
       * <code>"hello friend"</code>
       *
