@@ -7,7 +7,7 @@ import org.mongodb.scala.bson.conversions.Bson
   * The partial action is used to intercept and enhance parameters passed to the mongo command.
   * Example: Adding metadata to documents saved and updated
   */
-trait PartialMongoAction
+sealed trait PartialMongoAction
 
 /**
   * Used when the value parameter is of type Bson, for example when updating using functions like Updates.set or Updates.pull
