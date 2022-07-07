@@ -23,6 +23,7 @@ cleanFiles += baseDirectory.value / queueModuleName / "target"
 lazy val sharedSettings: SettingsDefinition = Seq(
   scalafmtOnCompile := true,
   libraryDependencies ++= Dependencies.Jars.commonDependencies,
+  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
   publishTo         := {
     val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
     Some((if (isSnapshot.value) "snapshots" else "releases") at nexus + "maven-snapshots/")
