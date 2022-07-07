@@ -4,7 +4,6 @@ import ch.qos.logback.classic.spi.{ILoggingEvent, IThrowableProxy, ThrowableProx
 import ch.qos.logback.core.CoreConstants.LINE_SEPARATOR
 import ch.qos.logback.core.LayoutBase
 import ch.qos.logback.core.util.CachingDateFormatter
-import ch.qos.logback.classic.Level
 
 final class LoggerLayout extends LayoutBase[ILoggingEvent] {
 

@@ -1,75 +1,60 @@
 package it.pagopa.interop.commons.files.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.interop.commons.files.service.{FileManager, StorageFilePath}
+import it.pagopa.interop.commons.files.service.FileManager
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream, InputStream}
+import java.io.{ByteArrayOutputStream, File, FileInputStream}
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.Try
+import scala.concurrent.ExecutionContextExecutor
 
-/** Implements an in memory version of [[FileManager]] trait.
-  */
-final class FileManagerImpl extends FileManager {
+final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
-  val currentPath: Path = Paths.get(System.getProperty("user.dir"))
+  implicit val ec: ExecutionContextExecutor = blockingExecutionContext
+
+  val tmp: Path = Path.of("/tmp")
 
   override def store(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] =
-    Future.fromTry {
-      Try {
-        val destPath = createPath(resourceId.toString, path, fileParts._1.getFileName)
-
-        moveRenameFile(fileParts._2.getPath, destPath).toString
-      }
-    }
-
-  override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
-    Try {
-      val inputStream: InputStream            = new FileInputStream(filePath)
-      val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
-
-      inputStream.transferTo(outputStream)
-      outputStream
-    }
+  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] = Future {
+    val destPath: Path = createPath(path, resourceId.toString, fileParts._1.getFileName)
+    Files.move(fileParts._2.toPath(), destPath, StandardCopyOption.REPLACE_EXISTING).toAbsolutePath().toString()
   }
 
-  override def delete(containerPath: String)(filePath: String): Future[Boolean] = Future.fromTry {
-    Try {
-      val file: File = Paths.get(filePath).toFile
-      file.delete()
-    }
+  override def storeBytes(
+    containerPath: String,
+    path: String
+  )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = Future {
+    val destPath: Path = createPath(path, resourceId.toString, fileName)
+    Files.write(destPath, fileContents).toAbsolutePath().toString()
   }
+
+  override def get(containerPath: String)(filePath: String): Future[ByteArrayOutputStream] = Future {
+    val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
+    new FileInputStream(filePath).transferTo(outputStream)
+    outputStream
+  }
+
+  override def delete(containerPath: String)(filePath: String): Future[Boolean] = Future(
+    Paths.get(filePath).toFile().delete()
+  )
 
   override def copy(
     containerPath: String,
     path: String
-  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] =
-    Future.fromTry {
-      Try {
-        val destination = createPath(resourceId = resourceId.toString, path = path, fileName = fileName)
-        Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
-
-        destination
-
-      }
-    }
-
-  private def createPath(resourceId: String, path: String, fileName: String): String = {
-
-    val docsPath: Path    = Paths.get(currentPath.toString, s"$path/$resourceId")
-    val pathCreated: Path = Files.createDirectories(docsPath)
-
-    Paths.get(pathCreated.toString, s"$fileName").toString
-
+  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] = Future {
+    val destination: Path = createPath(path, resourceId.toString, fileName)
+    Files.copy(Paths.get(filePathToCopy), destination, StandardCopyOption.REPLACE_EXISTING).toAbsolutePath().toString()
   }
 
-  private def moveRenameFile(source: String, destination: String): Path = {
-    Files.move(Paths.get(source), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
-
+  private def createPath(path: String, resourceId: String, fileName: String): Path = {
+    val pathF: String       = path.stripMargin('/')
+    val resourceIdF: String = resourceId.stripMargin('/')
+    val docsHome: Path      = tmp.resolve(s"$pathF/$resourceIdF")
+    val pathCreated: Path   = Files.createDirectories(docsHome)
+    pathCreated.resolve(fileName.stripMargin('/'))
   }
 
 }

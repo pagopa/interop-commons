@@ -10,28 +10,27 @@ import java.util.Properties
 import javax.mail.Provider
 import javax.mail.internet.InternetAddress
 
+// Mock SMTP provider
+class MockedSMTPProvider
+    extends Provider(Provider.Type.TRANSPORT, "mocked", classOf[MockTransport].getName, "Mock", null)
+
+// Mocks mails
+object MockedMailerSession {
+  val mockedSession = javax.mail.Session.getDefaultInstance(new Properties() {
+    {
+      put("mail.transport.protocol.rfc822", "mocked")
+    }
+  })
+  mockedSession.setProvider(new MockedSMTPProvider)
+}
+
+// mock SMTP server setup
+trait MockMailerConfiguration extends MailerInstance {
+  override val mailer: Mailer          = Mailer(MockedMailerSession.mockedSession)
+  override val sender: InternetAddress = new InternetAddress("mock-sender@interop.pagopa.it")
+}
+
 package object mail {
-
-  // Mock SMTP provider
-  private[mail] class MockedSMTPProvider
-      extends Provider(Provider.Type.TRANSPORT, "mocked", classOf[MockTransport].getName, "Mock", null)
-
-  // Mocks mails
-  private[mail] object MockedMailerSession {
-    val mockedSession = javax.mail.Session.getDefaultInstance(new Properties() {
-      {
-        put("mail.transport.protocol.rfc822", "mocked")
-      }
-    })
-    mockedSession.setProvider(new MockedSMTPProvider)
-  }
-
-  // mock SMTP server setup
-  private[mail] trait MockMailerConfiguration extends MailerInstance {
-    override val mailer: Mailer          = Mailer(MockedMailerSession.mockedSession)
-    override val sender: InternetAddress = new InternetAddress("mock-sender@interop.pagopa.it")
-  }
-
   def getTestResourceData(resource: String): (Array[Byte], String) = {
     val path     = getClass.getResource(resource).getPath
     val filePath = new File(path).toPath

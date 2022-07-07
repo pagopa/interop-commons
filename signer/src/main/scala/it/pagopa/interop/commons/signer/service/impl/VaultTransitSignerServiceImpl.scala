@@ -12,7 +12,6 @@ import it.pagopa.interop.commons.utils.TypeConversions.{OptionOps, StringOps, Tr
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyCallError
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
-import scala.language.postfixOps
 
 final case class VaultTransitSignerServiceImpl(vaultConfig: VaultConfig)(implicit as: ActorSystem)
     extends SignerService {
@@ -37,11 +36,12 @@ final case class VaultTransitSignerServiceImpl(vaultConfig: VaultConfig)(implici
     } yield response
 
     response
-      .flatMap {
-        case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Response]
-        case HttpResponse(statusCode, _, entity, _)     =>
-          entity.discardBytes()
-          Future.failed(ThirdPartyCallError("Vault", s"service returned ${statusCode.intValue()}"))
+      .flatMap { response =>
+        if (StatusCodes.OK == response.status) Unmarshal(response.entity).to[Response]
+        else {
+          response.entity.discardBytes()
+          Future.failed(ThirdPartyCallError("Vault", s"service returned ${response.status.intValue()}"))
+        }
       }
       .flatMap(
         _.data.signature

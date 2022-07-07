@@ -1,6 +1,5 @@
 package it.pagopa.interop.commons.signer.service.impl
 
-import akka.actor.ActorSystem
 import it.pagopa.interop.commons.signer.model.SignatureAlgorithm
 import it.pagopa.interop.commons.signer.service.SignerService
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ThirdPartyCallError
@@ -9,13 +8,12 @@ import software.amazon.awssdk.services.kms.KmsAsyncClient
 import software.amazon.awssdk.services.kms.model.{SignRequest, SigningAlgorithmSpec}
 
 import java.util.Base64
-import scala.compat.java8.FutureConverters.toScala
+import scala.jdk.FutureConverters._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.{existentials, postfixOps}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 
-final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit as: ActorSystem, blockingEc: ExecutionContext)
+final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit blockingEc: ExecutionContext)
     extends SignerService {
 
   private val asyncHttpClient: SdkAsyncHttpClient =
@@ -24,7 +22,9 @@ final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit as: ActorSys
 
   override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     val request = createRequest(keyId, signatureAlgorithm, data)
-    toScala(kmsClient.sign(request))
+    kmsClient
+      .sign(request)
+      .asScala
       .map { signResponse =>
         val bytes: SdkBytes         = signResponse.signature()
         val base64Signature: String = Base64.getEncoder.encodeToString(bytes.asByteArray())

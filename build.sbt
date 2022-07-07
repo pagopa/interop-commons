@@ -1,9 +1,10 @@
 import ProjectSettings.ProjectFrom
 
-ThisBuild / scalaVersion     := "2.13.8"
-ThisBuild / organization     := "it.pagopa"
-ThisBuild / organizationName := "Pagopa S.p.A."
-ThisBuild / version          := ComputeVersion.version
+ThisBuild / scalaVersion      := "2.13.8"
+ThisBuild / organization      := "it.pagopa"
+ThisBuild / organizationName  := "Pagopa S.p.A."
+ThisBuild / version           := ComputeVersion.version
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 val fileManagerModuleName = "file-manager"
 val mailManagerModuleName = "mail-manager"
@@ -21,17 +22,11 @@ cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
-  scalacOptions     := Seq(),
   scalafmtOnCompile := true,
   libraryDependencies ++= Dependencies.Jars.commonDependencies,
-  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-  updateOptions     := updateOptions.value.withGigahorse(false),
   publishTo         := {
     val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "maven-snapshots/")
-    else
-      Some("releases" at nexus + "maven-releases/")
+    Some((if (isSnapshot.value) "snapshots" else "releases") at nexus + "maven-snapshots/")
   }
 )
 
@@ -53,11 +48,12 @@ lazy val fileManager = project
 lazy val mailManager = project
   .in(file(mailManagerModuleName))
   .settings(
-    name := "interop-commons-mail-manager",
+    name        := "interop-commons-mail-manager",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.mailDependencies
+    libraryDependencies ++= Dependencies.Jars.mailDependencies,
+    Test / fork := true
   )
-  .dependsOn(utils, fileManager)
+  .dependsOn(utils)
   .setupBuildInfo
 
 lazy val signer = project
