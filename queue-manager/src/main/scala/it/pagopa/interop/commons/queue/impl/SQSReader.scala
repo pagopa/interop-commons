@@ -1,10 +1,9 @@
 package it.pagopa.interop.commons.queue.impl
 
 import cats.syntax.all._
-import org.slf4j.{Logger, LoggerFactory}
 import it.pagopa.interop.commons.queue.QueueReader
 import it.pagopa.interop.commons.queue.message.{Message, ProjectableEvent}
-import org.apache.commons.lang3.exception.ExceptionUtils
+import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, ReceiveMessageRequest, Message => SQSMessage}
 import spray.json._
