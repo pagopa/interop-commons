@@ -70,9 +70,11 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
   override def handle[V](f: Message => Future[V]): Future[Unit] = {
     // Submitting to an ExecutionContext introduces an async boundary that reset the stack,
     // that makes Future behave like it's trampolining, so this function is stack safe.
-    def loop: Future[List[V]] = handleN[V](10)(f).flatMap(_ => loop).recoverWith { ex =>
-      logger.error(s"Error trying to consume a message from SQS - ${ex.getMessage}")
-      loop
+    def loop: Future[List[V]] = handleN[V](10)(f).transformWith {
+      case Success(_)  => loop
+      case Failure(ex) =>
+        logger.error(s"Error trying to consume a message from SQS - ${ex.getMessage}")
+        loop
     }
     loop.void
   }
