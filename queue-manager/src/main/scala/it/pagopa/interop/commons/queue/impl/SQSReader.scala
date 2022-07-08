@@ -1,8 +1,10 @@
 package it.pagopa.interop.commons.queue.impl
 
 import cats.syntax.all._
+import org.slf4j.{Logger, LoggerFactory}
 import it.pagopa.interop.commons.queue.QueueReader
 import it.pagopa.interop.commons.queue.message.{Message, ProjectableEvent}
+import org.apache.commons.lang3.exception.ExceptionUtils
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, ReceiveMessageRequest, Message => SQSMessage}
 import spray.json._
@@ -17,6 +19,8 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
     extends QueueReader {
 
   implicit private val messageReader: JsonReader[Message] = Message.messageReader(f)
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private val sqsClient: SqsClient = SqsClient.create()
 
@@ -67,7 +71,10 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
   override def handle[V](f: Message => Future[V]): Future[Unit] = {
     // Submitting to an ExecutionContext introduces an async boundary that reset the stack,
     // that makes Future behave like it's trampolining, so this function is stack safe.
-    def loop: Future[List[V]] = handleN[V](10)(f).flatMap(_ => loop).recoverWith(_ => loop)
+    def loop: Future[List[V]] = handleN[V](10)(f).flatMap(_ => loop).recoverWith { ex =>
+      logger.error(s"Error trying to consume a message from SQS - ${ex.getMessage}")
+      loop
+    }
     loop.void
   }
 
