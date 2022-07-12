@@ -25,7 +25,7 @@ package object logging {
     val ipAddress: String     = values.getOrElse(IP_ADDRESS, "")
     val uid: String           = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
     val correlationId: String = values.getOrElse(CORRELATION_ID_HEADER, "")
-    s"[IP=$ipAddress] [UID=$uid] [CORR_ID=$correlationId]"
+    s"[IP=$ipAddress] [UID=$uid] [CID=$correlationId]"
   }
 
   /** Defines log message decoration for Interop
