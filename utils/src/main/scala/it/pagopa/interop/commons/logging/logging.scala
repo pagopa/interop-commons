@@ -47,9 +47,11 @@ package object logging {
 
     def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
       case RouteResult.Complete(res) =>
-        Some(LogEntry(s"$contextStr - Request ${req.uri} - Response ${res.status}", Logging.InfoLevel))
+        Some(
+          LogEntry(s"$contextStr - Request ${req.method.value} ${req.uri} - Response ${res.status}", Logging.InfoLevel)
+        )
       case RouteResult.Rejected(rej) =>
-        Some(LogEntry(s"$contextStr - Request ${req.uri} - Response ${rej}", Logging.InfoLevel))
+        Some(LogEntry(s"$contextStr - Request ${req.method.value} ${req.uri} - Response ${rej}", Logging.InfoLevel))
     }
 
     DebuggingDirectives.logRequestResult(logWithoutBody _)
