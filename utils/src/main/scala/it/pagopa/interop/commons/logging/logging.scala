@@ -21,11 +21,11 @@ package object logging {
     if (config.hasPath("interop-commons.isInternetFacing")) config.getBoolean("interop-commons.isInternetFacing")
     else false
 
-  private def contexts(values: Map[String, String]): String = {
+  private def createLogContexts(values: Map[String, String]): String = {
     val ipAddress: String     = values.getOrElse(IP_ADDRESS, "")
-    val subject: String       = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
+    val uid: String           = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
     val correlationId: String = values.getOrElse(CORRELATION_ID_HEADER, "")
-    s"[$ipAddress] [$subject] [$correlationId]"
+    s"[IP=$ipAddress] [UID=$uid] [CORR_ID=$correlationId]"
   }
 
   /** Defines log message decoration for Interop
@@ -33,7 +33,7 @@ package object logging {
   implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
       val fieldsMap: Map[String, String] = fields.toMap
-      s"[${fieldsMap.getOrElse(UID, "")}] [${fieldsMap.getOrElse(CORRELATION_ID_HEADER, "")}] - $originalMsg"
+      s"${createLogContexts(fieldsMap)} - $originalMsg"
     }
   }
 
@@ -43,7 +43,7 @@ package object logging {
     * @return logging directive
     */
   def logHttp(enabled: Boolean)(implicit ctxs: Seq[(String, String)]): Directive0 = if (enabled) {
-    val contextStr: String = contexts(ctxs.toMap)
+    val contextStr: String = createLogContexts(ctxs.toMap)
 
     def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
       case RouteResult.Complete(res) =>
