@@ -10,19 +10,20 @@ final case class VaultConfig(address: String, token: String, sslEnabled: Boolean
 
 /** Vaults configuration singleton
   */
-object VaultClientConfiguration {
+object SignerConfiguration {
 
-  private lazy val hoconConfig: Config =
-    ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
+  private val config: Config = ConfigFactory.load()
+
+  val maxConcurrency: Int = config.getInt("interop-commons.kms.max-concurrency")
 
   /** Returns currently vault configuration data
     */
   val vaultConfig =
     VaultConfig(
-      address = hoconConfig.getString("interop-commons.vault.address"),
-      token = hoconConfig.getString("interop-commons.vault.token"),
-      sslEnabled = hoconConfig.getBoolean("interop-commons.vault.sslEnabled"),
-      signatureRoute = hoconConfig.getString("interop-commons.vault.signature-route")
+      address = config.getString("interop-commons.vault.address"),
+      token = config.getString("interop-commons.vault.token"),
+      sslEnabled = config.getBoolean("interop-commons.vault.sslEnabled"),
+      signatureRoute = config.getString("interop-commons.vault.signature-route")
     )
 
 }

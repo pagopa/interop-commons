@@ -95,8 +95,8 @@ trait JWTReader {
 
   private def authenticationDirective[T](contextInfo: String): Try[T] => Directive1[T] = {
     case Success(result) => provide(result)
-    case Failure(_)      =>
-      logger.error(s"$contextInfo - Invalid authentication provided")
+    case Failure(ex)     =>
+      logger.error(s"$contextInfo - Invalid authentication provided - ${ex.getMessage}")
       reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
   }
 }
