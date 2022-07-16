@@ -15,7 +15,7 @@ object Versions {
   lazy val lightbendLoggingVersion    = "3.9.5"
   lazy val logbackVersion             = "1.2.11"
   lazy val mockJavaMailVersion        = "1.9"
-  lazy val mongodbScalaDriverVersion  = "4.6.0"
+  lazy val mongodbScalaDriverVersion  = "4.6.1"
   lazy val nimbusVersion              = "9.23"
   lazy val openhtmltopdfVersion       = "1.0.10"
   lazy val pdfBoxVersion              = "2.0.26"
