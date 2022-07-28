@@ -5,9 +5,7 @@ import it.pagopa.interop.commons.files.service.FileManager
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream}
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
-import java.util.UUID
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
@@ -18,16 +16,16 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
   override def store(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] = Future {
-    val destPath: Path = createPath(path, resourceId.toString, fileParts._1.getFileName)
+  )(resourceId: String, fileParts: (FileInfo, File)): Future[StorageFilePath] = Future {
+    val destPath: Path = createPath(path, resourceId, fileParts._1.getFileName)
     Files.move(fileParts._2.toPath(), destPath, StandardCopyOption.REPLACE_EXISTING).toAbsolutePath().toString()
   }
 
   override def storeBytes(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = Future {
-    val destPath: Path = createPath(path, resourceId.toString, fileName)
+  )(resourceId: String, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = Future {
+    val destPath: Path = createPath(path, resourceId, fileName)
     Files.write(destPath, fileContents).toAbsolutePath().toString()
   }
 
@@ -44,8 +42,8 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
   override def copy(
     containerPath: String,
     path: String
-  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] = Future {
-    val destination: Path = createPath(path, resourceId.toString, fileName)
+  )(filePathToCopy: String, resourceId: String, fileName: String): Future[StorageFilePath] = Future {
+    val destination: Path = createPath(path, resourceId, fileName)
     Files.copy(Paths.get(filePathToCopy), destination, StandardCopyOption.REPLACE_EXISTING).toAbsolutePath().toString()
   }
 

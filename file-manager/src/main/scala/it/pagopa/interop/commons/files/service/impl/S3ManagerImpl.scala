@@ -1,28 +1,22 @@
 package it.pagopa.interop.commons.files.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
+import cats.implicits._
+import it.pagopa.interop.commons.files.StorageConfiguration
 import it.pagopa.interop.commons.files.service.FileManager
 import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.core.ResponseBytes
-import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.S3Configuration
-import software.amazon.awssdk.services.s3.S3AsyncClient
-import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
-
-import cats.implicits._
-import java.io.{ByteArrayOutputStream, File}
-import java.util.UUID
-import scala.concurrent.Future
+import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
+import software.amazon.awssdk.core.client.config.{ClientAsyncConfiguration, SdkAdvancedAsyncClientOption}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
-import scala.concurrent.ExecutionContext
-import software.amazon.awssdk.core.async.AsyncRequestBody
-import scala.jdk.FutureConverters._
-import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
-import it.pagopa.interop.commons.files.StorageConfiguration
+import software.amazon.awssdk.services.s3.{S3AsyncClient, S3Configuration}
+import software.amazon.awssdk.services.s3.model._
+
+import java.io.{ByteArrayOutputStream, File}
 import java.util.concurrent.Executor
-import scala.concurrent.ExecutionContextExecutor
-import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.jdk.FutureConverters._
 
 final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
@@ -51,9 +45,9 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
   override def store(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath] = {
+  )(resourceId: String, fileParts: (FileInfo, File)): Future[StorageFilePath] = {
     val key: String                        = s3Key(path, resourceId.toString, fileParts._1.getFileName)
-    logger.debug("Storing resource {} at path {}", resourceId.toString, key)
+    logger.debug("Storing resource {} at path {}", resourceId, key)
     val putObjectRequest: PutObjectRequest = PutObjectRequest.builder.bucket(containerPath).key(key).build
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromFile(fileParts._2)
     asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.as(key)
@@ -62,9 +56,9 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
   override def storeBytes(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = {
+  )(resourceId: String, fileName: String, fileContents: Array[Byte]): Future[StorageFilePath] = {
     val key: String                        = s3Key(path, resourceId.toString, fileName)
-    logger.debug("Storing resource {} at path {}", resourceId.toString, key)
+    logger.debug("Storing resource {} at path {}", resourceId, key)
     val putObjectRequest: PutObjectRequest = PutObjectRequest.builder.bucket(containerPath).key(key).build
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromBytes(fileContents)
     asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.as(key)
@@ -73,9 +67,9 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
   override def copy(
     container: String,
     path: String
-  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath] = {
+  )(filePathToCopy: String, resourceId: String, fileName: String): Future[StorageFilePath] = {
     logger.debug("Copying file {}", filePathToCopy)
-    val key: String    = s3Key(path, resourceId.toString, fileName)
+    val key: String    = s3Key(path, resourceId, fileName)
     val copyObjRequest = CopyObjectRequest.builder
       .destinationKey(key)
       .sourceKey(filePathToCopy)
