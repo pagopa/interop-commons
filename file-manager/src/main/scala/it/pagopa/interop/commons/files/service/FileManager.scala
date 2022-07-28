@@ -4,25 +4,26 @@ import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.commons.files.service.impl.{FileManagerImpl, S3ManagerImpl}
 
 import java.io.{ByteArrayOutputStream, File}
-import java.util.UUID
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 trait FileManager {
 
   type StorageFilePath = String
 
-  def store(containerPath: String, path: String)(resourceId: UUID, fileParts: (FileInfo, File)): Future[StorageFilePath]
+  def store(containerPath: String, path: String)(
+    resourceId: String,
+    fileParts: (FileInfo, File)
+  ): Future[StorageFilePath]
 
   def storeBytes(
     containerPath: String,
     path: String
-  )(resourceId: UUID, fileName: String, fileContent: Array[Byte]): Future[StorageFilePath]
+  )(resourceId: String, fileName: String, fileContent: Array[Byte]): Future[StorageFilePath]
 
   def copy(
     containerPath: String,
     path: String
-  )(filePathToCopy: String, resourceId: UUID, fileName: String): Future[StorageFilePath]
+  )(filePathToCopy: String, resourceId: String, fileName: String): Future[StorageFilePath]
 
   def get(containerPath: String)(filePath: StorageFilePath): Future[ByteArrayOutputStream]
 
