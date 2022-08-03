@@ -9,16 +9,30 @@ import software.amazon.awssdk.services.kms.model.{SignRequest, SigningAlgorithmS
 
 import java.util.Base64
 import scala.jdk.FutureConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
+import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
+import java.util.concurrent.Executor
+import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
+import scala.concurrent.ExecutionContextExecutor
+import it.pagopa.interop.commons.signer.SignerConfiguration
+import scala.concurrent.ExecutionContext
 
-final case class KMSSignerServiceImpl(maxConcurrency: Int)(implicit blockingEc: ExecutionContext)
-    extends SignerService {
+final class KMSSignerService(blockingEc: ExecutionContextExecutor) extends SignerService {
 
-  private val asyncHttpClient: SdkAsyncHttpClient =
-    NettyNioAsyncHttpClient.builder().maxConcurrency(maxConcurrency).build()
-  private val kmsClient: KmsAsyncClient           = KmsAsyncClient.builder().httpClient(asyncHttpClient).build()
+  implicit val ec: ExecutionContext = blockingEc
+
+  private val asyncHttpClient: SdkAsyncHttpClient          =
+    NettyNioAsyncHttpClient.builder().maxConcurrency(SignerConfiguration.maxConcurrency).build()
+  private val asyncConfiguration: ClientAsyncConfiguration =
+    ClientAsyncConfiguration
+      .builder()
+      .advancedOption[Executor](SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingEc)
+      .build()
+
+  private val kmsClient: KmsAsyncClient =
+    KmsAsyncClient.builder().httpClient(asyncHttpClient).asyncConfiguration(asyncConfiguration).build()
 
   override def signData(keyId: String, signatureAlgorithm: SignatureAlgorithm)(data: String): Future[String] = {
     val request = createRequest(keyId, signatureAlgorithm, data)
