@@ -13,15 +13,14 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
 import slick.dbio._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-private[service] final case class CqrsProjectionHandler[T](
-  eventHandler: EventHandler[T],
-  dbName: String,
-  collectionName: String
-)(implicit ec: ExecutionContext, client: MongoClient)
-    extends SlickHandler[EventEnvelope[T]] {
+final case class CqrsProjectionHandler[T](eventHandler: EventHandler[T], dbName: String, collectionName: String)(
+  implicit
+  ec: ExecutionContext,
+  client: MongoClient
+) extends SlickHandler[EventEnvelope[T]] {
 
   private val logger: Logger = Logger(this.getClass)
 
@@ -42,22 +41,25 @@ private[service] final case class CqrsProjectionHandler[T](
     def withMetadata(op: Bson): Bson = Updates.combine(Updates.set("metadata", metadata.toDocument), op)
 
     val partialApplication = eventHandler(collection, envelope.event)
-    val result             = partialApplication match {
-      case ActionWithBson(action, value)   => action(withMetadata(value))
-      case Action(action)                  => action
-      case ActionWithDocument(action, doc) =>
-        val metadataDocument = Document(s"{ metadata : ${metadata.toDocument.toJson()} }")
-        val newDoc           = doc.concat(metadataDocument)
-        action(newDoc)
-    }
 
-    val futureResult = result.toFuture()
+    def applyPartialAction(partialApplication: PartialMongoAction): Future[_] =
+      partialApplication match {
+        case ActionWithBson(action, value)   => action(withMetadata(value)).toFuture()
+        case Action(action)                  => action.toFuture()
+        case ActionWithDocument(action, doc) =>
+          val metadataDocument = Document(s"{ metadata : ${metadata.toDocument.toJson()} }")
+          val newDoc           = doc.concat(metadataDocument)
+          action(newDoc).toFuture()
+        case MultiAction(actions)            => actions.traverse(applyPartialAction)
+      }
 
-    futureResult.onComplete {
+    val result = applyPartialAction(partialApplication)
+
+    result.onComplete {
       case Failure(e) => logger.error(s"Error on CQRS sink for ${show(metadata)}", e)
       case Success(_) => logger.debug(s"CQRS sink completed for ${show(metadata)}")
     }
-    futureResult.as(Done)
+    result.as(Done)
   }
 
   private def show(metadata: CqrsMetadata): String =
