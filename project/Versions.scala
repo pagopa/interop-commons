@@ -22,7 +22,7 @@ object Versions {
   lazy val pdfCompareVersion          = "1.1.61"
   lazy val projectionVersion          = "1.2.1"
   lazy val s3Persistence              = "1.1.74"
-  lazy val scalatestVersion           = "3.2.12"
+  lazy val scalatestVersion           = "3.2.13"
   lazy val slickProjectionVersion     = "1.2.2"
   lazy val sprayJsonVersion           = "1.3.6"
   lazy val swaggerValidatorVersion    = "2.28.2"
