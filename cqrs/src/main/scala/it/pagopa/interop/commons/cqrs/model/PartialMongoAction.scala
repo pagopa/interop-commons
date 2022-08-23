@@ -44,3 +44,19 @@ final case class ActionWithDocument(action: Document => SingleObservable[_], doc
   * }}}
   */
 final case class Action(action: SingleObservable[_]) extends PartialMongoAction
+
+/**
+  * Used when more than one action is required
+  * Note: there is not guarantee that actions are executed sequencially
+  *
+  * Usage:
+  * {{{
+  * MultiAction(
+  *   Seq(
+  *     Action(collection.deleteOne(Filters.eq("data.id", "xyz")),
+  *     ActionWithDocument(value => collection.insertOne(value), Document(s"{ data: 123 }"))
+  *   )
+  * )
+  * }}}
+  */
+final case class MultiAction(actions: Seq[PartialMongoAction]) extends PartialMongoAction
