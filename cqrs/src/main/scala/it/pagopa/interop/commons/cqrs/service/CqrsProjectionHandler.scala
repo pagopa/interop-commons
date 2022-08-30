@@ -44,13 +44,19 @@ final case class CqrsProjectionHandler[T](eventHandler: EventHandler[T], dbName:
 
     def applyPartialAction(partialApplication: PartialMongoAction): Future[_] =
       partialApplication match {
-        case ActionWithBson(action, value)   => action(withMetadata(value)).toFuture()
-        case Action(action)                  => action.toFuture()
-        case ActionWithDocument(action, doc) =>
+        case ActionWithBson(action, value)            => action(withMetadata(value)).toFuture()
+        case Action(action)                           => action.toFuture()
+        case ActionWithDocument(action, doc)          =>
           val metadataDocument = Document(s"{ metadata : ${metadata.toDocument.toJson()} }")
           val newDoc           = doc.concat(metadataDocument)
           action(newDoc).toFuture()
-        case MultiAction(actions)            => actions.traverse(applyPartialAction)
+        case ActionWithObservable(action, observable) =>
+          val r = for {
+            doc    <- observable
+            result <- action(withMetadata(doc))
+          } yield result
+          r.toFuture()
+        case MultiAction(actions)                     => actions.traverse(applyPartialAction)
       }
 
     val result = applyPartialAction(partialApplication)
