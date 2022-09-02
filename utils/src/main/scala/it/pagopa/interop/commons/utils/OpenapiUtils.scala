@@ -6,7 +6,7 @@ import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ValidationR
 import org.slf4j.LoggerFactory
 
 import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters.RichOptional
+import scala.jdk.OptionConverters._
 
 trait OpenapiUtils {
 
