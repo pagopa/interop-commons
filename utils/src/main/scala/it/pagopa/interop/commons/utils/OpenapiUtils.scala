@@ -2,10 +2,11 @@ package it.pagopa.interop.commons.utils
 
 import com.atlassian.oai.validator.report.ValidationReport
 import it.pagopa.interop.commons.utils.TypeConversions.StringOps
+import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ValidationRequestError
 import org.slf4j.LoggerFactory
 
 import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
+import scala.jdk.OptionConverters.RichOptional
 
 trait OpenapiUtils {
 
@@ -19,19 +20,27 @@ trait OpenapiUtils {
     params.isEmpty || params.contains(s)
   }
 
-  def errorFromRequestValidationReport(report: ValidationReport): String = {
-    val messageStrings = report.getMessages.asScala.foldLeft[List[String]](List.empty)((tail, m) => {
-      val context = m.getContext.toScala.map(c =>
-        Seq(c.getRequestMethod.toScala, c.getRequestPath.toScala, c.getLocation.toScala).flatten
-      )
-      s"""${m.getAdditionalInfo.asScala.mkString(",")}
-         |${m.getLevel} - ${m.getMessage}
-         |${context.getOrElse(Seq.empty).mkString(" - ")}
-         |""".stripMargin :: tail
-    })
+  def errorFromRequestValidationReport(report: ValidationReport): List[ValidationRequestError] = {
+    val errors: List[ValidationRequestError] = report.getMessages.asScala.toList.map { m =>
+      m.getContext.toScala.flatMap(_.getParameter.toScala) match {
+        case Some(param) => ValidationRequestError(s"${param.getName} is not valid - ${m.getMessage}")
+        case None        => ValidationRequestError(s"Invalid parameter found - ${m.getMessage}")
+      }
+    }
 
-    logger.error("Request failed: {}", messageStrings.mkString)
-    report.getMessages.asScala.map(_.getMessage).mkString(", ")
+    val messageStrings: String = report.getMessages.asScala.headOption
+      .map(m =>
+        m.getContext.toScala
+          .map(c => Seq(c.getRequestMethod.toScala.map(_.name()), c.getRequestPath.toScala).flatten)
+          .getOrElse(Seq.empty)
+          .mkString(" - ")
+      )
+      .getOrElse("No request information")
+
+    logger.error("Request failed: {}", s"""$messageStrings - ["${errors.map(_.msg).mkString("""", """")}"]""")
+
+    errors
+
   }
 }
 
