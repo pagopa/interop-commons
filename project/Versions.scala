@@ -13,7 +13,7 @@ object Versions {
   lazy val jdbcPersistenceVersion     = "5.0.2"
   lazy val jsoupVersion               = "1.15.2"
   lazy val lightbendLoggingVersion    = "3.9.5"
-  lazy val logbackVersion             = "1.2.11"
+  lazy val logbackVersion             = "1.4.0"
   lazy val mockJavaMailVersion        = "1.9"
   lazy val mongodbScalaDriverVersion  = "4.6.0"
   lazy val nimbusVersion              = "9.23"
