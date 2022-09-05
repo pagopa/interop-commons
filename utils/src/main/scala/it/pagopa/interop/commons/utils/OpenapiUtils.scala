@@ -22,10 +22,10 @@ trait OpenapiUtils {
 
   def errorFromRequestValidationReport(report: ValidationReport): List[ValidationRequestError] = {
     val errors: List[ValidationRequestError] = report.getMessages.asScala.toList.map { m =>
-      m.getContext.toScala.flatMap(_.getParameter.toScala) match {
-        case Some(param) => ValidationRequestError(s"${param.getName} is not valid - ${m.getMessage}")
-        case None        => ValidationRequestError(s"Invalid parameter found - ${m.getMessage}")
-      }
+      m.getContext.toScala
+        .flatMap(_.getParameter.toScala)
+        .map(param => ValidationRequestError(s"${param.getName} is not valid - ${m.getMessage}"))
+        .getOrElse(ValidationRequestError(s"Invalid parameter found - ${m.getMessage}"))
     }
 
     val messageStrings: String = report.getMessages.asScala.headOption
