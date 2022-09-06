@@ -28,6 +28,7 @@ object GenericComponentErrors {
   final case class MissingClaim(claimName: String)
       extends ComponentError("9990", s"Claim $claimName has not been passed")
 
-  final case class ValidationRequestError(errorMessage: String) extends ComponentError("9000", errorMessage)
+  final case class ValidationRequestError(validationErrorMessage: String)
+      extends ComponentError("9000", validationErrorMessage)
 
 }
