@@ -1,47 +1,27 @@
 package it.pagopa.commons.ratelimiter
 
 import it.pagopa.commons.ratelimiter.error.Errors.TooManyRequests
-import it.pagopa.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
-import it.pagopa.commons.ratelimiter.utils.RedisClient
-import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
-import org.scalamock.scalatest.MockFactory
+import it.pagopa.commons.ratelimiter.model.TokenBucket
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike
-
-import java.time.temporal.ChronoUnit
-import java.time.{OffsetDateTime, ZoneOffset}
-import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 import spray.json._
 
-class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
-  val configs: LimiterConfig = LimiterConfig(
-    limiterGroup = "TEST",
-    maxRequests = 200,
-    burstPercentage = 1.2,
-    rateInterval = 1.second,
-    redisHost = "non-existing-host",
-    redisPort = 6379
-  )
-
-  val redisClientMock: RedisClient                 = mock[RedisClient]
-  val dateTimeSupplierMock: OffsetDateTimeSupplier = mock[OffsetDateTimeSupplier]
-
-  final val timestamp = OffsetDateTime.of(2022, 12, 31, 11, 22, 33, 44, ZoneOffset.UTC)
+class LimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
 
   "Bucket refill" should {
     "init with burst value" in {
       val rateInterval             = 1.minute
       val burstPercentage          = 1.5
       val limiter: LimiterExecutor =
-        LimiterExecutor(
-          configs.copy(rateInterval = rateInterval, burstPercentage = burstPercentage),
-          dateTimeSupplierMock
-        )(redisClientMock)
+        LimiterExecutor(dateTimeSupplierMock, redisClientMock)(
+          configs.copy(rateInterval = rateInterval, burstPercentage = burstPercentage)
+        )
 
       val now             = timestamp
       val bucketTimestamp = timestamp.minus(rateInterval.toSeconds * 2, ChronoUnit.SECONDS)
@@ -55,8 +35,8 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
       val rateInterval             = 1.minute
       val maxRequests              = 100
       val limiter: LimiterExecutor =
-        LimiterExecutor(configs.copy(rateInterval = rateInterval, maxRequests = maxRequests), dateTimeSupplierMock)(
-          redisClientMock
+        LimiterExecutor(dateTimeSupplierMock, redisClientMock)(
+          configs.copy(rateInterval = rateInterval, maxRequests = maxRequests)
         )
 
       val now             = timestamp
@@ -72,10 +52,9 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
       val maxRequests              = 100
       val burstPercentage          = 1.0
       val limiter: LimiterExecutor =
-        LimiterExecutor(
-          configs.copy(rateInterval = rateInterval, maxRequests = maxRequests, burstPercentage = burstPercentage),
-          dateTimeSupplierMock
-        )(redisClientMock)
+        LimiterExecutor(dateTimeSupplierMock, redisClientMock)(
+          configs.copy(rateInterval = rateInterval, maxRequests = maxRequests, burstPercentage = burstPercentage)
+        )
 
       val now             = timestamp
       val bucketTimestamp = timestamp.minus(rateInterval.toSeconds / 2, ChronoUnit.SECONDS)
@@ -89,7 +68,7 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
 
   "Bucket retrieve" should {
     "return bucket if exists" in {
-      val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+      val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
       val organizationId           = UUID.randomUUID()
       val bucket                   = TokenBucket(10.0, timestamp)
 
@@ -99,7 +78,7 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
     }
 
     "return new bucket if does not exist" in {
-      val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+      val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
       val organizationId           = UUID.randomUUID()
 
       val expected = TokenBucket(limiter.burstRequests, timestamp)
@@ -110,16 +89,9 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
     }
   }
 
-  def mockRedisSet(key: String, value: String) =
-    (redisClientMock
-      .set(_: String, _: String)(_: ExecutionContext))
-      .expects(key, value, *)
-      .once()
-      .returns(Future.successful(""))
-
   "Using token" should {
     "store bucket with used token" in {
-      val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+      val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
       val bucket                   = TokenBucket(10, timestamp)
       val organizationId           = UUID.randomUUID()
 
@@ -132,7 +104,7 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
     }
 
     "fail with Too Many Requests error if limit is exceeded" in {
-      val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+      val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
       val bucket                   = TokenBucket(0, timestamp)
       val organizationId           = UUID.randomUUID()
 
@@ -140,52 +112,24 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
     }
   }
 
-  def mockRedisGetFailure() =
-    (redisClientMock
-      .get(_: String)(_: ExecutionContext))
-      .expects(*, *)
-      .once()
-      .returns(Future.failed(new Exception("Some Exception")))
-
-  def mockRedisSetFailure() =
-    (redisClientMock
-      .set(_: String, _: String)(_: ExecutionContext))
-      .expects(*, *, *)
-      .once()
-      .returns(Future.failed(new Exception("Some Exception")))
-
-  def mockRedisGet(key: String, result: Option[String]) =
-    (redisClientMock
-      .get(_: String)(_: ExecutionContext))
-      .expects(key, *)
-      .once()
-      .returns(Future.successful(result))
-
-  def mockRedisDel(key: String) =
-    (redisClientMock
-      .del(_: String)(_: ExecutionContext))
-      .expects(key, *)
-      .once()
-      .returns(Future.successful(0L))
-
   "Rate Limiting" should {
     "not fail" when {
       "current bucket retrieve fails" in {
-        val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+        val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
         val organizationId           = UUID.randomUUID()
 
-        (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
+        mockDateTimeSupplierGet(timestamp)
         mockRedisGetFailure()
 
         limiter.rateLimiting(organizationId).futureValue shouldBe ()
       }
 
       "updated bucket store fails" in {
-        val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+        val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
         val organizationId           = UUID.randomUUID()
         val bucket                   = TokenBucket(10.0, timestamp).toJson.compactPrint
 
-        (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
+        mockDateTimeSupplierGet(timestamp)
         mockRedisGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
         mockRedisSetFailure()
 
@@ -195,11 +139,11 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
 
     "fail" when {
       "limit has been exceeded" in {
-        val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+        val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
         val organizationId           = UUID.randomUUID()
         val bucket                   = TokenBucket(0.0, timestamp).toJson.compactPrint
 
-        (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
+        mockDateTimeSupplierGet(timestamp)
         mockRedisGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
 
         limiter.rateLimiting(organizationId).failed.futureValue shouldBe TooManyRequests
@@ -207,13 +151,13 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
     }
 
     "delete a corrupted value if deserialization fails and generate a new bucket" in {
-      val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+      val limiter: LimiterExecutor = LimiterExecutor(dateTimeSupplierMock, redisClientMock)(configs)
       val organizationId           = UUID.randomUUID()
       val key                      = limiter.key(configs.limiterGroup, organizationId)
 
       val expected = TokenBucket(limiter.burstRequests, timestamp)
 
-      (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
+      mockDateTimeSupplierGet(timestamp)
       mockRedisGet(key, Some("unexpected-value"))
       mockRedisDel(key)
       mockRedisSet(

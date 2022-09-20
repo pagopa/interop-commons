@@ -14,9 +14,10 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-private[ratelimiter] final case class LimiterExecutor(configs: LimiterConfig, dateTimeSupplier: OffsetDateTimeSupplier)(
+private[ratelimiter] final case class LimiterExecutor(
+  dateTimeSupplier: OffsetDateTimeSupplier,
   redisClient: RedisClient
-) {
+)(configs: LimiterConfig) {
   // TODO Logging
   // TODO Use try instead of Future?
   // TODO Refactor

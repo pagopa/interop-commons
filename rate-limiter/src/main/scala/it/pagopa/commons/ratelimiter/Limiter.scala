@@ -14,7 +14,7 @@ final case class Limiter(configs: LimiterConfig, dateTimeSupplier: OffsetDateTim
 
   private val jedis: JedisPooled = new JedisPooled(configs.redisHost, configs.redisPort)
 
-  private val executor = LimiterExecutor(configs, dateTimeSupplier)(JedisClient(jedis))
+  private val executor = LimiterExecutor(dateTimeSupplier, JedisClient(jedis))(configs)
 
   def rateLimiting(organizationId: UUID)(implicit ec: ExecutionContext): Future[Unit] =
     executor.rateLimiting(organizationId)
