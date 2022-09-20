@@ -1,13 +1,17 @@
 package it.pagopa.commons.ratelimiter
 
+import it.pagopa.commons.ratelimiter.error.Errors.TooManyRequests
 import it.pagopa.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
+import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.temporal.ChronoUnit
 import java.time.{OffsetDateTime, ZoneOffset}
+import java.util.UUID
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class LimiterSpec extends AnyWordSpecLike {
 
@@ -78,6 +82,16 @@ class LimiterSpec extends AnyWordSpecLike {
       val expected = TokenBucket(51, now)
 
       limiter.refillBucket(currentBucket, now) shouldBe expected
+    }
+  }
+
+  "Using token" should {
+    "fail with Too Many Requests error if limit is exceeded" in {
+      val limiter: Limiter = Limiter(configs, fakeDateTimeSupplier)
+      val bucket           = TokenBucket(0, timestamp)
+      val organizationId   = UUID.randomUUID()
+
+      limiter.useToken(bucket, organizationId).failed.futureValue shouldBe TooManyRequests
     }
   }
 }
