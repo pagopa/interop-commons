@@ -6,13 +6,14 @@ ThisBuild / organizationName  := "Pagopa S.p.A."
 ThisBuild / version           := ComputeVersion.version
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val fileManagerModuleName = "file-manager"
-val mailManagerModuleName = "mail-manager"
-val jwtModuleName         = "jwt"
-val signerModuleName      = "signer"
-val utilsModuleName       = "utils"
-val queueModuleName       = "queue-manager"
-val cqrsModuleName        = "cqrs"
+val fileManagerModuleName  = "file-manager"
+val mailManagerModuleName  = "mail-manager"
+val jwtModuleName          = "jwt"
+val signerModuleName       = "signer"
+val utilsModuleName        = "utils"
+val queueModuleName        = "queue-manager"
+val cqrsModuleName         = "cqrs"
+val rateLimiterModuleName = "rate-limiter"
 
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
@@ -92,10 +93,16 @@ lazy val queue = project
 
 lazy val cqrs = project
   .in(file(cqrsModuleName))
+  .settings(name := "interop-commons-cqrs", sharedSettings, libraryDependencies ++= Dependencies.Jars.cqrsDependencies)
+  .dependsOn(utils)
+  .setupBuildInfo
+
+lazy val rateLimiter = project
+  .in(file(rateLimiterModuleName))
   .settings(
-    name := "interop-commons-cqrs",
+    name := "interop-commons-rate-limiter",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.cqrsDependencies
+    libraryDependencies ++= Dependencies.Jars.rateLimiterDependencies
   )
   .dependsOn(utils)
   .setupBuildInfo

@@ -62,6 +62,10 @@ object Dependencies {
     lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
   }
 
+  private[this] object redis {
+    lazy val jedis = "redis.clients" % "jedis" % jedisVersion
+  }
+
   private[this] object jsoup {
     lazy val namespace = "org.jsoup"
     lazy val jsoup     = namespace % "jsoup" % jsoupVersion
@@ -170,6 +174,8 @@ object Dependencies {
       mongodb.scalaDriver         % Compile,
       spray.spray                 % Compile
     )
+
+    lazy val rateLimiterDependencies: Seq[ModuleID] = Seq(redis.jedis % Compile, spray.spray % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
