@@ -22,6 +22,11 @@ object Dependencies {
     lazy val core      = namespace %% "scalatest" % scalatestVersion
   }
 
+  private[this] object scalamock {
+    lazy val namespace = "org.scalamock"
+    lazy val core      = namespace %% "scalamock" % scalaMockVersion
+  }
+
   private[this] object typesafe {
     lazy val namespace = "com.typesafe"
     lazy val config    = namespace % "config" % typesafeConfigVersion
@@ -175,7 +180,8 @@ object Dependencies {
       spray.spray                 % Compile
     )
 
-    lazy val rateLimiterDependencies: Seq[ModuleID] = Seq(redis.jedis % Compile, spray.spray % Compile)
+    lazy val rateLimiterDependencies: Seq[ModuleID] =
+      Seq(redis.jedis % Compile, spray.spray % Compile, scalamock.core % Test)
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
