@@ -31,27 +31,6 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
   val redisClientMock: RedisClient                 = mock[RedisClient]
   val dateTimeSupplierMock: OffsetDateTimeSupplier = mock[OffsetDateTimeSupplier]
 
-//  def redisClientSuccessfulStub(retrievedValue: Option[String]): RedisClient = new RedisClient {
-//    override def get(key: String)(implicit ec: ExecutionContext): Future[Option[String]] =
-//      Future.successful(retrievedValue)
-//
-//    override def set(key: String, value: String)(implicit ec: ExecutionContext): Future[String] = Future.successful("")
-//  }
-//
-//  val redisClientSuccessfulStub: RedisClient = redisClientSuccessfulStub(Some(""))
-//
-//  val redisClientFailureStub: RedisClient = new RedisClient {
-//    override def get(key: String)(implicit ec: ExecutionContext): Future[Option[String]] =
-//      Future.failed(new Exception("Some exception"))
-//
-//    override def set(key: String, value: String)(implicit ec: ExecutionContext): Future[String] =
-//      Future.failed(new Exception("Some exception"))
-//  }
-
-//  val fakeDateTimeSupplier: OffsetDateTimeSupplier = new OffsetDateTimeSupplier {
-//    override def get: OffsetDateTime = throw new Exception("Fake functions should not be invoked")
-//  }
-
   final val timestamp = OffsetDateTime.of(2022, 12, 31, 11, 22, 33, 44, ZoneOffset.UTC)
 
   "Bucket refill" should {
@@ -131,21 +110,23 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
     }
   }
 
+  def mockRedisSet(key: String, value: String) =
+    (redisClientMock
+      .set(_: String, _: String)(_: ExecutionContext))
+      .expects(key, value, *)
+      .once()
+      .returns(Future.successful(""))
+
   "Using token" should {
     "store bucket with used token" in {
       val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
       val bucket                   = TokenBucket(10, timestamp)
       val organizationId           = UUID.randomUUID()
 
-      (redisClientMock
-        .set(_: String, _: String)(_: ExecutionContext))
-        .expects(
-          limiter.key(configs.limiterGroup, organizationId),
-          bucket.copy(tokens = bucket.tokens - 1).toJson.compactPrint,
-          *
-        )
-        .once()
-        .returns(Future.successful(""))
+      mockRedisSet(
+        limiter.key(configs.limiterGroup, organizationId),
+        bucket.copy(tokens = bucket.tokens - 1).toJson.compactPrint
+      )
 
       limiter.useToken(bucket, organizationId).futureValue shouldBe ()
     }
@@ -179,6 +160,13 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
       .expects(key, *)
       .once()
       .returns(Future.successful(result))
+
+  def mockRedisDel(key: String) =
+    (redisClientMock
+      .del(_: String)(_: ExecutionContext))
+      .expects(key, *)
+      .once()
+      .returns(Future.successful(0L))
 
   "Rate Limiting" should {
     "not fail" when {
@@ -218,9 +206,23 @@ class LimiterExecutorSpec extends AnyWordSpecLike with MockFactory {
       }
     }
 
+    "delete a corrupted value if deserialization fails and generate a new bucket" in {
+      val limiter: LimiterExecutor = LimiterExecutor(configs, dateTimeSupplierMock)(redisClientMock)
+      val organizationId           = UUID.randomUUID()
+      val key                      = limiter.key(configs.limiterGroup, organizationId)
+
+      val expected = TokenBucket(limiter.burstRequests, timestamp)
+
+      (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
+      mockRedisGet(key, Some("unexpected-value"))
+      mockRedisDel(key)
+      mockRedisSet(
+        limiter.key(configs.limiterGroup, organizationId),
+        expected.copy(tokens = expected.tokens - 1).toJson.compactPrint
+      )
+
+      limiter.rateLimiting(organizationId).futureValue shouldBe ()
+    }
   }
 
-  "Bucket conversion failure" should {
-    "delete the corrupted key" in {}
-  }
 }

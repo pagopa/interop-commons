@@ -1,7 +1,7 @@
 package it.pagopa.commons.ratelimiter
 
 import cats.implicits._
-import it.pagopa.commons.ratelimiter.error.Errors.TooManyRequests
+import it.pagopa.commons.ratelimiter.error.Errors.{DeserializationFailed, TooManyRequests}
 import it.pagopa.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
 import it.pagopa.commons.ratelimiter.utils.RedisClient
 import it.pagopa.interop.commons.utils.TypeConversions._
@@ -18,6 +18,8 @@ private[ratelimiter] final case class LimiterExecutor(configs: LimiterConfig, da
   redisClient: RedisClient
 ) {
   // TODO Logging
+  // TODO Use try instead of Future?
+  // TODO Refactor
 
   val burstRequests: Double = configs.maxRequests * configs.burstPercentage
 
@@ -29,7 +31,7 @@ private[ratelimiter] final case class LimiterExecutor(configs: LimiterConfig, da
     val now    = dateTimeSupplier.get
     val result = for {
       // Note: this is not transactional. Potentially N requests can use just 1 token
-      bucket <- getBucket(configs.limiterGroup, organizationId, now)
+      bucket <- getBucket(configs.limiterGroup, organizationId, now).recoverWith(clearOnDeserializationError(now))
       updatedBucket = refillBucket(bucket, now)
       _ <- useToken(updatedBucket, organizationId)
     } yield ()
@@ -44,10 +46,25 @@ private[ratelimiter] final case class LimiterExecutor(configs: LimiterConfig, da
     ec: ExecutionContext
   ): Future[TokenBucket] =
     for {
-      value  <- redisClient.get(key(limiterGroup, organizationId))
-      bucket <- value.fold(Future.successful(initBucket(now)))(b => Future(b.parseJson.convertTo[TokenBucket]))
-      // TODO delete key on parsing error (to allow the next request to succeed)
+      key    <- Future.successful(key(limiterGroup, organizationId))
+      value  <- redisClient.get(key)
+      bucket <- value.fold(Future.successful(initBucket(now)))(b => parseValue(key, b))
     } yield bucket
+
+  def parseValue(key: String, serializedBucket: String)(implicit ec: ExecutionContext): Future[TokenBucket] =
+    Future(serializedBucket.parseJson.convertTo[TokenBucket]).recoverWith(_ =>
+      Future.failed(DeserializationFailed(key))
+    )
+
+  // If parsing fails, the value is removed from the cache
+  // This ensures that in case of bugs or models changes, not manual maintenance is required
+  //   and the rate limit logic resumes on the next run
+  def clearOnDeserializationError(now: OffsetDateTime)(implicit
+    ec: ExecutionContext
+  ): PartialFunction[Throwable, Future[TokenBucket]] = { case DeserializationFailed(key) =>
+    redisClient.del(key)
+    Future.successful(initBucket(now))
+  }
 
   def storeBucket(limiterGroup: String, organizationId: UUID, bucket: TokenBucket)(implicit
     ec: ExecutionContext
