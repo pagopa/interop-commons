@@ -6,18 +6,20 @@ ThisBuild / organizationName  := "Pagopa S.p.A."
 ThisBuild / version           := ComputeVersion.version
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-val fileManagerModuleName  = "file-manager"
-val mailManagerModuleName  = "mail-manager"
-val jwtModuleName          = "jwt"
-val signerModuleName       = "signer"
-val utilsModuleName        = "utils"
-val queueModuleName        = "queue-manager"
-val cqrsModuleName         = "cqrs"
+val fileManagerModuleName = "file-manager"
+val mailManagerModuleName = "mail-manager"
+val jwtModuleName         = "jwt"
+val signerModuleName      = "signer"
+val utilsModuleName       = "utils"
+val queueModuleName       = "queue-manager"
+val cqrsModuleName        = "cqrs"
 val rateLimiterModuleName = "rate-limiter"
 
+cleanFiles += baseDirectory.value / cqrsModuleName / "target"
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
 cleanFiles += baseDirectory.value / jwtModuleName / "target"
+cleanFiles += baseDirectory.value / rateLimiterModuleName / "target"
 cleanFiles += baseDirectory.value / signerModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
@@ -108,5 +110,5 @@ lazy val rateLimiter = project
   .setupBuildInfo
 
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, signer, jwtModule, queue, cqrs)
+  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)

@@ -19,6 +19,8 @@ private[ratelimiter] final case class LimiterExecutor(
   redisClient: RedisClient
 )(configs: LimiterConfig) {
   // TODO Logging
+  //    it should be better to use logger with implicit context to include correlationId,
+  //    but it must be checked if it is possible when using this in a directive
   // TODO Use try instead of Future?
   // TODO Refactor
 
