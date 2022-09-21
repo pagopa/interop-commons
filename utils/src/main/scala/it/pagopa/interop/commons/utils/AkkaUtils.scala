@@ -33,13 +33,13 @@ trait AkkaUtils {
     override def apply(credentials: Credentials): Option[Seq[(String, String)]] = Some(Seq.empty)
   }
 
-  // * These are ugly as hell, but they avoid converting each time the whole Seq to a map to extract just a value
+  // * This is not particularly elegant but they avoid converting each time the whole Seq to a map to extract just a value
   @inline def fastGetOpt(contexts: Seq[(String, String)])(k: String): Option[String]                                =
     contexts.find(_._1 == k).map(_._2)
   @inline private def fastGet(contexts: Seq[(String, String)])(k: String, ex: Throwable): Either[Throwable, String] =
     fastGetOpt(contexts)(k).toRight(ex)
 
-  // * Ugly as hell, but avoids converting the whole Either to Try before converting to Future
+  // * This is not particularly elegant but avoids converting the whole Either to Try before converting to Future
   @inline private def toFastFutureUUID(either: Either[Throwable, String]): Future[UUID] = either match {
     case Left(ex) => Future.failed(ex)
     case Right(s) =>

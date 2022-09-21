@@ -31,8 +31,12 @@ package object utils {
     } yield (bearerToken, correlationId, ip)
   }
 
+  type BearerToken   = String
+  type CorrelationId = String
+  type IpAddress     = String
+
   def withHeaders[T](
-    f: (String, String, Option[String]) => Future[T]
+    f: (BearerToken, CorrelationId, Option[IpAddress]) => Future[T]
   )(implicit contexts: Seq[(String, String)]): Future[T] = extractHeaders(contexts) match {
     case Left(ex) => Future.failed(ex)
     case Right(x) => f.tupled(x)
