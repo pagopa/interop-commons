@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-private[ratelimiter] final case class LimiterExecutor(
+private[ratelimiter] final case class RateLimiterExecutor(
   dateTimeSupplier: OffsetDateTimeSupplier,
   redisClient: RedisClient
 )(configs: LimiterConfig) {
