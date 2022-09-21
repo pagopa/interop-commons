@@ -9,5 +9,5 @@ trait UUIDSupplier {
   /** Returns a generated UUID.
     * @return generated random UUID.
     */
-  def get: UUID
+  def get(): UUID
 }

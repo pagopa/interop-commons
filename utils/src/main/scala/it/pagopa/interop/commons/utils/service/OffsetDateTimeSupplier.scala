@@ -5,5 +5,5 @@ import java.time.OffsetDateTime
 /** Supplies a timestamp through DI
   */
 trait OffsetDateTimeSupplier {
-  def get: OffsetDateTime
+  def get(): OffsetDateTime
 }

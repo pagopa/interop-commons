@@ -5,6 +5,7 @@ import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBea
 
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
+import scala.concurrent.Future
 
 package object utils {
   private[utils] lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -30,4 +31,16 @@ package object utils {
     } yield (bearerToken, correlationId, ip)
   }
 
+  def withHeaders[T](
+    f: (String, String, Option[String]) => Future[T]
+  )(implicit contexts: Seq[(String, String)]): Future[T] = extractHeaders(contexts) match {
+    case Left(ex) => Future.failed(ex)
+    case Right(x) => f.tupled(x)
+  }
+
+  def withUid[T](f: String => Future[T])(implicit contexts: Seq[(String, String)]): Future[T] =
+    AkkaUtils.getUid(contexts) match {
+      case Left(ex) => Future.failed(ex)
+      case Right(x) => f(x)
+    }
 }
