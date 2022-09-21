@@ -22,7 +22,13 @@ package object utils {
   val PURPOSE_ID_CLAIM: String                             = "purposeId"
   val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
 
-  def extractHeaders(contexts: Seq[(String, String)]): Either[ComponentError, (String, String, Option[String])] = {
+  type BearerToken   = String
+  type CorrelationId = String
+  type IpAddress     = String
+
+  def extractHeaders(
+    contexts: Seq[(String, String)]
+  ): Either[ComponentError, (BearerToken, CorrelationId, Option[IpAddress])] = {
     val contextsMap = contexts.toMap
     for {
       bearerToken   <- contextsMap.get(BEARER).toRight(MissingBearer)
@@ -30,10 +36,6 @@ package object utils {
       ip = contextsMap.get(IP_ADDRESS)
     } yield (bearerToken, correlationId, ip)
   }
-
-  type BearerToken   = String
-  type CorrelationId = String
-  type IpAddress     = String
 
   def withHeaders[T](
     f: (BearerToken, CorrelationId, Option[IpAddress]) => Future[T]
