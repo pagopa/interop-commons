@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 object RateLimiterDirective {
-
+  // TODO move this to proper file?
   object MissingOrganizationIdClaim
       extends Throwable(s"Missing expected $ORGANIZATION_ID_CLAIM claim in token")
       with Rejection
