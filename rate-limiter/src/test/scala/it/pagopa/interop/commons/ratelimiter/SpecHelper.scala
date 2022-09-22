@@ -1,5 +1,7 @@
 package it.pagopa.interop.commons.ratelimiter
 
+import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
+import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.ratelimiter.error.Errors.TooManyRequests
 import it.pagopa.interop.commons.ratelimiter.model.LimiterConfig
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
@@ -24,6 +26,9 @@ trait SpecHelper extends MockFactory {
   val rateLimiterMock: RateLimiter                 = mock[RateLimiter]
   val cacheClientMock: CacheClient                 = mock[CacheClient]
   val dateTimeSupplierMock: OffsetDateTimeSupplier = mock[OffsetDateTimeSupplier]
+
+  implicit val logger: LoggerTakingImplicit[ContextFieldsToLog] =
+    Logger.takingImplicit[ContextFieldsToLog](this.getClass)
 
   final val timestamp = OffsetDateTime.of(2022, 12, 31, 11, 22, 33, 44, ZoneOffset.UTC)
 
@@ -67,22 +72,34 @@ trait SpecHelper extends MockFactory {
 
   def mockRateLimiting(organizationId: UUID) =
     (rateLimiterMock
-      .rateLimiting(_: UUID)(_: ExecutionContext))
-      .expects(organizationId, *)
+      .rateLimiting(_: UUID)(
+        _: ExecutionContext,
+        _: LoggerTakingImplicit[ContextFieldsToLog],
+        _: Seq[(String, String)]
+      ))
+      .expects(organizationId, *, *, *)
       .once()
       .returns(Future.unit)
 
   def mockRateLimitingFailure(organizationId: UUID) =
     (rateLimiterMock
-      .rateLimiting(_: UUID)(_: ExecutionContext))
-      .expects(organizationId, *)
+      .rateLimiting(_: UUID)(
+        _: ExecutionContext,
+        _: LoggerTakingImplicit[ContextFieldsToLog],
+        _: Seq[(String, String)]
+      ))
+      .expects(organizationId, *, *, *)
       .once()
       .returns(Future.failed(new Exception("Some Exception")))
 
   def mockRateLimitingTooManyRequests(organizationId: UUID) =
     (rateLimiterMock
-      .rateLimiting(_: UUID)(_: ExecutionContext))
-      .expects(organizationId, *)
+      .rateLimiting(_: UUID)(
+        _: ExecutionContext,
+        _: LoggerTakingImplicit[ContextFieldsToLog],
+        _: Seq[(String, String)]
+      ))
+      .expects(organizationId, *, *, *)
       .once()
       .returns(Future.failed(TooManyRequests))
 }

@@ -1,5 +1,7 @@
 package it.pagopa.interop.commons.ratelimiter.impl
 
+import com.typesafe.scalalogging.LoggerTakingImplicit
+import it.pagopa.interop.commons.logging.ContextFieldsToLog
 import it.pagopa.interop.commons.ratelimiter.model.LimiterConfig
 import it.pagopa.interop.commons.ratelimiter.{RateLimiter, RateLimiterExecutor}
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
@@ -17,7 +19,11 @@ final case class RedisRateLimiter(configs: LimiterConfig, dateTimeSupplier: Offs
 
   private val executor = RateLimiterExecutor(dateTimeSupplier, RedisClient(jedis))(configs)
 
-  override def rateLimiting(organizationId: UUID)(implicit ec: ExecutionContext): Future[Unit] =
+  override def rateLimiting(organizationId: UUID)(implicit
+    ec: ExecutionContext,
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    contexts: Seq[(String, String)]
+  ): Future[Unit] =
     executor.rateLimiting(organizationId)
 
 }

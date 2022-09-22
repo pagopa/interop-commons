@@ -5,6 +5,8 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.{onComplete, provide}
 import akka.http.scaladsl.server.directives.RouteDirectives._
+import com.typesafe.scalalogging.LoggerTakingImplicit
+import it.pagopa.interop.commons.logging.ContextFieldsToLog
 import it.pagopa.interop.commons.ratelimiter.RateLimiter
 import it.pagopa.interop.commons.ratelimiter.akkahttp.Errors.MissingOrganizationIdClaim
 import it.pagopa.interop.commons.ratelimiter.error.Errors.TooManyRequests
@@ -21,18 +23,23 @@ object RateLimiterDirective {
     contexts: Seq[(String, String)]
   )(implicit
     ec: ExecutionContext,
-    toEntityMarshallerProblem: ToEntityMarshaller[T]
+    toEntityMarshallerProblem: ToEntityMarshaller[T],
+    logger: LoggerTakingImplicit[ContextFieldsToLog]
   ): Directive1[Seq[(String, String)]] =
     getClaim(contexts, ORGANIZATION_ID_CLAIM).flatMap(_.toUUID) match {
       case Success(orgId) =>
+        implicit val c: Seq[(String, String)] = contexts
         onComplete(rateLimiter.rateLimiting(orgId)).flatMap {
           case Success(_)                  => provide(contexts)
-          case Failure(_ @TooManyRequests) =>
-            complete(StatusCodes.TooManyRequests, tooManyRequestsProblem)
+          case Failure(_ @TooManyRequests) => complete(StatusCodes.TooManyRequests, tooManyRequestsProblem)
           // Never interrupt execution in case of unexpected rate limiting failure
-          case Failure(_)                  => provide(contexts)
+          case Failure(err)                =>
+            logger.error(s"Unexpected error during rate limiting for organization $orgId", err)
+            provide(contexts)
         }
 
-      case Failure(_) => reject(MissingOrganizationIdClaim)
+      case Failure(_) =>
+        logger.error(s"Missing or not correctly formatted $ORGANIZATION_ID_CLAIM")(contexts)
+        reject(MissingOrganizationIdClaim)
     }
 }

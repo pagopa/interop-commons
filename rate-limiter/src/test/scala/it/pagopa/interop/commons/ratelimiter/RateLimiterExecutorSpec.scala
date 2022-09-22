@@ -2,6 +2,7 @@ package it.pagopa.interop.commons.ratelimiter
 
 import it.pagopa.interop.commons.ratelimiter.error.Errors.TooManyRequests
 import it.pagopa.interop.commons.ratelimiter.model.TokenBucket
+import it.pagopa.interop.commons.utils.ORGANIZATION_ID_CLAIM
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -117,6 +118,7 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
       "current bucket retrieve fails" in {
         val limiter: RateLimiterExecutor = RateLimiterExecutor(dateTimeSupplierMock, cacheClientMock)(configs)
         val organizationId               = UUID.randomUUID()
+        implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
         mockDateTimeSupplierGet(timestamp)
         mockCacheGetFailure()
@@ -128,6 +130,7 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
         val limiter: RateLimiterExecutor = RateLimiterExecutor(dateTimeSupplierMock, cacheClientMock)(configs)
         val organizationId               = UUID.randomUUID()
         val bucket                       = TokenBucket(10.0, timestamp).toJson.compactPrint
+        implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
         mockDateTimeSupplierGet(timestamp)
         mockCacheGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
@@ -142,6 +145,7 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
         val limiter: RateLimiterExecutor = RateLimiterExecutor(dateTimeSupplierMock, cacheClientMock)(configs)
         val organizationId               = UUID.randomUUID()
         val bucket                       = TokenBucket(0.0, timestamp).toJson.compactPrint
+        implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
         mockDateTimeSupplierGet(timestamp)
         mockCacheGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
@@ -154,6 +158,7 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
       val limiter: RateLimiterExecutor = RateLimiterExecutor(dateTimeSupplierMock, cacheClientMock)(configs)
       val organizationId               = UUID.randomUUID()
       val key                          = limiter.key(configs.limiterGroup, organizationId)
+      implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
       val expected = TokenBucket(limiter.burstRequests, timestamp)
 

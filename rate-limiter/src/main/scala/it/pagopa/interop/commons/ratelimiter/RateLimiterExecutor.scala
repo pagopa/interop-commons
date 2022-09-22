@@ -1,6 +1,8 @@
 package it.pagopa.interop.commons.ratelimiter
 
 import cats.implicits._
+import com.typesafe.scalalogging.LoggerTakingImplicit
+import it.pagopa.interop.commons.logging.ContextFieldsToLog
 import it.pagopa.interop.commons.ratelimiter.error.Errors.{DeserializationFailed, TooManyRequests}
 import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
 import it.pagopa.interop.commons.utils.TypeConversions._
@@ -17,9 +19,6 @@ private[ratelimiter] final case class RateLimiterExecutor(
   dateTimeSupplier: OffsetDateTimeSupplier,
   cacheClient: CacheClient
 )(configs: LimiterConfig) {
-  // TODO Logging
-  //    it should be better to use logger with implicit context to include correlationId,
-  //    but it must be checked if it is possible when using this in a directive
   // TODO Use try instead of Future?
   // TODO Refactor
 
@@ -29,7 +28,11 @@ private[ratelimiter] final case class RateLimiterExecutor(
     * Applies rate limiting using Token Bucket algorithm.
     * In case of any execution error, allows the request to avoid service outage
     */
-  def rateLimiting(organizationId: UUID)(implicit ec: ExecutionContext): Future[Unit] = {
+  def rateLimiting(organizationId: UUID)(implicit
+    ec: ExecutionContext,
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    contexts: Seq[(String, String)]
+  ): Future[Unit] = {
     val now    = dateTimeSupplier.get
     val result = for {
       // Note: this is not transactional. Potentially N requests can use just 1 token
@@ -39,8 +42,12 @@ private[ratelimiter] final case class RateLimiterExecutor(
     } yield ()
     result
       .recoverWith {
-        case TooManyRequests => Future.failed(TooManyRequests)
-        case _               => Future.unit
+        case TooManyRequests =>
+          logger.warn(s"Rate Limit triggered for organization $organizationId")
+          Future.failed(TooManyRequests)
+        case err             =>
+          logger.error(s"Unexpected error during rate limiting for organization $organizationId", err)
+          Future.unit
       }
   }
 
@@ -62,8 +69,11 @@ private[ratelimiter] final case class RateLimiterExecutor(
   // This ensures that in case of bugs or models changes, not manual maintenance is required
   //   and the rate limit logic resumes on the next run
   def clearOnDeserializationError(now: OffsetDateTime)(implicit
-    ec: ExecutionContext
+    ec: ExecutionContext,
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    contexts: Seq[(String, String)]
   ): PartialFunction[Throwable, Future[TokenBucket]] = { case DeserializationFailed(key) =>
+    logger.error(s"Deserialization failed for key $key")
     cacheClient.del(key)
     Future.successful(initBucket(now))
   }
