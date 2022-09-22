@@ -19,8 +19,6 @@ private[ratelimiter] final case class RateLimiterExecutor(
   dateTimeSupplier: OffsetDateTimeSupplier,
   cacheClient: CacheClient
 )(configs: LimiterConfig) {
-  // TODO Use try instead of Future?
-  // TODO Refactor
 
   val burstRequests: Double = configs.maxRequests * configs.burstPercentage
 
@@ -57,13 +55,12 @@ private[ratelimiter] final case class RateLimiterExecutor(
     for {
       key    <- Future.successful(key(limiterGroup, organizationId))
       value  <- cacheClient.get(key)
-      bucket <- value.fold(Future.successful(initBucket(now)))(b => parseValue(key, b))
+      bucket <- value.fold(Future.successful(initBucket(now)))(parseValue(key, _))
     } yield bucket
 
   def parseValue(key: String, serializedBucket: String)(implicit ec: ExecutionContext): Future[TokenBucket] =
-    Future(serializedBucket.parseJson.convertTo[TokenBucket]).recoverWith(_ =>
-      Future.failed(DeserializationFailed(key))
-    )
+    Future(serializedBucket.parseJson.convertTo[TokenBucket])
+      .recoverWith(_ => Future.failed(DeserializationFailed(key)))
 
   // If parsing fails, the value is removed from the cache
   // This ensures that in case of bugs or models changes, not manual maintenance is required
@@ -74,8 +71,7 @@ private[ratelimiter] final case class RateLimiterExecutor(
     contexts: Seq[(String, String)]
   ): PartialFunction[Throwable, Future[TokenBucket]] = { case DeserializationFailed(key) =>
     logger.error(s"Deserialization failed for key $key")
-    cacheClient.del(key)
-    Future.successful(initBucket(now))
+    cacheClient.del(key).as(initBucket(now))
   }
 
   def storeBucket(limiterGroup: String, organizationId: UUID, bucket: TokenBucket)(implicit
@@ -94,7 +90,6 @@ private[ratelimiter] final case class RateLimiterExecutor(
     TokenBucket(tokens = updatedTokens, lastCall = now)
   }
 
-  // TODO Rename
   def releaseTokens(currentBucket: TokenBucket, now: OffsetDateTime): Double = {
     val elapsed = now.toMillis - currentBucket.lastCall.toMillis
     if (FiniteDuration(elapsed, TimeUnit.MILLISECONDS) > configs.rateInterval) {
