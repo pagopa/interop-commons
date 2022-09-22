@@ -1,4 +1,4 @@
-package it.pagopa.commons.ratelimiter.error
+package it.pagopa.interop.commons.ratelimiter.error
 
 object Errors {
   case object TooManyRequests                         extends Throwable("Too many requests")

@@ -1,7 +1,7 @@
-package it.pagopa.commons.ratelimiter
+package it.pagopa.interop.commons.ratelimiter
 
-import it.pagopa.commons.ratelimiter.error.Errors.TooManyRequests
-import it.pagopa.commons.ratelimiter.model.TokenBucket
+import it.pagopa.interop.commons.ratelimiter.error.Errors.TooManyRequests
+import it.pagopa.interop.commons.ratelimiter.model.TokenBucket
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike

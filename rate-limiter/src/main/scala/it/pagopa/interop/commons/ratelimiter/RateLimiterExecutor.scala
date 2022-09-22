@@ -1,9 +1,9 @@
-package it.pagopa.commons.ratelimiter
+package it.pagopa.interop.commons.ratelimiter
 
 import cats.implicits._
-import it.pagopa.commons.ratelimiter.error.Errors.{DeserializationFailed, TooManyRequests}
-import it.pagopa.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
-import it.pagopa.commons.ratelimiter.utils.RedisClient
+import it.pagopa.interop.commons.ratelimiter.error.Errors.{DeserializationFailed, TooManyRequests}
+import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
+import it.pagopa.interop.commons.ratelimiter.utils.RedisClient
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import spray.json._

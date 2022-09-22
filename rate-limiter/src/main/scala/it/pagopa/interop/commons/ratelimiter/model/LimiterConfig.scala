@@ -1,4 +1,4 @@
-package it.pagopa.commons.ratelimiter.model
+package it.pagopa.interop.commons.ratelimiter.model
 
 import scala.concurrent.duration.FiniteDuration
 

@@ -1,4 +1,4 @@
-package it.pagopa.commons.ratelimiter.model
+package it.pagopa.interop.commons.ratelimiter.model
 
 import it.pagopa.interop.commons.utils.SprayCommonFormats._
 import spray.json.DefaultJsonProtocol._

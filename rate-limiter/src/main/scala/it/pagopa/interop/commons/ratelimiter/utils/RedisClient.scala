@@ -1,4 +1,4 @@
-package it.pagopa.commons.ratelimiter.utils
+package it.pagopa.interop.commons.ratelimiter.utils
 
 import redis.clients.jedis.JedisPooled
 

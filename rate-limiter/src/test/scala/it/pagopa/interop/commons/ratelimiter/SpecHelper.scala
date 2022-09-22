@@ -1,7 +1,7 @@
-package it.pagopa.commons.ratelimiter
+package it.pagopa.interop.commons.ratelimiter
 
-import it.pagopa.commons.ratelimiter.model.LimiterConfig
-import it.pagopa.commons.ratelimiter.utils.RedisClient
+import it.pagopa.interop.commons.ratelimiter.model.LimiterConfig
+import it.pagopa.interop.commons.ratelimiter.utils.RedisClient
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import org.scalamock.scalatest.MockFactory
 
