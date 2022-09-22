@@ -20,7 +20,8 @@ trait SpecHelper extends MockFactory {
     burstPercentage = 1.2,
     rateInterval = 1.second,
     redisHost = "non-existing-host",
-    redisPort = 6379
+    redisPort = 6379,
+    timeout = 2.seconds
   )
 
   val rateLimiterMock: RateLimiter                 = mock[RateLimiter]

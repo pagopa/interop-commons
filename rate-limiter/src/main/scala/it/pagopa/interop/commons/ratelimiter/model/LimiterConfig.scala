@@ -13,6 +13,8 @@ import scala.concurrent.duration.FiniteDuration
   * @param rateInterval Rate limiting will be evaluated within this interval
   * @param redisHost Redis hostname
   * @param redisPort Redis port
+  * @param timeout Timeframe connection and operations must be executed within
+  *                Note: in case of timeout the request is executed without applying rate limit
   */
 final case class LimiterConfig(
   limiterGroup: String,
@@ -20,5 +22,6 @@ final case class LimiterConfig(
   burstPercentage: Double,
   rateInterval: FiniteDuration,
   redisHost: String,
-  redisPort: Int
+  redisPort: Int,
+  timeout: FiniteDuration
 )
