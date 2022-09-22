@@ -181,7 +181,13 @@ object Dependencies {
     )
 
     lazy val rateLimiterDependencies: Seq[ModuleID] =
-      Seq(redis.jedis % Compile, spray.spray % Compile, scalamock.core % Test)
+      Seq(
+        redis.jedis        % Compile,
+        spray.spray        % Compile,
+        scalamock.core     % Test,
+        akka.httpTestkit   % Test,
+        akka.streamTestkit % Test
+      )
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy

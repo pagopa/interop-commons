@@ -1,16 +1,11 @@
-package it.pagopa.interop.commons.ratelimiter.utils
+package it.pagopa.interop.commons.ratelimiter.impl
 
+import it.pagopa.interop.commons.ratelimiter.CacheClient
 import redis.clients.jedis.JedisPooled
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait RedisClient {
-  def get(key: String)(implicit ec: ExecutionContext): Future[Option[String]]
-  def set(key: String, value: String)(implicit ec: ExecutionContext): Future[String]
-  def del(key: String)(implicit ec: ExecutionContext): Future[Long]
-}
-
-final case class JedisClient(client: JedisPooled) extends RedisClient {
+final case class RedisClient(client: JedisPooled) extends CacheClient {
   override def get(key: String)(implicit ec: ExecutionContext): Future[Option[String]] =
     Future(Option(client.get(key)))
 

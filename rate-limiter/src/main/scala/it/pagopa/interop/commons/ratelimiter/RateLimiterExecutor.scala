@@ -3,7 +3,6 @@ package it.pagopa.interop.commons.ratelimiter
 import cats.implicits._
 import it.pagopa.interop.commons.ratelimiter.error.Errors.{DeserializationFailed, TooManyRequests}
 import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
-import it.pagopa.interop.commons.ratelimiter.utils.RedisClient
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import spray.json._
@@ -16,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 private[ratelimiter] final case class RateLimiterExecutor(
   dateTimeSupplier: OffsetDateTimeSupplier,
-  redisClient: RedisClient
+  cacheClient: CacheClient
 )(configs: LimiterConfig) {
   // TODO Logging
   //    it should be better to use logger with implicit context to include correlationId,
@@ -50,7 +49,7 @@ private[ratelimiter] final case class RateLimiterExecutor(
   ): Future[TokenBucket] =
     for {
       key    <- Future.successful(key(limiterGroup, organizationId))
-      value  <- redisClient.get(key)
+      value  <- cacheClient.get(key)
       bucket <- value.fold(Future.successful(initBucket(now)))(b => parseValue(key, b))
     } yield bucket
 
@@ -65,14 +64,14 @@ private[ratelimiter] final case class RateLimiterExecutor(
   def clearOnDeserializationError(now: OffsetDateTime)(implicit
     ec: ExecutionContext
   ): PartialFunction[Throwable, Future[TokenBucket]] = { case DeserializationFailed(key) =>
-    redisClient.del(key)
+    cacheClient.del(key)
     Future.successful(initBucket(now))
   }
 
   def storeBucket(limiterGroup: String, organizationId: UUID, bucket: TokenBucket)(implicit
     ec: ExecutionContext
   ): Future[Unit] =
-    redisClient.set(key(limiterGroup, organizationId), bucket.toJson.compactPrint).as(())
+    cacheClient.set(key(limiterGroup, organizationId), bucket.toJson.compactPrint).as(())
 
   def useToken(bucket: TokenBucket, organizationId: UUID)(implicit ec: ExecutionContext): Future[Unit] =
     if (bucket.tokens >= 1)
