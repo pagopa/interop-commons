@@ -4,7 +4,7 @@ import cats.implicits._
 import com.typesafe.scalalogging.LoggerTakingImplicit
 import it.pagopa.interop.commons.logging.ContextFieldsToLog
 import it.pagopa.interop.commons.ratelimiter.error.Errors.{DeserializationFailed, TooManyRequests}
-import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, TokenBucket}
+import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, RateLimitStatus, TokenBucket}
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import spray.json._
@@ -30,22 +30,22 @@ private[ratelimiter] final case class RateLimiterExecutor(
     ec: ExecutionContext,
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     contexts: Seq[(String, String)]
-  ): Future[Unit] = {
+  ): Future[RateLimitStatus] = {
     val now    = dateTimeSupplier.get
     val result = for {
       // Note: this is not transactional. Potentially N requests can use just 1 token
       bucket <- getBucket(configs.limiterGroup, organizationId, now).recoverWith(clearOnDeserializationError(now))
-      updatedBucket = refillBucket(bucket, now)
-      _ <- useToken(updatedBucket, organizationId)
-    } yield ()
+      refilledBucket = refillBucket(bucket, now)
+      status <- useToken(refilledBucket, organizationId)
+    } yield status
     result
       .recoverWith {
-        case TooManyRequests =>
+        case tmr: TooManyRequests =>
           logger.warn(s"Rate Limit triggered for organization $organizationId")
-          Future.failed(TooManyRequests)
-        case err             =>
+          Future.failed(tmr)
+        case err                  =>
           logger.error(s"Unexpected error during rate limiting for organization $organizationId", err)
-          Future.unit
+          Future.successful(RateLimitStatus(configs.maxRequests, configs.maxRequests, configs.rateInterval))
       }
   }
 
@@ -79,11 +79,13 @@ private[ratelimiter] final case class RateLimiterExecutor(
   ): Future[Unit] =
     cacheClient.set(key(limiterGroup, organizationId), bucket.toJson.compactPrint).as(())
 
-  def useToken(bucket: TokenBucket, organizationId: UUID)(implicit ec: ExecutionContext): Future[Unit] =
-    if (bucket.tokens >= 1)
-      storeBucket(configs.limiterGroup, organizationId, bucket.copy(tokens = bucket.tokens - 1))
-    else
-      Future.failed(TooManyRequests)
+  def useToken(bucket: TokenBucket, organizationId: UUID)(implicit ec: ExecutionContext): Future[RateLimitStatus] =
+    if (bucket.tokens >= 1) {
+      val updatedToken = bucket.copy(tokens = bucket.tokens - 1)
+      storeBucket(configs.limiterGroup, organizationId, updatedToken)
+        .as(RateLimitStatus(configs.maxRequests, updatedToken.tokens.toInt, configs.rateInterval))
+    } else
+      Future.failed(TooManyRequests(status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)))
 
   def refillBucket(bucket: TokenBucket, now: OffsetDateTime): TokenBucket = {
     val updatedTokens = releaseTokens(bucket, now)

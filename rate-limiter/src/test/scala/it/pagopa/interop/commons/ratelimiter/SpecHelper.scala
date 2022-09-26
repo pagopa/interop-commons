@@ -3,7 +3,7 @@ package it.pagopa.interop.commons.ratelimiter
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.ratelimiter.error.Errors.TooManyRequests
-import it.pagopa.interop.commons.ratelimiter.model.LimiterConfig
+import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, RateLimitStatus}
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import org.scalamock.scalatest.MockFactory
 
@@ -32,6 +32,8 @@ trait SpecHelper extends MockFactory {
     Logger.takingImplicit[ContextFieldsToLog](this.getClass)
 
   final val timestamp = OffsetDateTime.of(2022, 12, 31, 11, 22, 33, 44, ZoneOffset.UTC)
+
+  val rateLimitStatus: RateLimitStatus = RateLimitStatus(configs.maxRequests, configs.maxRequests, configs.rateInterval)
 
   def mockDateTimeSupplierGet(timestamp: OffsetDateTime) =
     (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
@@ -71,7 +73,7 @@ trait SpecHelper extends MockFactory {
       .once()
       .returns(Future.successful(""))
 
-  def mockRateLimiting(organizationId: UUID) =
+  def mockRateLimiting(organizationId: UUID, result: RateLimitStatus) =
     (rateLimiterMock
       .rateLimiting(_: UUID)(
         _: ExecutionContext,
@@ -80,7 +82,7 @@ trait SpecHelper extends MockFactory {
       ))
       .expects(organizationId, *, *, *)
       .once()
-      .returns(Future.unit)
+      .returns(Future.successful(result))
 
   def mockRateLimitingFailure(organizationId: UUID) =
     (rateLimiterMock
@@ -102,5 +104,5 @@ trait SpecHelper extends MockFactory {
       ))
       .expects(organizationId, *, *, *)
       .once()
-      .returns(Future.failed(TooManyRequests))
+      .returns(Future.failed(TooManyRequests(RateLimitStatus(configs.maxRequests, 0, configs.rateInterval))))
 }

@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons.ratelimiter
 
 import it.pagopa.interop.commons.ratelimiter.error.Errors.TooManyRequests
-import it.pagopa.interop.commons.ratelimiter.model.TokenBucket
+import it.pagopa.interop.commons.ratelimiter.model.{RateLimitStatus, TokenBucket}
 import it.pagopa.interop.commons.utils.ORGANIZATION_ID_CLAIM
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.matchers.should.Matchers._
@@ -95,13 +95,13 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
       val limiter: RateLimiterExecutor = RateLimiterExecutor(dateTimeSupplierMock, cacheClientMock)(configs)
       val bucket                       = TokenBucket(10, timestamp)
       val organizationId               = UUID.randomUUID()
+      val usedBucket                   = bucket.copy(tokens = bucket.tokens - 1)
 
-      mockCacheSet(
-        limiter.key(configs.limiterGroup, organizationId),
-        bucket.copy(tokens = bucket.tokens - 1).toJson.compactPrint
-      )
+      val expected = RateLimitStatus(configs.maxRequests, usedBucket.tokens.toInt, configs.rateInterval)
 
-      limiter.useToken(bucket, organizationId).futureValue shouldBe ()
+      mockCacheSet(limiter.key(configs.limiterGroup, organizationId), usedBucket.toJson.compactPrint)
+
+      limiter.useToken(bucket, organizationId).futureValue shouldBe expected
     }
 
     "fail with Too Many Requests error if limit is exceeded" in {
@@ -109,7 +109,9 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
       val bucket                       = TokenBucket(0, timestamp)
       val organizationId               = UUID.randomUUID()
 
-      limiter.useToken(bucket, organizationId).failed.futureValue shouldBe TooManyRequests
+      val status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)
+
+      limiter.useToken(bucket, organizationId).failed.futureValue shouldBe TooManyRequests(status)
     }
   }
 
@@ -120,10 +122,12 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
         val organizationId               = UUID.randomUUID()
         implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
+        val expected = RateLimitStatus(configs.maxRequests, configs.maxRequests, configs.rateInterval)
+
         mockDateTimeSupplierGet(timestamp)
         mockCacheGetFailure()
 
-        limiter.rateLimiting(organizationId).futureValue shouldBe ()
+        limiter.rateLimiting(organizationId).futureValue shouldBe expected
       }
 
       "updated bucket store fails" in {
@@ -132,11 +136,13 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
         val bucket                       = TokenBucket(10.0, timestamp).toJson.compactPrint
         implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
+        val expected = RateLimitStatus(configs.maxRequests, configs.maxRequests, configs.rateInterval)
+
         mockDateTimeSupplierGet(timestamp)
         mockCacheGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
         mockCacheSetFailure()
 
-        limiter.rateLimiting(organizationId).futureValue shouldBe ()
+        limiter.rateLimiting(organizationId).futureValue shouldBe expected
       }
     }
 
@@ -147,10 +153,12 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
         val bucket                       = TokenBucket(0.0, timestamp).toJson.compactPrint
         implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
+        val status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)
+
         mockDateTimeSupplierGet(timestamp)
         mockCacheGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
 
-        limiter.rateLimiting(organizationId).failed.futureValue shouldBe TooManyRequests
+        limiter.rateLimiting(organizationId).failed.futureValue shouldBe TooManyRequests(status)
       }
     }
 
@@ -160,17 +168,16 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
       val key                          = limiter.key(configs.limiterGroup, organizationId)
       implicit val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
 
-      val expected = TokenBucket(limiter.burstRequests, timestamp)
+      val initialBucket        = TokenBucket(limiter.burstRequests, timestamp)
+      val expectedStoredBucket = initialBucket.copy(tokens = initialBucket.tokens - 1)
+      val expectedStatus = RateLimitStatus(configs.maxRequests, expectedStoredBucket.tokens.toInt, configs.rateInterval)
 
       mockDateTimeSupplierGet(timestamp)
       mockCacheGet(key, Some("unexpected-value"))
       mockCacheDel(key)
-      mockCacheSet(
-        limiter.key(configs.limiterGroup, organizationId),
-        expected.copy(tokens = expected.tokens - 1).toJson.compactPrint
-      )
+      mockCacheSet(limiter.key(configs.limiterGroup, organizationId), expectedStoredBucket.toJson.compactPrint)
 
-      limiter.rateLimiting(organizationId).futureValue shouldBe ()
+      limiter.rateLimiting(organizationId).futureValue shouldBe expectedStatus
     }
   }
 
