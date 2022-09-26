@@ -2,7 +2,7 @@ package it.pagopa.interop.commons.ratelimiter.impl
 
 import com.typesafe.scalalogging.LoggerTakingImplicit
 import it.pagopa.interop.commons.logging.ContextFieldsToLog
-import it.pagopa.interop.commons.ratelimiter.model.LimiterConfig
+import it.pagopa.interop.commons.ratelimiter.model.{LimiterConfig, RateLimitStatus}
 import it.pagopa.interop.commons.ratelimiter.{RateLimiter, RateLimiterExecutor}
 import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import redis.clients.jedis.JedisPooled
@@ -23,7 +23,7 @@ final case class RedisRateLimiter(configs: LimiterConfig, dateTimeSupplier: Offs
     ec: ExecutionContext,
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     contexts: Seq[(String, String)]
-  ): Future[Unit] =
+  ): Future[RateLimitStatus] =
     executor.rateLimiting(organizationId)
 
 }
