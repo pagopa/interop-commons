@@ -83,7 +83,6 @@ private[ratelimiter] final case class RateLimiterExecutor(
     if (bucket.tokens >= 1) {
       val updatedToken = bucket.copy(tokens = bucket.tokens - 1)
       storeBucket(configs.limiterGroup, organizationId, updatedToken)
-        .as(updatedToken)
         .as(RateLimitStatus(configs.maxRequests, updatedToken.tokens.toInt, configs.rateInterval))
     } else
       Future.failed(TooManyRequests(status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)))
