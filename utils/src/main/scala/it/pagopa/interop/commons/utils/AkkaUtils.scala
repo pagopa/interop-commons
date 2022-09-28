@@ -82,6 +82,11 @@ trait AkkaUtils {
   def getPurposeIdFuture(contexts: Seq[(String, String)]): Future[String]      = toFuture(getPurposeId(contexts))
   def getPurposeIdFutureUUID(contexts: Seq[(String, String)]): Future[UUID] = toFastFutureUUID(getPurposeId(contexts))
 
+  def getSelfcareId(contexts: Seq[(String, String)]): Either[Throwable, String] =
+    fastGet(contexts)(SELFCARE_ID_CLAIM, MissingClaim(SELFCARE_ID_CLAIM))
+  def getSelfcareIdFuture(contexts: Seq[(String, String)]): Future[String]      = toFuture(getSelfcareId(contexts))
+  def getSelfcareIdFutureUUID(contexts: Seq[(String, String)]): Future[UUID] = toFastFutureUUID(getSelfcareId(contexts))
+
   def getClaim(contexts: Seq[(String, String)], claimName: String): Either[Throwable, String] =
     fastGet(contexts)(claimName, MissingClaim(claimName))
   def getClaimFuture(contexts: Seq[(String, String)], claimName: String): Future[String]      =

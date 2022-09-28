@@ -21,6 +21,7 @@ package object utils {
   val INTEROP_PRODUCT_NAME: String                         = "prod-interop"
   val PURPOSE_ID_CLAIM: String                             = "purposeId"
   val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
+  val SELFCARE_ID_CLAIM: String                            = "selfcareId"
 
   type BearerToken   = String
   type CorrelationId = String
