@@ -1,5 +1,6 @@
 package it.pagopa.interop.commons.ratelimiter.akkahttp
 
+import cats.syntax.all._
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive1
@@ -19,7 +20,6 @@ import it.pagopa.interop.commons.ratelimiter.model.Headers.{
 import it.pagopa.interop.commons.ratelimiter.model.{Headers, RateLimitStatus}
 import it.pagopa.interop.commons.utils.AkkaUtils._
 import it.pagopa.interop.commons.utils.ORGANIZATION_ID_CLAIM
-import it.pagopa.interop.commons.utils.TypeConversions._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -42,8 +42,8 @@ object RateLimiterDirective {
     toEntityMarshallerProblem: ToEntityMarshaller[T],
     logger: LoggerTakingImplicit[ContextFieldsToLog]
   ): Directive1[Seq[(String, String)]] =
-    getClaim(contexts, ORGANIZATION_ID_CLAIM).flatMap(_.toUUID) match {
-      case Success(orgId) =>
+    getOrganizationIdUUID(contexts) match {
+      case Right(orgId) =>
         implicit val c: Seq[(String, String)] = contexts
         onComplete(rateLimiter.rateLimiting(orgId)).flatMap {
           case Success(status)               => provide(contexts ++ statusToContext(status))
@@ -55,7 +55,7 @@ object RateLimiterDirective {
             provide(contexts)
         }
 
-      case Failure(_) =>
+      case Left(_) =>
         logger.error(s"Missing or not correctly formatted $ORGANIZATION_ID_CLAIM")(contexts)
         reject(MissingOrganizationIdClaim)
     }
