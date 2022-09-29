@@ -31,7 +31,7 @@ private[ratelimiter] final case class RateLimiterExecutor(
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     contexts: Seq[(String, String)]
   ): Future[RateLimitStatus] = {
-    val now    = dateTimeSupplier.get
+    val now    = dateTimeSupplier.get()
     val result = for {
       // Note: this is not transactional. Potentially N requests can use just 1 token
       bucket <- getBucket(configs.limiterGroup, organizationId, now).recoverWith(clearOnDeserializationError(now))

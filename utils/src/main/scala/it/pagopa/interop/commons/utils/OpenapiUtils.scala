@@ -12,13 +12,10 @@ trait OpenapiUtils {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  def parseArrayParameters(params: String): List[String] = {
+  def parseArrayParameters(params: String): List[String] =
     if (params == "[]") List.empty else params.parseCommaSeparated
-  }
 
-  def verifyParametersByCondition[A](params: List[A]): A => Boolean = { s =>
-    params.isEmpty || params.contains(s)
-  }
+  def verifyParametersByCondition[A](params: List[A]): A => Boolean = { s => params.isEmpty || params.contains(s) }
 
   def errorFromRequestValidationReport(report: ValidationReport): List[ValidationRequestError] = {
     val errors: List[ValidationRequestError] = report.getMessages.asScala.toList.map { m =>

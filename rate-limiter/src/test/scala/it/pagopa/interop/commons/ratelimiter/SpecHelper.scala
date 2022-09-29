@@ -36,7 +36,7 @@ trait SpecHelper extends MockFactory {
   val rateLimitStatus: RateLimitStatus = RateLimitStatus(configs.maxRequests, configs.maxRequests, configs.rateInterval)
 
   def mockDateTimeSupplierGet(timestamp: OffsetDateTime) =
-    (() => dateTimeSupplierMock.get).expects().returning(timestamp).once()
+    (() => dateTimeSupplierMock.get()).expects().returning(timestamp).once()
 
   def mockCacheGetFailure() =
     (cacheClientMock
