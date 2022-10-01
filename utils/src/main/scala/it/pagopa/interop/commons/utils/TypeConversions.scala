@@ -36,28 +36,21 @@ object TypeConversions {
 
   implicit class OffsetDateTimeOps(val dt: OffsetDateTime) extends AnyVal {
     def toMillis: Long                 = dt.toInstant.toEpochMilli
-    def asFormattedString: Try[String] = Try {
-      dt.format(dateFormatter)
-    }
+    def asFormattedString: Try[String] = Try(dt.format(dateFormatter))
   }
 
   implicit class StringOps(val str: String) extends AnyVal {
-    def toUUID: Try[UUID]                     = Try {
-      UUID.fromString(str)
-    }
-    def toOffsetDateTime: Try[OffsetDateTime] = Try { OffsetDateTime.parse(str, dateFormatter) }
+    def toUUID: Try[UUID]                     = Try(UUID.fromString(str))
+    def toOffsetDateTime: Try[OffsetDateTime] = Try(OffsetDateTime.parse(str, dateFormatter))
     def toFutureUUID: Future[UUID]            = str.toUUID.toFuture
-    def parseCommaSeparated: List[String]     = str.split(",").map(_.trim).toList.filterNot(entry => entry == "")
+    def parseCommaSeparated: List[String]     = str.split(",").map(_.trim).toList.filterNot(_ == "")
     def decodeBase64: Try[String]             = Try {
       val decoded: Array[Byte] = Base64.getDecoder.decode(str.getBytes(StandardCharsets.UTF_8))
       new String(decoded, StandardCharsets.UTF_8)
     }
-    def encodeBase64: Try[String]             = Try {
-      Base64.getEncoder.encodeToString(str.getBytes(StandardCharsets.UTF_8))
-    }
-
-    def toBase64SHA1: String = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
-    def toBase64MD5: String  = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))
+    def encodeBase64: Try[String] = Try(Base64.getEncoder.encodeToString(str.getBytes(StandardCharsets.UTF_8)))
+    def toBase64SHA1: String      = Base64.getEncoder.encodeToString(sha1.digest(str.getBytes(StandardCharsets.UTF_8)))
+    def toBase64MD5: String       = Base64.getEncoder.encodeToString(md5.digest(str.getBytes(StandardCharsets.UTF_8)))
 
     /** Replaces string variables in the format <code>\${VARIABLE}</code>
       * with the corresponding VARIABLE value as defined in <code>variables</code> input map.<br>
@@ -70,10 +63,7 @@ object TypeConversions {
       * @param variables map of variables to replace
       * @return string with variables replaced
       */
-    def interpolate(variables: Map[String, String]): String = {
-      val sub = new StringSubstitutor(variables.asJava)
-      sub.replace(str)
-    }
+    def interpolate(variables: Map[String, String]): String = new StringSubstitutor(variables.asJava).replace(str)
   }
 
   implicit class StatusReplyOps[A](val statusReply: StatusReply[A]) extends AnyVal {
@@ -85,7 +75,10 @@ object TypeConversions {
   }
 
   implicit class LongOps(val l: Long) extends AnyVal {
-    def toOffsetDateTime: Try[OffsetDateTime] = Try(OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneOffset.UTC))
+    def toOffsetDateTime: Try[OffsetDateTime]                     = toOffsetDateTime(ZoneOffset.UTC)
+    def toOffsetDateTime(offset: ZoneOffset): Try[OffsetDateTime] = Try(
+      OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), offset)
+    )
   }
 
 }

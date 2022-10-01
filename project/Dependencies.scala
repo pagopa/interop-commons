@@ -22,6 +22,11 @@ object Dependencies {
     lazy val core      = namespace %% "scalatest" % scalatestVersion
   }
 
+  private[this] object scalamock {
+    lazy val namespace = "org.scalamock"
+    lazy val core      = namespace %% "scalamock" % scalaMockVersion
+  }
+
   private[this] object typesafe {
     lazy val namespace = "com.typesafe"
     lazy val config    = namespace % "config" % typesafeConfigVersion
@@ -60,6 +65,10 @@ object Dependencies {
     lazy val namespace   = "com.github.daddykotex"
     lazy val mail        = namespace                %% "courier"       % courierVersion
     lazy val testMocking = "org.jvnet.mock-javamail" % "mock-javamail" % mockJavaMailVersion
+  }
+
+  private[this] object redis {
+    lazy val jedis = "redis.clients" % "jedis" % jedisVersion
   }
 
   private[this] object jsoup {
@@ -170,6 +179,15 @@ object Dependencies {
       mongodb.scalaDriver         % Compile,
       spray.spray                 % Compile
     )
+
+    lazy val rateLimiterDependencies: Seq[ModuleID] =
+      Seq(
+        redis.jedis        % Compile,
+        spray.spray        % Compile,
+        scalamock.core     % Test,
+        akka.httpTestkit   % Test,
+        akka.streamTestkit % Test
+      )
 
     lazy val commonDependencies: Seq[ModuleID] = Seq(
       // For making Java 12 happy
