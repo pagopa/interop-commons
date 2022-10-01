@@ -11,7 +11,7 @@ object Versions {
   lazy val jacksonVersion             = "2.11.4"
   lazy val json4sVersion              = "4.0.4"
   lazy val jdbcPersistenceVersion     = "5.0.2"
-  lazy val jsoupVersion               = "1.15.3"
+  lazy val jsoupVersion               = "1.15.2"
   lazy val lightbendLoggingVersion    = "3.9.5"
   lazy val logbackVersion             = "1.2.11"
   lazy val mockJavaMailVersion        = "1.9"
