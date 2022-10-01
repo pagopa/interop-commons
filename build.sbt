@@ -1,6 +1,6 @@
 import ProjectSettings.ProjectFrom
 
-ThisBuild / scalaVersion      := "2.13.9"
+ThisBuild / scalaVersion      := "2.13.8"
 ThisBuild / organization      := "it.pagopa"
 ThisBuild / organizationName  := "Pagopa S.p.A."
 ThisBuild / version           := ComputeVersion.version
@@ -92,7 +92,11 @@ lazy val queue = project
 
 lazy val cqrs = project
   .in(file(cqrsModuleName))
-  .settings(name := "interop-commons-cqrs", sharedSettings, libraryDependencies ++= Dependencies.Jars.cqrsDependencies)
+  .settings(
+    name := "interop-commons-cqrs",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.cqrsDependencies
+  )
   .dependsOn(utils)
   .setupBuildInfo
 
