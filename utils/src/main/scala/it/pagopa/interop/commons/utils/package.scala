@@ -5,6 +5,7 @@ import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBea
 
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
+import scala.concurrent.Future
 
 package object utils {
   private[utils] lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -20,8 +21,15 @@ package object utils {
   val INTEROP_PRODUCT_NAME: String                         = "prod-interop"
   val PURPOSE_ID_CLAIM: String                             = "purposeId"
   val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
+  val SELFCARE_ID_CLAIM: String                            = "selfcareId"
 
-  def extractHeaders(contexts: Seq[(String, String)]): Either[ComponentError, (String, String, Option[String])] = {
+  type BearerToken   = String
+  type CorrelationId = String
+  type IpAddress     = String
+
+  def extractHeaders(
+    contexts: Seq[(String, String)]
+  ): Either[ComponentError, (BearerToken, CorrelationId, Option[IpAddress])] = {
     val contextsMap = contexts.toMap
     for {
       bearerToken   <- contextsMap.get(BEARER).toRight(MissingBearer)
@@ -30,4 +38,16 @@ package object utils {
     } yield (bearerToken, correlationId, ip)
   }
 
+  def withHeaders[T](
+    f: (BearerToken, CorrelationId, Option[IpAddress]) => Future[T]
+  )(implicit contexts: Seq[(String, String)]): Future[T] = extractHeaders(contexts) match {
+    case Left(ex) => Future.failed(ex)
+    case Right(x) => f.tupled(x)
+  }
+
+  def withUid[T](f: String => Future[T])(implicit contexts: Seq[(String, String)]): Future[T] =
+    AkkaUtils.getUid(contexts) match {
+      case Left(ex) => Future.failed(ex)
+      case Right(x) => f(x)
+    }
 }

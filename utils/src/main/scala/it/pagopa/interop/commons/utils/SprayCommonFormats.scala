@@ -25,11 +25,9 @@ object SprayCommonFormats {
         case JsString(s)  =>
           Try(UUID.fromString(s)) match {
             case Success(result)    => result
-            case Failure(exception) =>
-              deserializationError(s"could not parse $s as UUID", exception)
+            case Failure(exception) => deserializationError(s"could not parse $s as UUID", exception)
           }
-        case notAJsString =>
-          deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
+        case notAJsString => deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
       }
     }
 
@@ -55,11 +53,9 @@ object SprayCommonFormats {
             file
           } match {
             case Success(result)    => result
-            case Failure(exception) =>
-              deserializationError(s"could not parse $s as File", exception)
+            case Failure(exception) => deserializationError(s"could not parse $s as File", exception)
           }
-        case notAJsString =>
-          deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
+        case notAJsString => deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
       }
     }
 
@@ -73,11 +69,9 @@ object SprayCommonFormats {
         case JsString(s)  =>
           s.toOffsetDateTime match {
             case Success(result)    => result
-            case Failure(exception) =>
-              deserializationError(s"could not parse $s as java OffsetDateTime", exception)
+            case Failure(exception) => deserializationError(s"could not parse $s as java OffsetDateTime", exception)
           }
-        case notAJsString =>
-          deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
+        case notAJsString => deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
       }
     }
 
@@ -91,11 +85,9 @@ object SprayCommonFormats {
         case JsString(s)  =>
           Try(URI.create(s)) match {
             case Success(result)    => result
-            case Failure(exception) =>
-              deserializationError(s"could not parse $s as URI", exception)
+            case Failure(exception) => deserializationError(s"could not parse $s as URI", exception)
           }
-        case notAJsString =>
-          deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
+        case notAJsString => deserializationError(s"expected a String but got a ${notAJsString.compactPrint}")
       }
     }
 }

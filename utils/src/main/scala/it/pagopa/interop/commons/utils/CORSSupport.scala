@@ -25,22 +25,15 @@ trait CORSSupport {
     * @param r - the route to decorate
     * @return - the decorated route
     */
-  def corsHandler(r: Route): Route = addAccessControlHeaders {
-    preflightRequestHandler ~ r
-  }
+  def corsHandler(r: Route): Route = addAccessControlHeaders { preflightRequestHandler ~ r }
 
-  private def addAccessControlHeaders: Directive0 = {
-    respondWithHeaders(
-      `Access-Control-Allow-Origin`.*,
-      `Access-Control-Allow-Credentials`(true),
-      `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With")
-    )
-  }
+  private def addAccessControlHeaders: Directive0 = respondWithHeaders(
+    `Access-Control-Allow-Origin`.*,
+    `Access-Control-Allow-Credentials`(true),
+    `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With")
+  )
 
   private def preflightRequestHandler: Route = options {
-    complete(
-      HttpResponse(StatusCodes.OK)
-        .withHeaders(`Access-Control-Allow-Methods`(OPTIONS, POST, GET))
-    )
+    complete(HttpResponse(StatusCodes.OK).withHeaders(`Access-Control-Allow-Methods`(OPTIONS, POST, GET)))
   }
 }
