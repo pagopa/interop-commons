@@ -92,7 +92,11 @@ lazy val queue = project
 
 lazy val cqrs = project
   .in(file(cqrsModuleName))
-  .settings(name := "interop-commons-cqrs", sharedSettings, libraryDependencies ++= Dependencies.Jars.cqrsDependencies)
+  .settings(
+    name := "interop-commons-cqrs",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.cqrsDependencies
+  )
   .dependsOn(utils)
   .setupBuildInfo
 
