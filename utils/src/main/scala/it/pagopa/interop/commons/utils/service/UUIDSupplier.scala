@@ -2,12 +2,10 @@ package it.pagopa.interop.commons.utils.service
 
 import java.util.UUID
 
-/** Models a UUID generator.
-  */
 trait UUIDSupplier {
+  def get(): UUID
+}
 
-  /** Returns a generated UUID.
-    * @return generated random UUID.
-    */
-  def get: UUID
+object UUIDSupplier extends UUIDSupplier {
+  override def get(): UUID = UUID.randomUUID()
 }

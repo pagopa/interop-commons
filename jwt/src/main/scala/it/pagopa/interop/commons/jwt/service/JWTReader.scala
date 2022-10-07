@@ -32,7 +32,7 @@ trait JWTReader {
     */
   def parseValidBearer(contexts: Seq[(String, String)]): Try[String] =
     for {
-      bearer <- getBearer(contexts)
+      bearer <- getBearer(contexts).toTry
       _      <- getClaims(bearer)
     } yield bearer
 

@@ -13,10 +13,13 @@ val signerModuleName      = "signer"
 val utilsModuleName       = "utils"
 val queueModuleName       = "queue-manager"
 val cqrsModuleName        = "cqrs"
+val rateLimiterModuleName = "rate-limiter"
 
+cleanFiles += baseDirectory.value / cqrsModuleName / "target"
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
 cleanFiles += baseDirectory.value / mailManagerModuleName / "target"
 cleanFiles += baseDirectory.value / jwtModuleName / "target"
+cleanFiles += baseDirectory.value / rateLimiterModuleName / "target"
 cleanFiles += baseDirectory.value / signerModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
@@ -92,14 +95,20 @@ lazy val queue = project
 
 lazy val cqrs = project
   .in(file(cqrsModuleName))
+  .settings(name := "interop-commons-cqrs", sharedSettings, libraryDependencies ++= Dependencies.Jars.cqrsDependencies)
+  .dependsOn(utils)
+  .setupBuildInfo
+
+lazy val rateLimiter = project
+  .in(file(rateLimiterModuleName))
   .settings(
-    name := "interop-commons-cqrs",
+    name := "interop-commons-rate-limiter",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.cqrsDependencies
+    libraryDependencies ++= Dependencies.Jars.rateLimiterDependencies
   )
   .dependsOn(utils)
   .setupBuildInfo
 
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, signer, jwtModule, queue, cqrs)
+  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)

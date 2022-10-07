@@ -1,9 +1,11 @@
 package it.pagopa.interop.commons.utils.service
 
-import java.time.OffsetDateTime
+import java.time.{OffsetDateTime, ZoneOffset}
 
-/** Supplies a timestamp through DI
-  */
 trait OffsetDateTimeSupplier {
-  def get: OffsetDateTime
+  def get(): OffsetDateTime
+}
+
+object OffsetDateTimeSupplier extends OffsetDateTimeSupplier {
+  override def get(): OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 }
