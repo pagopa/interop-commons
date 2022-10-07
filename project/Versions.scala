@@ -19,7 +19,7 @@ object Versions {
   lazy val mongodbScalaDriverVersion  = "4.6.0"
   lazy val nimbusVersion              = "9.23"
   lazy val openhtmltopdfVersion       = "1.0.10"
-  lazy val pdfBoxVersion              = "2.0.26"
+  lazy val pdfBoxVersion              = "2.0.27"
   lazy val pdfCompareVersion          = "1.1.61"
   lazy val projectionVersion          = "1.2.1"
   lazy val s3Persistence              = "1.1.74"
