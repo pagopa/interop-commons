@@ -27,7 +27,7 @@ object Versions {
   lazy val scalaMockVersion           = "5.2.0"
   lazy val slickProjectionVersion     = "1.2.2"
   lazy val sprayJsonVersion           = "1.3.6"
-  lazy val swaggerValidatorVersion    = "2.28.2"
+  lazy val swaggerValidatorVersion    = "2.30.0"
   lazy val testContainersScalaVersion = "0.40.8"
   lazy val typesafeConfigVersion      = "1.4.2"
   lazy val vaultDriverVersion         = "5.1.0"
