@@ -1,6 +1,6 @@
 package it.pagopa.interop.commons.cqrs.model
 
-import org.mongodb.scala.{Document, SingleObservable}
+import org.mongodb.scala.{Document, Observable, SingleObservable}
 import org.mongodb.scala.bson.conversions.Bson
 
 /**
@@ -36,7 +36,7 @@ final case class ActionWithBson(action: Bson => SingleObservable[_], value: Bson
 final case class ActionWithDocument(action: Document => SingleObservable[_], doc: Document) extends PartialMongoAction
 
 /**
-  * Used when there is no value parameter, for example when deleting a document
+  * Used when there is no value parameter and metadata should not be added, for example when deleting a document
   *
   * Usage:
   * {{{
@@ -44,3 +44,40 @@ final case class ActionWithDocument(action: Document => SingleObservable[_], doc
   * }}}
   */
 final case class Action(action: SingleObservable[_]) extends PartialMongoAction
+
+/**
+  * Used when the value parameter is the result of a previous operation
+  *
+  * Usage:
+  * {{{
+  * val result: Observable[...] = collection.find(...)
+  *
+  * ActionWithObservable(
+  *   value => collection.updateOne(Filters.eq("data.id", "xyz"), value),
+  *   result
+  * )
+  * }}}
+  */
+final case class ActionWithObservable[T](action: Bson => SingleObservable[T], observable: Observable[Bson])
+    extends PartialMongoAction
+
+/**
+  * Used when more than one action is required
+  * Note: there is not guarantee that actions are executed sequentially
+  *
+  * Usage:
+  * {{{
+  * MultiAction(
+  *   Seq(
+  *     Action(collection.deleteOne(Filters.eq("data.id", "xyz")),
+  *     ActionWithDocument(value => collection.insertOne(value), Document(s"{ data: 123 }"))
+  *   )
+  * )
+  * }}}
+  */
+final case class MultiAction(actions: Seq[PartialMongoAction]) extends PartialMongoAction
+
+/**
+  * Used when no action is required
+  */
+object NoOpAction extends PartialMongoAction
