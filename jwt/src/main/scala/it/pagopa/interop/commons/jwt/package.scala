@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Route
 import com.nimbusds.jose.crypto.{ECDSAVerifier, RSASSAVerifier}
 import com.nimbusds.jose.jwk.JWK
-import com.nimbusds.jose.shaded.json.{JSONArray, JSONObject}
+import com.nimbusds.jose.shaded.gson.{JsonArray, JsonObject}
 import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.utils.USER_ROLES
 import org.slf4j.{Logger, LoggerFactory}
@@ -65,12 +65,13 @@ package object jwt {
     }
 
   // Sadly getJSONObjectClaim both throws and returns null, so it requires a lot of handling
-  private def getOrganizationRolesClaimSafe(claims: JWTClaimsSet): Try[JSONArray] = for {
+  private def getOrganizationRolesClaimSafe(claims: JWTClaimsSet): Try[JsonArray] = for {
     nullableOrgClaimsMap <- Try(claims.getJSONObjectClaim(organizationClaim)).as(MissingClaim(organizationClaim))
     orgClaims            <- Option(nullableOrgClaimsMap).toTry(MissingClaim(organizationClaim))
     orgClaimsMap = orgClaims.asScala.toMap
-    roles          <- orgClaimsMap.get("roles").toTry(MissingClaim("roles in organization"))
-    rolesJsonArray <- Try(roles.asInstanceOf[JSONArray]).as(GenericError("Roles in context are not in json format"))
+    roles <- orgClaimsMap.get("roles").toTry(MissingClaim("roles in organization"))
+    _ = println(s"roles are ${roles.asInstanceOf[java.util.ArrayList[_]].get(0).getClass().getName()}")
+    rolesJsonArray <- Try(roles.asInstanceOf[JsonArray]).as(GenericError("Roles in context are not in json format"))
   } yield rolesJsonArray
 
   private def getInteropRoleClaimSafe(claims: JWTClaimsSet): Option[String] =
@@ -81,9 +82,9 @@ package object jwt {
       roles <- getOrganizationRolesClaimSafe(claims)
       rolesObjList = roles.iterator.asScala.toList
       rolesList <- rolesObjList
-        .traverse(r => Try(r.asInstanceOf[JSONObject]))
+        .traverse(r => Try(r.asInstanceOf[JsonObject]))
         .as(GenericError("Roles in context are not in json format"))
-      roles     <- rolesList.traverse(r => Try(r.getAsString(roleClaim)))
+      roles     <- rolesList.traverse(r => Try(r.get(roleClaim).getAsString()))
     } yield roles
 
     val roles: Set[String] = maybeRoles match {
