@@ -6,16 +6,16 @@ import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Route
 import com.nimbusds.jose.crypto.{ECDSAVerifier, RSASSAVerifier}
 import com.nimbusds.jose.jwk.JWK
-import com.nimbusds.jose.shaded.gson.{JsonArray, JsonObject}
 import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.utils.USER_ROLES
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.jdk.CollectionConverters._
-import scala.util.{Try, Failure, Success}
+import scala.util.Try
 import cats.syntax.all._
+import java.{util => ju}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors._
 import it.pagopa.interop.commons.utils.TypeConversions._
+import com.nimbusds.jose.util.JSONObjectUtils
 
 package object jwt {
 
@@ -64,35 +64,40 @@ package object jwt {
         x.intersect(requestRoles).size > 0
     }
 
-  // Sadly getJSONObjectClaim both throws and returns null, so it requires a lot of handling
-  private def getOrganizationRolesClaimSafe(claims: JWTClaimsSet): Try[JsonArray] = for {
-    nullableOrgClaimsMap <- Try(claims.getJSONObjectClaim(organizationClaim)).as(MissingClaim(organizationClaim))
-    orgClaims            <- Option(nullableOrgClaimsMap).toTry(MissingClaim(organizationClaim))
-    orgClaimsMap = orgClaims.asScala.toMap
-    roles <- orgClaimsMap.get("roles").toTry(MissingClaim("roles in organization"))
-    _ = println(s"roles are ${roles.asInstanceOf[java.util.ArrayList[_]].get(0).getClass().getName()}")
-    rolesJsonArray <- Try(roles.asInstanceOf[JsonArray]).as(GenericError("Roles in context are not in json format"))
-  } yield rolesJsonArray
+  private def getJSONObjectClaimsSafe(claims: JWTClaimsSet): Try[ju.Map[String, Object]] =
+    Try(claims.getJSONObjectClaim(organizationClaim))
+      .as(MissingClaim(organizationClaim))
+      .flatMap(nullable => Option(nullable).toTry(MissingClaim(organizationClaim)))
+
+  private def getRolesSafe(map: ju.Map[String, Object]): Try[List[ju.Map[String, Object]]] =
+    Try(JSONObjectUtils.getJSONObjectArray(map, "roles"))
+      .as(GenericError("Roles in context are not in json format"))
+      .flatMap(nullable => Option(nullable).map(_.toList).toTry(MissingClaim("roles in organization")))
+
+  private def getOrganizationRolesClaimSafe(claims: JWTClaimsSet): Try[List[ju.Map[String, Object]]] =
+    getJSONObjectClaimsSafe(claims) >>= getRolesSafe
+
+  private def getRoleSafe(map: ju.Map[String, Object]): Try[String] =
+    Try(JSONObjectUtils.getString(map, roleClaim))
+      .flatMap(nullable => Option(nullable).toTry(GenericError("Roles in context are not in json format")))
+      .as(GenericError("Roles in context are not in json format"))
 
   private def getInteropRoleClaimSafe(claims: JWTClaimsSet): Option[String] =
     Try(claims.getStringClaim(roleClaim)).toOption.flatMap(Option(_))
 
   def getUserRoles(claims: JWTClaimsSet): Set[String] = {
     val maybeRoles: Try[List[String]] = for {
-      roles <- getOrganizationRolesClaimSafe(claims)
-      rolesObjList = roles.iterator.asScala.toList
-      rolesList <- rolesObjList
-        .traverse(r => Try(r.asInstanceOf[JsonObject]))
-        .as(GenericError("Roles in context are not in json format"))
-      roles     <- rolesList.traverse(r => Try(r.get(roleClaim).getAsString()))
-    } yield roles
+      roles     <- getOrganizationRolesClaimSafe(claims)
+      userRoles <- roles.traverse(getRoleSafe)
+    } yield userRoles
 
-    val roles: Set[String] = maybeRoles match {
-      case Failure(e)         =>
+    val roles: Set[String] = maybeRoles.fold(
+      e => {
         logger.warn(s"Unable to extract userRoles from claims: ${e.getMessage()}")
         Set.empty[String]
-      case Success(rolesList) => rolesList.toSet
-    }
+      },
+      _.toSet
+    )
 
     getInteropRoleClaimSafe(claims).fold(roles)(roles + _)
   }
