@@ -149,7 +149,7 @@ object Dependencies {
     lazy val fileDependencies: Seq[ModuleID] =
       Seq(
         aws.s3               % Compile,
-        aws.sts              % Runtime, 
+        aws.sts              % Runtime,
         typesafe.config      % Compile,
         jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,
@@ -168,7 +168,7 @@ object Dependencies {
       Seq(
         akka.stream              % Compile,
         aws.kms                  % Compile,
-        aws.sts                  % Runtime, 
+        aws.sts                  % Runtime,
         vault.driver             % Compile,
         typesafe.config          % Compile,
         testContainers.scalatest % Test,
@@ -179,7 +179,7 @@ object Dependencies {
       Seq(nimbus.joseJwt % Compile, typesafe.config % Compile, cats.core % Compile)
 
     lazy val queueDependencies: Seq[ModuleID] =
-      Seq(aws.sqs % Compile, typesafe.config % Compile, spray.spray % Compile, cats.core % Compile)
+      Seq(aws.sts % Runtime, aws.sqs % Compile, typesafe.config % Compile, spray.spray % Compile, cats.core % Compile)
 
     lazy val cqrsDependencies: Seq[ModuleID] = Seq(
       akka.projectionSlick        % Compile,
