@@ -149,6 +149,7 @@ object Dependencies {
     lazy val fileDependencies: Seq[ModuleID] =
       Seq(
         aws.s3               % Compile,
+        aws.sts              % Runtime, 
         typesafe.config      % Compile,
         jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,
@@ -167,6 +168,7 @@ object Dependencies {
       Seq(
         akka.stream              % Compile,
         aws.kms                  % Compile,
+        aws.sts                  % Runtime, 
         vault.driver             % Compile,
         typesafe.config          % Compile,
         testContainers.scalatest % Test,
@@ -202,6 +204,6 @@ object Dependencies {
       )
 
     lazy val commonDependencies: Seq[ModuleID] =
-      Seq(aws.sts % Runtime, logback.classic % Runtime, scalatest.core % Test)
+      Seq(logback.classic % Runtime, scalatest.core % Test)
   }
 }
