@@ -129,46 +129,57 @@ object Dependencies {
   }
 
   object Jars {
-    lazy val akkaDependencies: Seq[ModuleID] =
+    lazy val utilsDependencies: Seq[ModuleID] =
       Seq(
-        akka.http          % Compile,
-        akka.httpJson      % Compile,
-        akka.httpJson4s    % Compile,
-        akka.slf4j         % Compile,
-        akka.stream        % Compile,
-        akka.actorTyped    % Compile,
-        akka.httpTestkit   % Test,
-        akka.streamTestkit % Test
+        akka.http                  % Compile,
+        akka.slf4j                 % Compile,
+        akka.httpJson              % Compile,
+        akka.httpJson4s            % Compile,
+        spray.spray                % Compile,
+        typesafe.config            % Compile,
+        cats.core                  % Compile,
+        apacheCommons.text         % Compile,
+        logback.classic            % Compile,
+        atlassian.swaggerValidator % Compile,
+        lightbend.logging          % Compile,
+        akka.httpTestkit           % Test,
+        akka.streamTestkit         % Test
       )
 
     lazy val fileDependencies: Seq[ModuleID] =
       Seq(
         aws.s3               % Compile,
-        aws.sts              % Compile,
-        commons.fileUpload   % Compile,
+        aws.sts              % Runtime,
+        typesafe.config      % Compile,
         jsoup.jsoup          % Compile,
         openhtmltopdf.core   % Compile,
         openhtmltopdf.pdfbox % Compile,
-        openhtmltopdf.slf4j  % Compile,
+        openhtmltopdf.slf4j  % Runtime,
         openhtmltopdf.svg    % Compile,
         pdfbox.lib           % Compile,
+        cats.core            % Compile,
         pdfcompare.lib       % Test
       )
 
-    lazy val mailDependencies: Seq[ModuleID] = Seq(courier.mail % Compile, courier.testMocking % Test)
+    lazy val mailDependencies: Seq[ModuleID] =
+      Seq(courier.mail % Compile, typesafe.config % Compile, courier.testMocking % Test)
 
     lazy val signerDependencies: Seq[ModuleID] =
       Seq(
+        akka.stream              % Compile,
         aws.kms                  % Compile,
-        aws.sts                  % Compile,
+        aws.sts                  % Runtime,
         vault.driver             % Compile,
+        typesafe.config          % Compile,
         testContainers.scalatest % Test,
         testContainers.vault     % Test
       )
 
-    lazy val jwtDependencies: Seq[ModuleID] = Seq(nimbus.joseJwt % Compile)
+    lazy val jwtDependencies: Seq[ModuleID] =
+      Seq(nimbus.joseJwt % Compile, typesafe.config % Compile, cats.core % Compile)
 
-    lazy val queueDependencies: Seq[ModuleID] = Seq(aws.sqs % Compile, aws.sts % Compile, spray.spray % Compile)
+    lazy val queueDependencies: Seq[ModuleID] =
+      Seq(aws.sts % Runtime, aws.sqs % Compile, typesafe.config % Compile, spray.spray % Compile, cats.core % Compile)
 
     lazy val cqrsDependencies: Seq[ModuleID] = Seq(
       akka.projectionSlick        % Compile,
@@ -177,28 +188,22 @@ object Dependencies {
       akka.persistenceQuery       % Compile,
       akka.projectionEventSourced % Compile,
       mongodb.scalaDriver         % Compile,
-      spray.spray                 % Compile
+      spray.spray                 % Compile,
+      cats.core                   % Compile
     )
 
     lazy val rateLimiterDependencies: Seq[ModuleID] =
       Seq(
         redis.jedis        % Compile,
+        akka.stream        % Compile,
         spray.spray        % Compile,
+        cats.core          % Compile,
         scalamock.core     % Test,
         akka.httpTestkit   % Test,
         akka.streamTestkit % Test
       )
 
-    lazy val commonDependencies: Seq[ModuleID] = Seq(
-      // For making Java 12 happy
-      "javax.annotation"         % "javax.annotation-api" % "1.3.2" % "compile",
-      apacheCommons.text         % Compile,
-      atlassian.swaggerValidator % Compile,
-      cats.core                  % Compile,
-      logback.classic            % Compile,
-      typesafe.config            % Compile,
-      lightbend.logging          % Compile,
-      scalatest.core             % Test
-    )
+    lazy val commonDependencies: Seq[ModuleID] =
+      Seq(logback.classic % Runtime, scalatest.core % Test)
   }
 }
