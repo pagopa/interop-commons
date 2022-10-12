@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Route
 import com.nimbusds.jose.crypto.{ECDSAVerifier, RSASSAVerifier}
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jwt.JWTClaimsSet
-import it.pagopa.interop.commons.utils.USER_ROLES
+import it.pagopa.interop.commons.utils._
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.Try
@@ -102,23 +102,23 @@ package object jwt {
     getInteropRoleClaimSafe(claims).fold(roles)(roles + _)
   }
 
-  /**
-    * Checks if the current request is authorized
-    * @param isAuthorized function to check if the request is authorized
-    * @param errorMessage message to show if the request is not authorized
-    * @param route route to invoke if the request is authorized
-    * @param errorMarshaller implicit parameter containing the error marshaller
-    * @tparam T error message type
-    * @return
-    */
   def authorizeInterop[T](isAuthorized: => Boolean, errorMessage: => T)(
     route: Route
-  )(implicit errorMarshaller: ToEntityMarshaller[T]): Route = {
-    if (isAuthorized) {
-      route
-    } else {
-      logger.error(s"Invalid user role to execute this request")
-      complete(StatusCodes.Forbidden, errorMessage)
-    }
+  )(implicit contexts: Seq[(String, String)], errorMarshaller: ToEntityMarshaller[T]): Route = if (isAuthorized) route
+  else {
+    val values: Map[String, String] = contexts.toMap
+    val ipAddress: String           = values.getOrElse(IP_ADDRESS, "")
+    val uid: String                 = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
+    val correlationId: String       = values.getOrElse(CORRELATION_ID_HEADER, "")
+    val header: String              = s"[IP=$ipAddress] [UID=$uid] [CID=$correlationId]"
+    val body: String                = values
+      .get(USER_ROLES)
+      .fold(s"No user roles found to execute this request")(roles =>
+        s"Invalid user roles ($roles) to execute this request"
+      )
+
+    logger.error(s"$header $body")
+    complete(StatusCodes.Forbidden, errorMessage)
   }
+
 }
