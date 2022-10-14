@@ -93,13 +93,13 @@ package object jwt {
         .flatMap(nullable => Option(nullable).toTry(GenericError("Roles in context are not in valid format")))
         .map(roles => roles.split(",").toList)
 
-    val maybeRoles: Try[List[String]] = for {
+    def maybeRoles(): Try[List[String]] = for {
       roles     <- getOrganizationRolesClaimSafe(claims)
       userRoles <- roles.traverse(getRoleSafe)
     } yield userRoles
 
     val roles: Set[String] = userRolesStringFromInteopClaim
-      .orElse[List[String]](maybeRoles)
+      .orElse[List[String]](maybeRoles())
       .fold(
         e => {
           logger.warn(s"Unable to extract userRoles from claims: ${e.getMessage()}")
