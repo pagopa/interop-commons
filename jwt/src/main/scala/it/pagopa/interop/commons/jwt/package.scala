@@ -16,6 +16,7 @@ import java.{util => ju}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors._
 import it.pagopa.interop.commons.utils.TypeConversions._
 import com.nimbusds.jose.util.JSONObjectUtils
+import it.pagopa.interop.commons.utils.USER_ROLES
 
 package object jwt {
 
@@ -86,18 +87,26 @@ package object jwt {
     Try(claims.getStringClaim(roleClaim)).toOption.flatMap(Option(_))
 
   def getUserRoles(claims: JWTClaimsSet): Set[String] = {
-    val maybeRoles: Try[List[String]] = for {
+
+    val userRolesStringFromInteropClaim: Try[List[String]] =
+      Try(claims.getStringClaim(USER_ROLES))
+        .flatMap(nullable => Option(nullable).toTry(GenericError("Roles in context are not in valid format")))
+        .map(roles => roles.split(",").toList)
+
+    def userRolesStringFromOrganizationClaim(): Try[List[String]] = for {
       roles     <- getOrganizationRolesClaimSafe(claims)
       userRoles <- roles.traverse(getRoleSafe)
     } yield userRoles
 
-    val roles: Set[String] = maybeRoles.fold(
-      e => {
-        logger.warn(s"Unable to extract userRoles from claims: ${e.getMessage()}")
-        Set.empty[String]
-      },
-      _.toSet
-    )
+    val roles: Set[String] = userRolesStringFromInteropClaim
+      .orElse[List[String]](userRolesStringFromOrganizationClaim())
+      .fold(
+        e => {
+          logger.warn(s"Unable to extract userRoles from claims: ${e.getMessage()}")
+          Set.empty[String]
+        },
+        _.toSet
+      )
 
     getInteropRoleClaimSafe(claims).fold(roles)(roles + _)
   }
