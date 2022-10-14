@@ -88,18 +88,18 @@ package object jwt {
 
   def getUserRoles(claims: JWTClaimsSet): Set[String] = {
 
-    val userRolesStringFromInteopClaim: Try[List[String]] =
+    val userRolesStringFromInteropClaim: Try[List[String]] =
       Try(claims.getStringClaim(USER_ROLES))
         .flatMap(nullable => Option(nullable).toTry(GenericError("Roles in context are not in valid format")))
         .map(roles => roles.split(",").toList)
 
-    def maybeRoles(): Try[List[String]] = for {
+    def userRolesStringFromOrganizationClaim(): Try[List[String]] = for {
       roles     <- getOrganizationRolesClaimSafe(claims)
       userRoles <- roles.traverse(getRoleSafe)
     } yield userRoles
 
-    val roles: Set[String] = userRolesStringFromInteopClaim
-      .orElse[List[String]](maybeRoles())
+    val roles: Set[String] = userRolesStringFromInteropClaim
+      .orElse[List[String]](userRolesStringFromOrganizationClaim())
       .fold(
         e => {
           logger.warn(s"Unable to extract userRoles from claims: ${e.getMessage()}")
