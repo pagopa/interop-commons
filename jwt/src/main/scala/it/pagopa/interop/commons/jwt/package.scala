@@ -112,7 +112,7 @@ package object jwt {
   }
 
   def authorizeInterop[T](isAuthorized: => Boolean, errorMessage: => T)(
-    route: Route
+    route: => Route
   )(implicit contexts: Seq[(String, String)], errorMarshaller: ToEntityMarshaller[T]): Route = if (isAuthorized) route
   else {
     val values: Map[String, String] = contexts.toMap
