@@ -84,6 +84,23 @@ class UserRolesRetrievalSpec extends AnyWordSpecLike with Matchers {
 
     }
 
+    "return the interop roles before the selfcare roles if already present in the jwt" in {
+      val s =
+        """|eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlZmM3Y2IzZC1jNzkxLTRkZDMtYjM3MC1mZTUzYjU1MjA2ZGMiLCJzd
+           |WIiOiJzdWJqZWN0IiwiaWF0IjoxNjUxODI0NTU2LCJleHAiOjE2NTE4MjQ1NjEsImF1ZCI6InJlYWxtIiwiaXNzIjoiaHR0cHM6Ly9
+           |kZXYuc2VsZmNhcmUucGFnb3BhLml0IiwidXNlci1yb2xlcyI6InBhcGVyaW5vIiwib3JnYW5pemF0aW9uIjp7ImlkIjoiaW5zdGl0d
+           |XRpb25JZCIsInJvbGVzIjpbeyJwYXJ0eVJvbGUiOiJPUEVSQVRPUiIsInJvbGUiOiJwcm9kdWN0Um9sZSJ9LHsicGFydHlSb2xlIjo
+           |iT1BFUkFUT1IiLCJyb2xlIjoicGlwcG9Sb2xlIn0seyJwYXJ0eVJvbGUiOiJPUEVSQVRPUiIsInJvbGUiOiJ0ZXN0Um9sZSJ9LHsic
+           |GFydHlSb2xlIjoiT1BFUkFUT1IiLCJyb2xlIjoicGlwcG9Sb2xlIn1dLCJncm91cHMiOlsiZ3JvdXBJZCJdLCJmaXNjYWxfY29kZSI
+           |6InRheENvZGUifSwiZGVzaXJlZF9leHAiOjE2NTE4MjQ1NTh9.E_LHsdRJnRyns6_PzTQCDsZTuusWCeFrt2ogk_pMyWs""".stripMargin
+
+      val jwt                  = SignedJWT.parse(s)
+      val claims: JWTClaimsSet = jwt.getJWTClaimsSet
+      val roles: Set[String]   = getUserRoles(claims)
+
+      roles shouldBe Set("paperino")
+    }
+
     "return error since no roles have been found" in {
       val s =
         """eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlZmM3Y2IzZC1jNzkxLTRkZDMtYjM3MC1mZTUzYjU1MjA2ZGMiLCJzdWIiOiJz
