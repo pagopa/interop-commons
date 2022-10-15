@@ -17,7 +17,7 @@ object Versions {
   lazy val logbackVersion             = "1.4.4"
   lazy val mockJavaMailVersion        = "1.9"
   lazy val mongodbScalaDriverVersion  = "4.7.2"
-  lazy val nimbusVersion              = "9.25.4"
+  lazy val nimbusVersion              = "9.25.6"
   lazy val openhtmltopdfVersion       = "1.0.10"
   lazy val pdfBoxVersion              = "2.0.27"
   lazy val pdfCompareVersion          = "1.1.61"
