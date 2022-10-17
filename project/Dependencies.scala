@@ -175,8 +175,13 @@ object Dependencies {
         testContainers.vault     % Test
       )
 
-    lazy val jwtDependencies: Seq[ModuleID] =
-      Seq(nimbus.joseJwt % Compile, typesafe.config % Compile, cats.core % Compile)
+    lazy val jwtDependencies: Seq[ModuleID] = Seq(
+      nimbus.joseJwt     % Compile,
+      typesafe.config    % Compile,
+      cats.core          % Compile,
+      akka.streamTestkit % Test,
+      akka.httpTestkit   % Test
+    )
 
     lazy val queueDependencies: Seq[ModuleID] =
       Seq(aws.sts % Runtime, aws.sqs % Compile, typesafe.config % Compile, spray.spray % Compile, cats.core % Compile)
