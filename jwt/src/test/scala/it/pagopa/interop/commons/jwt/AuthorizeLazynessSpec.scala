@@ -11,7 +11,7 @@ import scala.annotation.nowarn
 
 class AuthorizeLazynessSpec extends AnyWordSpecLike with Matchers with ScalatestRouteTest {
 
-  "A test" in {
+  "Authorization method should be lazy and not consume the route definition eagerly" in {
     implicit val contexts: List[(String, String)] = List()
 
     @nowarn
@@ -26,7 +26,5 @@ class AuthorizeLazynessSpec extends AnyWordSpecLike with Matchers with Scalatest
       status shouldBe StatusCodes.Forbidden
       entityAs[String] shouldBe "You should see this"
     }
-
   }
-
 }
