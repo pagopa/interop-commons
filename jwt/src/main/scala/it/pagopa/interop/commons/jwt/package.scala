@@ -88,17 +88,21 @@ package object jwt {
 
   def getUserRoles(claims: JWTClaimsSet): Set[String] = {
 
-    val userRolesStringFromInteropClaim: Try[List[String]] =
-      Try(claims.getStringClaim(USER_ROLES))
-        .flatMap(nullable => Option(nullable).toTry(GenericError("Roles in context are not in valid format")))
-        .map(roles => roles.split(",").toList)
+    val rolesFromInteropClaim: Try[List[String]] = Try(claims.getStringClaim("role"))
+      .flatMap(nullable => Option(nullable).toTry(GenericError("User roles in context are not in valid format")))
+      .map(roles => roles.split(",").toList)
+
+    val userRolesStringFromInteropClaim: Try[List[String]] = Try(claims.getStringClaim(USER_ROLES))
+      .flatMap(nullable => Option(nullable).toTry(GenericError("User roles in context are not in valid format")))
+      .map(roles => roles.split(",").toList)
 
     def userRolesStringFromOrganizationClaim(): Try[List[String]] = for {
       roles     <- getOrganizationRolesClaimSafe(claims)
       userRoles <- roles.traverse(getRoleSafe)
     } yield userRoles
 
-    val roles: Set[String] = userRolesStringFromInteropClaim
+    val roles: Set[String] = rolesFromInteropClaim
+      .orElse(userRolesStringFromInteropClaim)
       .orElse[List[String]](userRolesStringFromOrganizationClaim())
       .fold(
         e => {
