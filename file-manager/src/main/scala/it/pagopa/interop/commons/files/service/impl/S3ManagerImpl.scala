@@ -52,7 +52,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     val key: String                        = s3Key(path, resourceId, fileParts._1.getFileName)
     logger.debug("Storing resource {} at path {}", resourceId, key)
     val putObjectRequest: PutObjectRequest =
-      PutObjectRequest.builder.bucket(containerPath).key(key).contentMD5(contentMd5(fileParts._2)).build
+      PutObjectRequest.builder.bucket(containerPath).key(key).contentMD5(calcContentMd5(fileParts._2)).build
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromFile(fileParts._2)
     asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.as(key)
   }
@@ -64,7 +64,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     val key: String                        = s3Key(path, resourceId, fileName)
     logger.debug("Storing resource {} at path {}", resourceId, key)
     val putObjectRequest: PutObjectRequest =
-      PutObjectRequest.builder.bucket(containerPath).key(key).contentMD5(contentMd5(fileContents)).build
+      PutObjectRequest.builder.bucket(containerPath).key(key).contentMD5(calcContentMd5(fileContents)).build
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromBytes(fileContents)
     asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.as(key)
   }
@@ -112,8 +112,8 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
       .map(_.deleteMarker().booleanValue())
   }
 
-  def contentMd5(file: File): String = contentMd5(Files.readAllBytes(file.toPath))
+  def calcContentMd5(file: File): String = calcContentMd5(Files.readAllBytes(file.toPath))
 
-  def contentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
+  def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
 
 }
