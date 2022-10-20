@@ -1,8 +1,9 @@
 package it.pagopa.interop.commons.cqrs.service
 
 import cats.implicits._
-import it.pagopa.interop.commons.cqrs.model.MongoDbConfig
-import it.pagopa.interop.commons.utils.TypeConversions.TryOps
+import it.pagopa.interop.commons.cqrs.errors.ReadModelErrors.ReadModelMissingDataField
+import it.pagopa.interop.commons.cqrs.model.ReadModelConfig
+import it.pagopa.interop.commons.utils.TypeConversions._
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.connection.NettyStreamFactoryFactory
@@ -10,47 +11,37 @@ import org.mongodb.scala.{ConnectionString, Document, MongoClient, MongoClientSe
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Try}
 
-final class ReadModelService(mongoDbConfig: MongoDbConfig) {
+final class ReadModelService(dbConfig: ReadModelConfig) {
 
-  private implicit val client: MongoClient = MongoClient(
+  private val client: MongoClient = MongoClient(
     MongoClientSettings
       .builder()
-      .applyConnectionString(new ConnectionString(mongoDbConfig.connectionString))
+      .applyConnectionString(new ConnectionString(dbConfig.connectionString))
       .codecRegistry(DEFAULT_CODEC_REGISTRY)
       .streamFactoryFactory(NettyStreamFactoryFactory())
       .build()
   )
 
-  def findOne[T: JsonReader](filter: Bson)(implicit ec: ExecutionContext): Future[Option[T]] =
-    find[T](filter, offset = 0, limit = 1).map(_.headOption)
+  private val db = client.getDatabase(dbConfig.dbName)
 
-  def find[T: JsonReader](filter: Bson, offset: Int, limit: Int)(implicit ec: ExecutionContext): Future[Seq[T]] =
-    // TODO Nice to have: remove the execution context
-//      client
-//        .getDatabase(mongoDbConfig.dbName)
-//        .getCollection(mongoDbConfig.collectionName)
-//        .find(filter).map(extractData[T]).toFuture
-//    OR
-//    client
-//      .getDatabase(mongoDbConfig.dbName)
-//      .getCollection(mongoDbConfig.collectionName)
+  def findOne[T: JsonReader](collectionName: String, filter: Bson)(implicit ec: ExecutionContext): Future[Option[T]] =
+    find[T](collectionName, filter, offset = 0, limit = 1).map(_.headOption)
+
+  def find[T: JsonReader](collectionName: String, filter: Bson, offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]] =
+    // TODO Nice to have: remove the execution context. This works but I don't like throwing the error
+//    db
+//      .getCollection(collectionName)
 //      .find(filter)
-//      .map(result =>
-//        extractData[T](result) match {
-//          case Success(r)  => Observable(List(r))
-////            Future.successful(r)
-//          case Failure(ex) =>
-//
-//            Future.failed(ex)
-//        }
-//      )
-
+//      .skip(offset)
+//      .limit(limit)
+//      .map(result => extractData[T](result).fold(ex => throw ex, identity))
+//      .toFuture()
     for {
-      results <- client
-        .getDatabase(mongoDbConfig.dbName)
-        .getCollection(mongoDbConfig.collectionName)
+      results <- db
+        .getCollection(collectionName)
         .find(filter)
         .skip(offset)
         .limit(limit)
@@ -58,21 +49,25 @@ final class ReadModelService(mongoDbConfig: MongoDbConfig) {
       model   <- results.traverse(extractData[T](_).toFuture)
     } yield model
 
-  private def extractData[T: JsonReader](document: Document): Try[T] = for {
-    fields <- Try(document.toJson().parseJson.asJsObject.getFields("data")).leftMap(ex =>
-      // TODO Use proper exception
-      new Exception(s"Error retrieving data from read-model: Unable to extract field 'data'. Reason: ${ex.getMessage}")
-    )
-    result <- fields match {
-      case data :: Nil => Try(data.convertTo[T])
-      case _           =>
-        // TODO Use proper exception
-        Failure(
-          new Exception(
-            s"Error retrieving data from read-model: Unexpected number of fields ${fields.size}. Content: $fields"
-          )
-        )
-    }
-  } yield result
+  def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson])(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]] =
+    for {
+      results <- db
+        .getCollection(collectionName)
+        .aggregate(pipeline)
+        .toFuture()
+      model   <- results.traverse(extractData[T](_).toFuture)
+    } yield model
+
+  private def extractData[T: JsonReader](document: Document): Either[Throwable, T] =
+    document
+      .toJson()
+      .parseJson
+      .asJsObject
+      .fields
+      .get("data")
+      .toRight(ReadModelMissingDataField)
+      .flatMap(data => Either.catchNonFatal(data.convertTo[T]))
 
 }
