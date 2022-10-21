@@ -7,7 +7,8 @@ import it.pagopa.interop.commons.utils.TypeConversions._
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.connection.NettyStreamFactoryFactory
-import org.mongodb.scala.{ConnectionString, Document, MongoClient, MongoClientSettings}
+import org.mongodb.scala.model.Projections
+import org.mongodb.scala.{ConnectionString, Document, MongoClient, MongoClientSettings, MongoDatabase}
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,26 +24,23 @@ final class ReadModelService(dbConfig: ReadModelConfig) {
       .build()
   )
 
-  private val db = client.getDatabase(dbConfig.dbName)
+  private val db: MongoDatabase = client.getDatabase(dbConfig.dbName)
 
   def findOne[T: JsonReader](collectionName: String, filter: Bson)(implicit ec: ExecutionContext): Future[Option[T]] =
     find[T](collectionName, filter, offset = 0, limit = 1).map(_.headOption)
 
   def find[T: JsonReader](collectionName: String, filter: Bson, offset: Int, limit: Int)(implicit
     ec: ExecutionContext
+  ): Future[Seq[T]] = find[T](collectionName, filter, Projections.include(), offset, limit)
+
+  def find[T: JsonReader](collectionName: String, filter: Bson, projection: Bson, offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
   ): Future[Seq[T]] =
-    // TODO Nice to have: remove the execution context. This works but I don't like throwing the error
-//    db
-//      .getCollection(collectionName)
-//      .find(filter)
-//      .skip(offset)
-//      .limit(limit)
-//      .map(result => extractData[T](result).fold(ex => throw ex, identity))
-//      .toFuture()
     for {
       results <- db
         .getCollection(collectionName)
         .find(filter)
+        .projection(projection)
         .skip(offset)
         .limit(limit)
         .toFuture()
