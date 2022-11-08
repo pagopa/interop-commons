@@ -7,7 +7,7 @@ import it.pagopa.interop.commons.utils.TypeConversions._
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.connection.NettyStreamFactoryFactory
-import org.mongodb.scala.model.Projections
+import org.mongodb.scala.model.{Aggregates, Projections}
 import org.mongodb.scala.{ConnectionString, Document, MongoClient, MongoClientSettings, MongoDatabase}
 import spray.json._
 
@@ -47,13 +47,13 @@ final class ReadModelService(dbConfig: ReadModelConfig) {
       model   <- results.traverse(extractData[T](_).toFuture)
     } yield model
 
-  def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson])(implicit
+  def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
     ec: ExecutionContext
   ): Future[Seq[T]] =
     for {
       results <- db
         .getCollection(collectionName)
-        .aggregate(pipeline)
+        .aggregate(pipeline ++ Seq(Aggregates.skip(offset), Aggregates.limit(limit)))
         .toFuture()
       model   <- results.traverse(extractData[T](_).toFuture)
     } yield model
