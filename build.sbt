@@ -1,4 +1,4 @@
-import ProjectSettings.ProjectFrom
+import ProjectSettings._
 
 ThisBuild / scalaVersion      := "2.13.10"
 ThisBuild / organization      := "it.pagopa"
@@ -116,3 +116,5 @@ lazy val rateLimiter = project
 lazy val commons = (project in file("."))
   .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)
+
+inThisBuild(sbtGithubActionsSettings)
