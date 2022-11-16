@@ -1,7 +1,6 @@
 package it.pagopa.interop.commons
 
 import buildinfo.BuildInfo
-import cats.syntax.all._
 import akka.event.Logging
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
@@ -9,7 +8,7 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.CanLog
-import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, SUB, UID}
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, ORGANIZATION_ID_CLAIM, SUB, UID}
 
 import java.util.UUID
 
@@ -22,10 +21,11 @@ package object logging {
     else false
 
   private def createLogContexts(values: Map[String, String]): String = {
-    val ipAddress: String     = values.getOrElse(IP_ADDRESS, "")
-    val uid: String           = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
-    val correlationId: String = values.getOrElse(CORRELATION_ID_HEADER, "")
-    s"[IP=$ipAddress] [UID=$uid] [CID=$correlationId]"
+    val ipAddress: String      = values.getOrElse(IP_ADDRESS, "")
+    val uid: String            = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
+    val organizationId: String = values.getOrElse(ORGANIZATION_ID_CLAIM, "")
+    val correlationId: String  = values.getOrElse(CORRELATION_ID_HEADER, "")
+    s"[IP=$ipAddress] [UID=$uid] [OID=$organizationId] [CID=$correlationId]"
   }
 
   /** Defines log message decoration for Interop
