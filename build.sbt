@@ -1,4 +1,4 @@
-import ProjectSettings._
+import ProjectSettings.ProjectFrom
 
 ThisBuild / scalaVersion      := "2.13.10"
 ThisBuild / organization      := "it.pagopa"
@@ -25,9 +25,14 @@ cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition = Seq(
-  publishMavenStyle := true,
   scalafmtOnCompile := true,
-  libraryDependencies ++= Dependencies.Jars.commonDependencies
+  libraryDependencies ++= Dependencies.Jars.commonDependencies,
+  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+  publishTo         := {
+    val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
+    if (isSnapshot.value) Some("snapshots" at nexus + "maven-snapshots/")
+    else Some("releases" at nexus + "maven-releases/")
+  }
 )
 
 lazy val utils = project
@@ -111,5 +116,3 @@ lazy val rateLimiter = project
 lazy val commons = (project in file("."))
   .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs)
   .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)
-
-inThisBuild(sbtGithubActionsSettings)
