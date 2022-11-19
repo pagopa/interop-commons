@@ -4,7 +4,7 @@ object Versions {
   lazy val akkaVersion                = "2.6.20"
   lazy val apacheCommonsTextVersion   = "1.10.0"
   lazy val awsVersion                 = "2.17.290"
-  lazy val catsVersion                = "2.8.0"
+  lazy val catsVersion                = "2.9.0"
   lazy val commonsFileUploadVersion   = "1.4"
   lazy val courierVersion             = "3.2.0"
   lazy val httpJson4sVersion          = "1.39.2"
