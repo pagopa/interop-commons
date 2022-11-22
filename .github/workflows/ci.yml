@@ -138,8 +138,5 @@ jobs:
         with:
           package-version-ids: ${{ steps.version.outputs.ids }}
 
-      - name: Regenerating code
-        run: sbt ++${{ matrix.scala }} generateCode
-
       - name: Publish project
         run: sbt ++${{ matrix.scala }} +publish
