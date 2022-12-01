@@ -1,14 +1,16 @@
 package it.pagopa.interop.commons.jwt
 
-import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.gen.{ECKeyGenerator, RSAKeyGenerator}
+import com.nimbusds.jose.jwk.{Curve, ECKey, RSAKey}
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.JWTClaimNames
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
+import it.pagopa.interop.commons.jwt.errors._
 import it.pagopa.interop.commons.jwt.model.ValidClientAssertionRequest
 import it.pagopa.interop.commons.jwt.service.impl.{DefaultClientAssertionValidator, getClaimsVerifier}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.TryValues._
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.{Date, UUID}
@@ -23,8 +25,8 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
   val VALID_ASSERTION_TYPE: String = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
   val CLIENT_CREDENTIALS: String   = "client_credentials"
 
-  val rsaKey = new RSAKeyGenerator(2048).generate
-  val ecKey  = new ECKeyGenerator(Curve.P_256).generate
+  val rsaKey: RSAKey = new RSAKeyGenerator(2048).generate
+  val ecKey: ECKey   = new ECKeyGenerator(Curve.P_256).generate
 
   val publicRsaKey: String = rsaKey.toPublicJWK.toJSONString
   val publicEcKey: String  = ecKey.toPublicJWK.toJSONString
@@ -72,7 +74,61 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
         _            <- checker.verify(new RSAKeyGenerator(2048).generate.toPublicJWK.toJSONString)
       } yield ()
 
-      validation shouldBe a[Failure[_]]
+      validation.failure.exception should be theSameInstanceAs InvalidJWTSignature
+    }
+
+    "fail validation when kid is missing" in {
+      val issuerUUID = UUID.randomUUID().toString
+      val clientUUID = UUID.randomUUID()
+
+      val assertion =
+        makeJWT(issuerUUID, clientUUID.toString, List("test"), expirationTime, "RSA", kid = null, rsaKey.toJSONString)
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(new RSAKeyGenerator(2048).generate.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation.failure.exception should be theSameInstanceAs KidNotFound
+    }
+
+    "fail validation when subject is missing" in {
+      val issuerUUID = UUID.randomUUID().toString
+      val clientUUID = UUID.randomUUID()
+
+      val assertion =
+        makeJWT(
+          issuerUUID,
+          clientId = null,
+          List("test"),
+          expirationTime,
+          "RSA",
+          rsaKey.computeThumbprint().toJSONString,
+          rsaKey.toJSONString
+        )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(new RSAKeyGenerator(2048).generate.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation.failure.exception should be theSameInstanceAs SubjectNotFound
     }
 
     "fail validation when no valid assertion type is provided" in {
@@ -94,7 +150,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
         _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
       } yield ()
 
-      validation shouldBe a[Failure[_]]
+      validation.failure.exception shouldBe a[InvalidAccessTokenRequest]
     }
 
     "fail validation when no valid grant type is provided" in {
@@ -116,7 +172,7 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
         _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
       } yield ()
 
-      validation shouldBe a[Failure[_]]
+      validation.failure.exception shouldBe a[InvalidAccessTokenRequest]
     }
 
     "fail validation when assertion is expired" in {
