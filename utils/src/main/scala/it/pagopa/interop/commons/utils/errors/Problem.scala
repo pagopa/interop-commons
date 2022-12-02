@@ -33,4 +33,17 @@ object Problem extends SprayJsonSupport with DefaultJsonProtocol {
       )
     )
 
+  def apply(httpError: StatusCode, errors: List[ComponentError], serviceCode: ServiceCode): Problem =
+    Problem(
+      `type` = defaultProblemType,
+      status = httpError.intValue,
+      title = httpError.defaultMessage,
+      errors = errors.map(error =>
+        ProblemError(
+          code = s"${serviceCode.code}-${error.code}",
+          detail = Option(error.getMessage).getOrElse(defaultErrorMessage)
+        )
+      )
+    )
+
 }

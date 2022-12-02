@@ -3,6 +3,7 @@ package it.pagopa.interop.commons.utils.errors
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.StandardRoute
+import cats.implicits.toFunctorFilterOps
 import com.typesafe.scalalogging.LoggerTakingImplicit
 import it.pagopa.interop.commons.logging.ContextFieldsToLog
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.GenericError
@@ -13,6 +14,10 @@ trait AkkaResponses {
     serviceCode: ServiceCode
   ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, error, serviceCode))
 
+  private def completeWithErrors(statusCode: StatusCode, errors: List[ComponentError])(implicit
+    serviceCode: ServiceCode
+  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, errors, serviceCode))
+
   def badRequest(error: ComponentError, logMessage: String)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
@@ -22,15 +27,14 @@ trait AkkaResponses {
     completeWithError(StatusCodes.BadRequest, error)
   }
 
-
-//  def badRequest(errors: List[ComponentError], logMessage: String)(implicit
-//                                                            contexts: Seq[(String, String)],
-//                                                            logger: LoggerTakingImplicit[ContextFieldsToLog],
-//                                                            serviceCode: ServiceCode
-//  ): StandardRoute = {
-//    logger.warn(s"$logMessage. Reasons: ${errors.mapFilter(e => Option(e.getMessage)).mkString("[",",","]")}")
-//    completeWithError(StatusCodes.BadRequest, errors)
-//  }
+  def badRequest(errors: List[ComponentError], logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    logger.warn(s"$logMessage. Reasons: ${errors.mapFilter(e => Option(e.getMessage)).mkString("[", ",", "]")}")
+    completeWithErrors(StatusCodes.BadRequest, errors)
+  }
 
   def notFound(error: ComponentError, logMessage: String)(implicit
     contexts: Seq[(String, String)],

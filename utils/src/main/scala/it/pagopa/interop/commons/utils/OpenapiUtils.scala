@@ -34,7 +34,7 @@ trait OpenapiUtils {
       )
       .getOrElse("No request information")
 
-    logger.error("Request failed: {}", s"""$messageStrings - ["${errors.map(_.msg).mkString("""", """")}"]""")
+    logger.warn(s"""Request failed: $messageStrings - ["${errors.map(_.msg).mkString("""", """")}"]"""")
 
     errors
 
