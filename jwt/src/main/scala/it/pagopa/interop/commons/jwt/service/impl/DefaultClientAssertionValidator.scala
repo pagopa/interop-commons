@@ -33,12 +33,12 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
   private def subjectClaim(clientId: Option[String], claimSet: JWTClaimsSet): Try[String] = {
     Try(claimSet.getSubject) match {
       case Failure(_) =>
-        logger.error("Subject not found in this claim")
+        logger.warn("Subject not found in this claim")
         Failure(SubjectNotFound)
 
       case Success(s) if s == clientId.getOrElse(s) => Success(s)
       case Success(s)                               =>
-        logger.error(s"Subject value $s is not equal to the provided client_id $clientId")
+        logger.warn(s"Subject value $s is not equal to the provided client_id $clientId")
         Failure(InvalidSubject(s))
     }
   }

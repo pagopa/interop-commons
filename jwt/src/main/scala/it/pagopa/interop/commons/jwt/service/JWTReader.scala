@@ -82,11 +82,11 @@ trait JWTReader {
               case "Bearer" :: payload :: Nil =>
                 validation.andThen(authenticationDirective(contextInfo))(payload)
               case _                          =>
-                logger.error(s"$contextInfo - No authentication has been provided for this call")
+                logger.warn(s"$contextInfo - No authentication has been provided for this call")
                 reject(MalformedHeaderRejection("Authorization", "Illegal header key."))
             }
           case None         =>
-            logger.error(s"$contextInfo - No authentication has been provided for this call")
+            logger.warn(s"$contextInfo - No authentication has been provided for this call")
             reject(AuthenticationFailedRejection(CredentialsMissing, HttpChallenge("Bearer", None)))
         }
       }
@@ -96,7 +96,7 @@ trait JWTReader {
   private def authenticationDirective[T](contextInfo: String): Try[T] => Directive1[T] = {
     case Success(result) => provide(result)
     case Failure(ex)     =>
-      logger.error(s"$contextInfo - Invalid authentication provided - ${ex.getMessage}")
+      logger.warn(s"$contextInfo - Invalid authentication provided - ${ex.getMessage}")
       reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
   }
 }
