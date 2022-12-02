@@ -14,21 +14,23 @@ final case class Problem(
 )
 
 object Problem extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit def problemFormat: RootJsonFormat[Problem] = jsonFormat5(Problem.apply)
+  implicit def problemFormat: RootJsonFormat[Problem]                 = jsonFormat5(Problem.apply)
   implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] = sprayJsonMarshaller[Problem]
 
   final val defaultProblemType: String  = "about:blank"
   final val defaultErrorMessage: String = "Unknown error"
 
-  def apply(httpError: StatusCode, error: ComponentError, serviceErrorCodePrefix: String): Problem = Problem(
-    `type` = defaultProblemType,
-    status = httpError.intValue,
-    title = httpError.defaultMessage,
-    errors = Seq(
-      ProblemError(
-        code = s"$serviceErrorCodePrefix-${error.code}",
-        detail = Option(error.getMessage).getOrElse(defaultErrorMessage)
+  def apply(httpError: StatusCode, error: ComponentError, serviceCode: ServiceCode): Problem =
+    Problem(
+      `type` = defaultProblemType,
+      status = httpError.intValue,
+      title = httpError.defaultMessage,
+      errors = Seq(
+        ProblemError(
+          code = s"${serviceCode.code}-${error.code}",
+          detail = Option(error.getMessage).getOrElse(defaultErrorMessage)
+        )
       )
     )
-  )
+
 }
