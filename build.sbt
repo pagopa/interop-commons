@@ -33,9 +33,10 @@ lazy val sharedSettings: SettingsDefinition =
 lazy val utils = project
   .in(file(utilsModuleName))
   .settings(
-    name := "interop-commons-utils",
+    name                     := "interop-commons-utils",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.utilsDependencies
+    libraryDependencies ++= Dependencies.Jars.utilsDependencies,
+    Test / parallelExecution := false
   )
   .setupBuildInfo
 
