@@ -3,7 +3,6 @@ package it.pagopa.interop.commons.jwt
 import akka.http.scaladsl.server.Directives.{complete, get}
 import akka.http.scaladsl.server.Route
 import it.pagopa.interop.commons.utils.USER_ROLES
-//import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -14,7 +13,7 @@ import it.pagopa.interop.commons.utils.errors.ServiceCode
 
 import scala.annotation.nowarn
 
-class AuthorizeLazynessSpec extends AnyWordSpecLike with Matchers with ScalatestRouteTest {
+class AuthorizationSpec extends AnyWordSpecLike with Matchers with ScalatestRouteTest {
 
   implicit val logger: LoggerTakingImplicit[ContextFieldsToLog] =
     Logger.takingImplicit[ContextFieldsToLog](this.getClass)
