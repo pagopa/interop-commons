@@ -5,6 +5,10 @@ ThisBuild / organization     := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
 ThisBuild / version          := ComputeVersion.version
 
+ThisBuild / githubOwner      := "pagopa"
+ThisBuild / githubRepository := "interop-commons"
+ThisBuild / resolvers += Resolver.githubPackages("pagopa")
+
 val fileManagerModuleName = "file-manager"
 val mailManagerModuleName = "mail-manager"
 val jwtModuleName         = "jwt"
@@ -23,15 +27,7 @@ lazy val sharedSettings: SettingsDefinition = Seq(
   scalacOptions     := Seq(),
   scalafmtOnCompile := true,
   libraryDependencies ++= Dependencies.Jars.commonDependencies,
-  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-  updateOptions     := updateOptions.value.withGigahorse(false),
-  publishTo         := {
-    val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "maven-snapshots/")
-    else
-      Some("releases" at nexus + "maven-releases/")
-  }
+  updateOptions     := updateOptions.value.withGigahorse(false)
 )
 
 lazy val utils = project
