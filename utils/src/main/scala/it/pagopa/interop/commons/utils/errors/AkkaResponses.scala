@@ -36,6 +36,15 @@ trait AkkaResponses {
     completeWithErrors(StatusCodes.BadRequest, errors)
   }
 
+  def unauthorized(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    logger.warn(logMessage, error)
+    completeWithError(StatusCodes.Unauthorized, error)
+  }
+
   def notFound(error: ComponentError, logMessage: String)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
