@@ -3,7 +3,7 @@ package it.pagopa.interop.commons.jwt.service.impl
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.errors.{InvalidSubject, SubjectNotFound}
+import it.pagopa.interop.commons.jwt.errors.{InvalidSubject, KidNotFound, SubjectNotFound}
 import it.pagopa.interop.commons.jwt.model.{ClientAssertionChecker, ValidClientAssertionRequest}
 import it.pagopa.interop.commons.jwt.service.ClientAssertionValidator
 import it.pagopa.interop.commons.utils.PURPOSE_ID_CLAIM
@@ -27,20 +27,25 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
       _           = logger.debug("Getting subject claim")
       subject   <- subjectClaim(clientIdOpt, jwt.getJWTClaimsSet)
       purposeId <- Try(Option(jwt.getJWTClaimsSet.getStringClaim(PURPOSE_ID_CLAIM)))
-      kid       <- Try(jwt.getHeader.getKeyID)
+      kid       <- kidHeader(jwt)
     } yield ClientAssertionChecker(jwt, kid, subject, purposeId)
 
-  private def subjectClaim(clientId: Option[String], claimSet: JWTClaimsSet): Try[String] = {
-    Try(claimSet.getSubject) match {
-      case Failure(_) =>
-        logger.warn("Subject not found in this claim")
+  private def subjectClaim(clientId: Option[String], claimSet: JWTClaimsSet): Try[String] =
+    Try(Option(claimSet.getSubject)) match {
+      case Failure(_) | Success(None)                     =>
+        logger.warn("Subject not found in client assertion")
         Failure(SubjectNotFound)
-
-      case Success(s) if s == clientId.getOrElse(s) => Success(s)
-      case Success(s)                               =>
+      case Success(Some(s)) if s == clientId.getOrElse(s) => Success(s)
+      case Success(Some(s))                               =>
         logger.warn(s"Subject value $s is not equal to the provided client_id $clientId")
         Failure(InvalidSubject(s))
     }
-  }
 
+  private def kidHeader(jwt: SignedJWT): Try[String] =
+    Try(Option(jwt.getHeader.getKeyID)) match {
+      case Failure(_) | Success(None) =>
+        logger.error("Kid not found in client assertion")
+        Failure(KidNotFound)
+      case Success(Some(s))           => Success(s)
+    }
 }
