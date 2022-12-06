@@ -63,6 +63,15 @@ trait AkkaResponses {
     completeWithError(StatusCodes.Forbidden, error)
   }
 
+  def conflict(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    logger.warn(logMessage, error)
+    completeWithError(StatusCodes.Conflict, error)
+  }
+
   def internalServerError(error: Throwable, errorMessage: String)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
