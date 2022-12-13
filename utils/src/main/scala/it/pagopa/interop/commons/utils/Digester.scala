@@ -1,33 +1,21 @@
 package it.pagopa.interop.commons.utils
 
-import java.io.File
-import java.nio.file.Files
-import java.security.{DigestInputStream, MessageDigest}
-import scala.annotation.tailrec
+import io.circe.Json
+import org.apache.commons.codec.digest.DigestUtils
 
-/** Returns file hash codes
-  */
+import scala.xml.Elem
+
+trait Digester[A] {
+  def toSha256(value: A): String
+}
+
 object Digester {
+  def toSha256[A](value: A)(implicit digester: Digester[A]): String = digester.toSha256(value)
 
-  /** Returns an hash code digest of the file for the specified algorithm
-    * @param file file to digest
-    * @param algorithm algorithm to apply
-    * @return digested file as string
-    */
-  def createHash(file: File, algorithm: String): String = {
-    val md  = MessageDigest.getInstance(algorithm)
-    val dis = new DigestInputStream(Files.newInputStream(file.toPath), md)
-    loop(dis.available > 0, { val _ = dis.read }, { dis.close() })
-    md.digest.map(b => String.format("%02x", Byte.box(b))).mkString
+  implicit def jsonDigester: Digester[Json] = new Digester[Json] {
+    override def toSha256(value: Json): String = DigestUtils.sha256Hex(value.noSpacesSortKeys)
   }
-
-  def createMD5Hash(file: File): String = createHash(file, "MD5")
-
-  @tailrec
-  private def loop(cond: => Boolean, block: => Unit, closing: => Unit): Unit =
-    if (cond) {
-      block
-      loop(cond, block, closing)
-    } else closing
-
+  implicit def elemDigester: Digester[Elem] = new Digester[Elem] {
+    override def toSha256(value: Elem): String = DigestUtils.sha256Hex(value.text)
+  }
 }

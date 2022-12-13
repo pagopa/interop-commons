@@ -8,13 +8,25 @@ object Dependencies {
     lazy val classic   = namespace % "logback-classic" % logbackVersion
   }
 
+  private[this] object circe {
+    lazy val namespace = "io.circe"
+    lazy val yaml      = namespace %% "circe-yaml"   % circeVersion
+    lazy val core      = namespace %% "circe-core"   % circeVersion
+    lazy val parser    = namespace %% "circe-parser" % circeVersion
+  }
+
   private[this] object commons {
     lazy val fileUpload = "commons-fileupload" % "commons-fileupload" % commonsFileUploadVersion
   }
 
   private[this] object apacheCommons {
-    lazy val namespace = "org.apache.commons"
-    lazy val text      = namespace % "commons-text" % apacheCommonsTextVersion
+    lazy val text  = "org.apache.commons" % "commons-text"  % apacheCommonsTextVersion
+    lazy val codec = "commons-codec"      % "commons-codec" % apacheCommonsCodecVersion
+  }
+
+  private[this] object scala {
+    lazy val namespace = "org.scala-lang.modules"
+    lazy val xml       = namespace %% "scala-xml" % scalaXMLVersion
   }
 
   private[this] object scalatest {
@@ -136,13 +148,18 @@ object Dependencies {
         akka.httpJson              % Compile,
         akka.httpJson4s            % Compile,
         akka.stream                % Compile,
+        circe.core                 % Compile,
+        circe.parser               % Compile,
+        circe.yaml                 % Compile,
         spray.spray                % Compile,
         typesafe.config            % Compile,
         cats.core                  % Compile,
         apacheCommons.text         % Compile,
+        apacheCommons.codec        % Compile,
         logback.classic            % Compile,
         atlassian.swaggerValidator % Compile,
         lightbend.logging          % Compile,
+        scala.xml                  % Compile,
         akka.httpTestkit           % Test,
         akka.streamTestkit         % Test
       )
