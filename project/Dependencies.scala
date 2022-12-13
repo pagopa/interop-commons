@@ -135,6 +135,7 @@ object Dependencies {
         akka.slf4j                 % Compile,
         akka.httpJson              % Compile,
         akka.httpJson4s            % Compile,
+        akka.stream                % Compile,
         spray.spray                % Compile,
         typesafe.config            % Compile,
         cats.core                  % Compile,

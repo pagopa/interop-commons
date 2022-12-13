@@ -10,11 +10,11 @@ import java.util.{Date, UUID}
 import scala.jdk.CollectionConverters.SeqHasAsJava
 
 trait JWTMockHelper {
+  val expirationTime: Date = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
 
   def createMockJWT(key: JWK, issuer: String, clientId: String, audience: List[String], algorithm: String): String = {
-    val rsaKid         = key.computeThumbprint().toJSONString
-    val privateRsaKey  = key.toJSONString
-    val expirationTime = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
+    val rsaKid        = key.computeThumbprint().toJSONString
+    val privateRsaKey = key.toJSONString
     makeJWT(issuer, clientId, audience, expirationTime, algorithm, rsaKid, privateRsaKey)
   }
 

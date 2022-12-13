@@ -6,7 +6,7 @@ import org.apache.commons.text.StringSubstitutor
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.{Base64, UUID}
-import scala.concurrent.Future
+import scala.concurrent.{Future, ExecutionContext}
 import scala.jdk.CollectionConverters.MapHasAsJava
 import scala.util.{Failure, Success, Try}
 
@@ -79,6 +79,19 @@ object TypeConversions {
     def toOffsetDateTime(offset: ZoneOffset): Try[OffsetDateTime] = Try(
       OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), offset)
     )
+  }
+
+  implicit class RichFutureObject(val obj: Future.type) extends AnyVal {
+    def traverseWithLatch[T, V](
+      n: Int
+    )(list: List[T])(f: T => Future[V])(implicit ec: ExecutionContext): Future[List[V]] = {
+      def go(list: List[List[T]])(acc: List[V]): Future[List[V]] = list match {
+        case head :: next => Future.traverse(head)(f).flatMap(vs => go(next)(acc ++ vs))
+        case Nil          => Future.successful(acc)
+      }
+
+      go(list.grouped(n).toList)(Nil)
+    }
   }
 
 }

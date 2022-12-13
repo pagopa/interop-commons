@@ -4,19 +4,21 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Route
+import cats.syntax.all._
 import com.nimbusds.jose.crypto.{ECDSAVerifier, RSASSAVerifier}
 import com.nimbusds.jose.jwk.JWK
+import com.nimbusds.jose.util.JSONObjectUtils
 import com.nimbusds.jwt.JWTClaimsSet
+import com.typesafe.scalalogging.LoggerTakingImplicit
+import it.pagopa.interop.commons.logging.ContextFieldsToLog
+import it.pagopa.interop.commons.utils.TypeConversions._
+import it.pagopa.interop.commons.utils.errors.GenericComponentErrors._
+import it.pagopa.interop.commons.utils.errors.{AkkaResponses, ServiceCode}
 import it.pagopa.interop.commons.utils._
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.util.Try
-import cats.syntax.all._
 import java.{util => ju}
-import it.pagopa.interop.commons.utils.errors.GenericComponentErrors._
-import it.pagopa.interop.commons.utils.TypeConversions._
-import com.nimbusds.jose.util.JSONObjectUtils
-import it.pagopa.interop.commons.utils.USER_ROLES
+import scala.util.Try
 
 package object jwt {
 
@@ -115,6 +117,24 @@ package object jwt {
     getInteropRoleClaimSafe(claims).fold(roles)(roles + _)
   }
 
+  def authorize(roles: String*)(route: => Route)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): Route =
+    if (hasPermissions(roles: _*)) route
+    else {
+      val logMessage: String = contexts.toMap
+        .get(USER_ROLES)
+        .fold(s"No user roles found to execute this request")(roles =>
+          s"Invalid user roles ($roles) to execute this request"
+        )
+
+      AkkaResponses.forbidden(OperationForbidden, logMessage)
+    }
+
+  // TODO Kept for backward compatibility.
+  //      To be removed as soon as all services have been migrated to the new authorize function
   def authorizeInterop[T](isAuthorized: => Boolean, errorMessage: => T)(
     route: => Route
   )(implicit contexts: Seq[(String, String)], errorMarshaller: ToEntityMarshaller[T]): Route = if (isAuthorized) route
@@ -134,5 +154,4 @@ package object jwt {
     logger.error(s"$header $body")
     complete(StatusCodes.Forbidden, errorMessage)
   }
-
 }

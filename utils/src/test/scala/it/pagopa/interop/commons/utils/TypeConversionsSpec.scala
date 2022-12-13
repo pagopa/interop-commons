@@ -8,7 +8,12 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
+import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
+import org.scalatest.concurrent.PatienceConfiguration
 
 class TypeConversionsSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
@@ -89,6 +94,44 @@ class TypeConversionsSpec extends AnyWordSpecLike with Matchers with ScalaFuture
             .of(2021, 1, 1, 10, 10, 10, 0, ZoneOffset.UTC)
         )
     }
-
   }
+
+  "A future" should {
+    "have limited parallelism if using the correct api" in {
+      val tp: ExecutorService           = Executors.newFixedThreadPool(21)
+      implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(tp)
+      val oneToTwenty: List[Int]        = (1 to 20).toList
+      def blockingFuture: Future[Unit]  = Future(Thread.sleep(1000))
+
+      def allTheLimitedFutures(): Future[List[Unit]] =
+        Future.traverseWithLatch[Int, Unit](10)(oneToTwenty)(_ => blockingFuture)
+
+      def allTheFutures(): Future[List[Unit]] =
+        Future.traverse(oneToTwenty)(_ => blockingFuture)
+
+      assert(!allTheLimitedFutures().isReadyWithin(1000.millis), "The limited future completed too early")
+      assert(allTheLimitedFutures().isReadyWithin(2100.millis), "The limited future completed too slowly")
+      assert(allTheFutures().isReadyWithin(1100.millis))
+      tp.shutdown()
+    }
+
+    "failfast using the new traverse method" in {
+      val tp: ExecutorService                  = Executors.newFixedThreadPool(20)
+      implicit val ec: ExecutionContext        = ExecutionContext.fromExecutor(tp, _ => ())
+      val oneToTwenty: List[Int]               = (1 to 20).toList
+      def blockingFuture(i: Int): Future[Unit] =
+        if (i == 17) Future.failed(new Exception("I'm broken - Pantera")) else Future(Thread.sleep(1000))
+
+      def allTheLimitedFutures(): Future[List[Unit]] =
+        Future.traverseWithLatch[Int, Unit](10)(oneToTwenty)(blockingFuture)
+
+      assert(
+        allTheLimitedFutures().failed
+          .futureValue(PatienceConfiguration.Timeout(2000.millis))
+          .getMessage === "I'm broken - Pantera"
+      )
+      tp.shutdown()
+    }
+  }
+
 }
