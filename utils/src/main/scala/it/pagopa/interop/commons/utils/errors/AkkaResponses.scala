@@ -1,6 +1,6 @@
 package it.pagopa.interop.commons.utils.errors
 
-import akka.http.scaladsl.model.{StatusCode, StatusCodes}
+import akka.http.scaladsl.model.{HttpHeader, StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.StandardRoute
 import cats.implicits.toFunctorFilterOps
@@ -17,6 +17,10 @@ trait AkkaResponses {
   private def completeWithErrors(statusCode: StatusCode, errors: List[ComponentError])(implicit
     serviceCode: ServiceCode
   ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, errors, serviceCode))
+
+  private def completeWithError(statusCode: StatusCode, headers: List[HttpHeader], error: ComponentError)(implicit
+    serviceCode: ServiceCode
+  ): StandardRoute = complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode))
 
   def badRequest(error: ComponentError, logMessage: String)(implicit
     contexts: Seq[(String, String)],
@@ -70,6 +74,15 @@ trait AkkaResponses {
   ): StandardRoute = {
     logger.warn(logMessage, error)
     completeWithError(StatusCodes.Conflict, error)
+  }
+
+  def tooManyRequests(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    logger.warn(logMessage, error)
+    completeWithError(StatusCodes.TooManyRequests, headers, error)
   }
 
   def internalServerError(error: Throwable, errorMessage: String)(implicit
