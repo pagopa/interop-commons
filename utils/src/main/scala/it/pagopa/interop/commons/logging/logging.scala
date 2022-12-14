@@ -43,7 +43,12 @@ package object logging {
     if (config.hasPath("interop-commons.isInternetFacing")) config.getBoolean("interop-commons.isInternetFacing")
     else false
 
-  def withLoggingAttributes(wrappingDirective: Directive1[Seq[(String, String)]]): Directive1[Seq[(String, String)]] =
+  def withLoggingAttributes: Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] =
+    withLoggingAttributesF(isInternetFacing)(_)
+
+  def withLoggingAttributesF(
+    changeUUID: Boolean
+  )(wrappingDirective: Directive1[Seq[(String, String)]]): Directive1[Seq[(String, String)]] =
     for {
       ip            <- extractClientIP
       correlationId <- optionalHeaderValueByName(CORRELATION_ID_HEADER)
@@ -51,7 +56,7 @@ package object logging {
     } yield {
       val ipAddress: String           = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
       def uuid: String                = UUID.randomUUID().toString
-      val actualCorrelationId: String = if (isInternetFacing) uuid else correlationId.getOrElse(uuid)
+      val actualCorrelationId: String = if (changeUUID) uuid else correlationId.getOrElse(uuid)
 
       contexts.prependedAll(List(CORRELATION_ID_HEADER -> actualCorrelationId, IP_ADDRESS -> ipAddress))
     }
