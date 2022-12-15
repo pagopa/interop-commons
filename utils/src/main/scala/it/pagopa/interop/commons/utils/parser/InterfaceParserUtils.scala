@@ -6,20 +6,20 @@ import it.pagopa.interop.commons.utils.errors.Errors
 
 import scala.xml.Elem
 
-trait InterfaceExtractor[A] {
+trait InterfaceParserUtils[A] {
   def getUrls(serviceInterface: A): Either[Throwable, List[String]]
   def getEndpoints(serviceInterface: A): Either[Throwable, List[String]]
 }
 
-object InterfaceExtractor {
+object InterfaceParserUtils {
 
-  def getUrls[A](serviceInterface: A)(implicit ie: InterfaceExtractor[A]): Either[Throwable, List[String]] =
+  def getUrls[A](serviceInterface: A)(implicit ie: InterfaceParserUtils[A]): Either[Throwable, List[String]] =
     ie.getUrls(serviceInterface)
 
-  def getEndpoints[A](serviceInterface: A)(implicit ie: InterfaceExtractor[A]): Either[Throwable, List[String]] =
+  def getEndpoints[A](serviceInterface: A)(implicit ie: InterfaceParserUtils[A]): Either[Throwable, List[String]] =
     ie.getEndpoints(serviceInterface)
 
-  implicit val openApiInterfaceExtractor: InterfaceExtractor[Json] = new InterfaceExtractor[Json] {
+  implicit val openApiInterfaceExtractor: InterfaceParserUtils[Json] = new InterfaceParserUtils[Json] {
     override def getUrls(serviceInterface: Json): Either[Throwable, List[String]] =
       serviceInterface.hcursor.downField("servers").as[List[Json]].flatMap(_.traverse(_.hcursor.get[String]("url")))
 
@@ -28,7 +28,7 @@ object InterfaceExtractor {
     }
   }
 
-  implicit val soapInterfaceExtractor: InterfaceExtractor[Elem] = new InterfaceExtractor[Elem] {
+  implicit val soapInterfaceExtractor: InterfaceParserUtils[Elem] = new InterfaceParserUtils[Elem] {
     override def getUrls(serviceInterface: Elem): Either[Throwable, List[String]] =
       (serviceInterface \\ "definitions" \ "service" \ "port" \ "address").toList.traverse(node =>
         node.attribute("location").map(_.text).toRight(Errors.InterfaceExtractingInfoError)
