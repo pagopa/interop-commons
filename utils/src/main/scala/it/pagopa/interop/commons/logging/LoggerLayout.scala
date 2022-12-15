@@ -30,7 +30,10 @@ final class LoggerLayout extends LayoutBase[ILoggingEvent] {
 
     sbuf.append(s"$time $level [$loggerName] - $header $message")
     sbuf.append(LINE_SEPARATOR)
-    throwableProxy.foreach(x => sbuf.append(s"${cid} ${ThrowableProxyUtil.asString(x)}"))
+    throwableProxy
+      .map(ThrowableProxyUtil.asString)
+      .map(_.split("\n").map(l => s"${cid} $l").mkString("\n"))
+      .foreach(sbuf.append)
     sbuf.toString()
   }
 
