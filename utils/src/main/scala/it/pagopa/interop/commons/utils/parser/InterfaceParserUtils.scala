@@ -1,4 +1,4 @@
-package it.pagopa.interop.commons.utils
+package it.pagopa.interop.commons.utils.parser
 
 import cats.implicits._
 import io.circe.Json
