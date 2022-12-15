@@ -1,4 +1,4 @@
-package it.pagopa.interop.commons.utils.errors
+package it.pagopa.interop.commons.parser.errors
 
 object Errors {
   object InterfaceExtractingInfoError

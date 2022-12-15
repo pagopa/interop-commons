@@ -141,6 +141,7 @@ object Dependencies {
   }
 
   object Jars {
+
     lazy val utilsDependencies: Seq[ModuleID] =
       Seq(
         akka.http                  % Compile,
@@ -148,9 +149,6 @@ object Dependencies {
         akka.httpJson              % Compile,
         akka.httpJson4s            % Compile,
         akka.stream                % Compile,
-        circe.core                 % Compile,
-        circe.parser               % Compile,
-        circe.yaml                 % Compile,
         spray.spray                % Compile,
         typesafe.config            % Compile,
         cats.core                  % Compile,
@@ -159,7 +157,6 @@ object Dependencies {
         logback.classic            % Compile,
         atlassian.swaggerValidator % Compile,
         lightbend.logging          % Compile,
-        scala.xml                  % Compile,
         akka.httpTestkit           % Test,
         akka.streamTestkit         % Test
       )
@@ -225,6 +222,9 @@ object Dependencies {
         akka.httpTestkit   % Test,
         akka.streamTestkit % Test
       )
+
+    lazy val parserDependencies: Seq[ModuleID] =
+      Seq(cats.core % Compile, circe.core % Compile, circe.parser % Compile, circe.yaml % Compile, scala.xml % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] =
       Seq(logback.classic % Runtime, scalatest.core % Test)

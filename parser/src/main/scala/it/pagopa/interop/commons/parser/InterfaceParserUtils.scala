@@ -1,8 +1,8 @@
-package it.pagopa.interop.commons.utils.parser
+package it.pagopa.interop.commons.parser
 
-import cats.implicits._
+import cats.implicits.toTraverseOps
 import io.circe.Json
-import it.pagopa.interop.commons.utils.errors.Errors
+import it.pagopa.interop.commons.parser.errors.Errors
 
 import scala.xml.Elem
 

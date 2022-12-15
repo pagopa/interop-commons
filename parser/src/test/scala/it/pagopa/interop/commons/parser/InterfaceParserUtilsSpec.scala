@@ -1,8 +1,6 @@
-package it.pagopa.interop.commons.utils
+package it.pagopa.interop.commons.parser
 
 import io.circe.Json
-import it.pagopa.interop.commons.utils.parser.{InterfaceParserUtils, InterfaceParser}
-import it.pagopa.interop.commons.utils.parser.InterfaceParserUtils._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -17,7 +15,7 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
       val parsed: Either[Throwable, Json]         = InterfaceParser.parseOpenApi(bytes)
       val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Json])
 
-      result shouldBe Right(List("http://petstore.swagger.io/api"))
+      result shouldBe Right(List("http://petstore.swagger.io/api/v1", "http://petstore.swagger.io/api/v2"))
     }
 
     "extract urls from an Openapi YAML correctly" in {
@@ -25,7 +23,7 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
       val parsed: Either[Throwable, Json]         = InterfaceParser.parseOpenApi(bytes)
       val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Json])
 
-      result shouldBe Right(List("http://petstore.swagger.io/api"))
+      result shouldBe Right(List("http://petstore.swagger.io/api/v1", "http://petstore.swagger.io/api/v2"))
     }
 
     "extract urls from a WSDL correctly" in {

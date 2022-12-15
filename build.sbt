@@ -5,9 +5,6 @@ ThisBuild / organization      := "it.pagopa"
 ThisBuild / organizationName  := "Pagopa S.p.A."
 ThisBuild / version           := ComputeVersion.version
 Global / onChangedBuildSource := ReloadOnSourceChanges
-ThisBuild / githubOwner       := "pagopa"
-ThisBuild / githubRepository  := "interop-commons"
-ThisBuild / resolvers += Resolver.githubPackages("pagopa")
 
 val fileManagerModuleName = "file-manager"
 val mailManagerModuleName = "mail-manager"
@@ -17,6 +14,7 @@ val utilsModuleName       = "utils"
 val queueModuleName       = "queue-manager"
 val cqrsModuleName        = "cqrs"
 val rateLimiterModuleName = "rate-limiter"
+val parserModuleName      = "parser"
 
 cleanFiles += baseDirectory.value / cqrsModuleName / "target"
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
@@ -26,17 +24,25 @@ cleanFiles += baseDirectory.value / rateLimiterModuleName / "target"
 cleanFiles += baseDirectory.value / signerModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
+cleanFiles += baseDirectory.value / parserModuleName / "target"
 
-lazy val sharedSettings: SettingsDefinition =
-  Seq(scalafmtOnCompile := true, libraryDependencies ++= Dependencies.Jars.commonDependencies)
+lazy val sharedSettings: SettingsDefinition = Seq(
+  scalafmtOnCompile := true,
+  libraryDependencies ++= Dependencies.Jars.commonDependencies,
+  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+  publishTo         := {
+    val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
+    if (isSnapshot.value) Some("snapshots" at nexus + "maven-snapshots/")
+    else Some("releases" at nexus + "maven-releases/")
+  }
+)
 
 lazy val utils = project
   .in(file(utilsModuleName))
   .settings(
-    name                     := "interop-commons-utils",
+    name := "interop-commons-utils",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.utilsDependencies,
-    Test / parallelExecution := false
+    libraryDependencies ++= Dependencies.Jars.utilsDependencies
   )
   .setupBuildInfo
 
@@ -109,7 +115,15 @@ lazy val rateLimiter = project
   .dependsOn(utils)
   .setupBuildInfo
 
+lazy val parser = project
+  .in(file(parserModuleName))
+  .settings(
+    name := "interop-commons-parser",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.parserDependencies
+  )
+  .setupBuildInfo
+
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs)
-  .settings(name := "interop-commons")
-  .enablePlugins(NoPublishPlugin)
+  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs, parser)
+  .settings(name := "interop-commons", publish / skip := true, publishLocal / skip := true)

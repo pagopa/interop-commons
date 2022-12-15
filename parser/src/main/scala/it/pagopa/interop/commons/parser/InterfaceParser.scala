@@ -1,13 +1,14 @@
-package it.pagopa.interop.commons.utils.parser
+package it.pagopa.interop.commons.parser
 
 import io.circe.Json
 
 import java.nio.charset.StandardCharsets
 import scala.util.Try
-import scala.xml.Elem
-import scala.xml.XML.loadString
 import io.circe.jawn.{parse => parseJson}
 import io.circe.yaml.parser.{parse => parseYaml}
+
+import scala.xml.Elem
+import scala.xml.XML.loadString
 
 object InterfaceParser {
 
