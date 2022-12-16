@@ -20,7 +20,7 @@ class InterfaceParserSpec extends AnyWordSpecLike with Matchers {
 
     "parse a WSDL correctly" in {
       val bytes: Array[Byte] = Source.fromResource("api.wsdl").getLines().mkString("\n").getBytes
-      InterfaceParser.parseSoap(bytes).isRight shouldBe true
+      InterfaceParser.parseWSDL(bytes).isRight shouldBe true
     }
   }
 }

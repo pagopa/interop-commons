@@ -13,11 +13,11 @@ trait InterfaceParserUtils[A] {
 
 object InterfaceParserUtils {
 
-  def getUrls[A](serviceInterface: A)(implicit ie: InterfaceParserUtils[A]): Either[Throwable, List[String]] =
-    ie.getUrls(serviceInterface)
+  def getUrls[A: InterfaceParserUtils](serviceInterface: A): Either[Throwable, List[String]] =
+    implicitly[InterfaceParserUtils[A]].getUrls(serviceInterface)
 
-  def getEndpoints[A](serviceInterface: A)(implicit ie: InterfaceParserUtils[A]): Either[Throwable, List[String]] =
-    ie.getEndpoints(serviceInterface)
+  def getEndpoints[A: InterfaceParserUtils](serviceInterface: A): Either[Throwable, List[String]] =
+    implicitly[InterfaceParserUtils[A]].getEndpoints(serviceInterface)
 
   implicit val openApiInterfaceExtractor: InterfaceParserUtils[Json] = new InterfaceParserUtils[Json] {
     override def getUrls(serviceInterface: Json): Either[Throwable, List[String]] =

@@ -2,5 +2,5 @@ package it.pagopa.interop.commons.parser.errors
 
 object Errors {
   object InterfaceExtractingInfoError
-      extends Throwable(s"Error trying to extract some information from interface document")
+      extends Exception(s"Error trying to extract some information from interface document")
 }

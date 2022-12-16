@@ -28,7 +28,7 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
 
     "extract urls from a WSDL correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api.wsdl").getLines().mkString("\n").getBytes
-      val parsed: Either[Throwable, Elem] = InterfaceParser.parseSoap(bytes)
+      val parsed: Either[Throwable, Elem] = InterfaceParser.parseWSDL(bytes)
 
       val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Elem])
 
@@ -53,7 +53,7 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
 
     "extract endpoints from a WSDL correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api.wsdl").getLines().mkString("\n").getBytes
-      val parsed: Either[Throwable, Elem] = InterfaceParser.parseSoap(bytes)
+      val parsed: Either[Throwable, Elem] = InterfaceParser.parseWSDL(bytes)
 
       val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getEndpoints[Elem])
 

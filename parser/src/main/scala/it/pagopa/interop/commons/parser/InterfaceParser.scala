@@ -17,7 +17,7 @@ object InterfaceParser {
     parseYaml(txt) orElse parseJson(txt)
   }
 
-  def parseSoap(bytes: Array[Byte]): Either[Throwable, Elem] = {
+  def parseWSDL(bytes: Array[Byte]): Either[Throwable, Elem] = {
     val txt: String = new String(bytes, StandardCharsets.UTF_8)
     Try(loadString(txt)).toEither
   }
