@@ -22,5 +22,10 @@ class InterfaceParserSpec extends AnyWordSpecLike with Matchers {
       val bytes: Array[Byte] = Source.fromResource("api.wsdl").getLines().mkString("\n").getBytes
       InterfaceParser.parseWSDL(bytes).isRight shouldBe true
     }
+
+    "parse a WSDL with BOM char correctly" in {
+      val bytes: Array[Byte] = Source.fromResource("api_with_BOM.wsdl").getLines().mkString("\n").getBytes
+      InterfaceParser.parseWSDL(bytes).isRight shouldBe true
+    }
   }
 }
