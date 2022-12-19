@@ -8,13 +8,25 @@ object Dependencies {
     lazy val classic   = namespace % "logback-classic" % logbackVersion
   }
 
+  private[this] object circe {
+    lazy val namespace = "io.circe"
+    lazy val yaml      = namespace %% "circe-yaml"   % circeVersion
+    lazy val core      = namespace %% "circe-core"   % circeVersion
+    lazy val parser    = namespace %% "circe-parser" % circeVersion
+  }
+
   private[this] object commons {
     lazy val fileUpload = "commons-fileupload" % "commons-fileupload" % commonsFileUploadVersion
   }
 
   private[this] object apacheCommons {
-    lazy val namespace = "org.apache.commons"
-    lazy val text      = namespace % "commons-text" % apacheCommonsTextVersion
+    lazy val text  = "org.apache.commons" % "commons-text"  % apacheCommonsTextVersion
+    lazy val codec = "commons-codec"      % "commons-codec" % apacheCommonsCodecVersion
+  }
+
+  private[this] object scala {
+    lazy val namespace = "org.scala-lang.modules"
+    lazy val xml       = namespace %% "scala-xml" % scalaXMLVersion
   }
 
   private[this] object scalatest {
@@ -129,6 +141,7 @@ object Dependencies {
   }
 
   object Jars {
+
     lazy val utilsDependencies: Seq[ModuleID] =
       Seq(
         akka.http                  % Compile,
@@ -140,6 +153,7 @@ object Dependencies {
         typesafe.config            % Compile,
         cats.core                  % Compile,
         apacheCommons.text         % Compile,
+        apacheCommons.codec        % Compile,
         logback.classic            % Compile,
         atlassian.swaggerValidator % Compile,
         lightbend.logging          % Compile,
@@ -208,6 +222,9 @@ object Dependencies {
         akka.httpTestkit   % Test,
         akka.streamTestkit % Test
       )
+
+    lazy val parserDependencies: Seq[ModuleID] =
+      Seq(cats.core % Compile, circe.core % Compile, circe.parser % Compile, circe.yaml % Compile, scala.xml % Compile)
 
     lazy val commonDependencies: Seq[ModuleID] =
       Seq(logback.classic % Runtime, scalatest.core % Test)
