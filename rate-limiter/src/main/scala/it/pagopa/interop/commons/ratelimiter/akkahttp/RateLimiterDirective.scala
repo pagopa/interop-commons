@@ -1,8 +1,5 @@
 package it.pagopa.interop.commons.ratelimiter.akkahttp
 
-import cats.syntax.all._
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.{mapResponseHeaders, onComplete, provide}
 import akka.http.scaladsl.server.directives.RouteDirectives._
@@ -20,26 +17,23 @@ import it.pagopa.interop.commons.ratelimiter.model.Headers.{
 import it.pagopa.interop.commons.ratelimiter.model.{Headers, RateLimitStatus}
 import it.pagopa.interop.commons.utils.AkkaUtils._
 import it.pagopa.interop.commons.utils.ORGANIZATION_ID_CLAIM
+import it.pagopa.interop.commons.utils.errors.AkkaResponses.tooManyRequests
+import it.pagopa.interop.commons.utils.errors.{GenericComponentErrors, ServiceCode}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 object RateLimiterDirective {
 
-  def rateLimiterDirective[T](rateLimiter: RateLimiter, tooManyRequestsProblem: T)(
-    contexts: Seq[(String, String)]
-  )(implicit
+  def rateLimiterDirective(rateLimiter: RateLimiter)(contexts: Seq[(String, String)])(implicit
     ec: ExecutionContext,
-    toEntityMarshallerProblem: ToEntityMarshaller[T],
+    serviceCode: ServiceCode,
     logger: LoggerTakingImplicit[ContextFieldsToLog]
-  ): Directive1[Seq[(String, String)]] =
-    rateLimit(rateLimiter, tooManyRequestsProblem)(contexts).flatMap(addHeaders)
+  ): Directive1[Seq[(String, String)]] = rateLimit(rateLimiter)(contexts).flatMap(addHeaders)
 
-  private def rateLimit[T](rateLimiter: RateLimiter, tooManyRequestsProblem: T)(
-    contexts: Seq[(String, String)]
-  )(implicit
+  private def rateLimit(rateLimiter: RateLimiter)(contexts: Seq[(String, String)])(implicit
     ec: ExecutionContext,
-    toEntityMarshallerProblem: ToEntityMarshaller[T],
+    serviceCode: ServiceCode,
     logger: LoggerTakingImplicit[ContextFieldsToLog]
   ): Directive1[Seq[(String, String)]] =
     getOrganizationIdUUID(contexts) match {
@@ -48,7 +42,11 @@ object RateLimiterDirective {
         onComplete(rateLimiter.rateLimiting(orgId)).flatMap {
           case Success(status)               => provide(contexts ++ statusToContext(status))
           case Failure(tmr: TooManyRequests) =>
-            complete(StatusCodes.TooManyRequests, Headers.headersFromStatus(tmr.status), tooManyRequestsProblem)
+            tooManyRequests(
+              GenericComponentErrors.TooManyRequests,
+              s"Requests limit exceeded for organization $orgId",
+              Headers.headersFromStatus(tmr.status)
+            )
           // Never interrupt execution in case of unexpected rate limiting failure
           case Failure(err)                  =>
             logger.error(s"Unexpected error during rate limiting for organization $orgId", err)
