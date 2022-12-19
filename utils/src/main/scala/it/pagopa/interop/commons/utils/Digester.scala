@@ -1,33 +1,29 @@
 package it.pagopa.interop.commons.utils
 
+import org.apache.commons.codec.digest.DigestUtils
+
 import java.io.File
 import java.nio.file.Files
-import java.security.{DigestInputStream, MessageDigest}
-import scala.annotation.tailrec
 
-/** Returns file hash codes
-  */
+trait Digester[A] {
+  def toSha256(value: A): String
+  def toMD5(value: A): String
+}
+
 object Digester {
+  def toSha256[A: Digester](value: A): String = implicitly[Digester[A]].toSha256(value)
 
-  /** Returns an hash code digest of the file for the specified algorithm
-    * @param file file to digest
-    * @param algorithm algorithm to apply
-    * @return digested file as string
-    */
-  def createHash(file: File, algorithm: String): String = {
-    val md  = MessageDigest.getInstance(algorithm)
-    val dis = new DigestInputStream(Files.newInputStream(file.toPath), md)
-    loop(dis.available > 0, { val _ = dis.read }, { dis.close() })
-    md.digest.map(b => String.format("%02x", Byte.box(b))).mkString
+  def toMD5[A: Digester](value: A): String = implicitly[Digester[A]].toMD5(value)
+
+  implicit val fileDigester: Digester[File] = new Digester[File] {
+    override def toSha256(value: File): String = DigestUtils.sha256Hex(Files.readAllBytes(value.toPath))
+
+    override def toMD5(value: File): String = DigestUtils.md5Hex(Files.readAllBytes(value.toPath))
   }
 
-  def createMD5Hash(file: File): String = createHash(file, "MD5")
+  implicit val bytesDigester: Digester[Array[Byte]] = new Digester[Array[Byte]] {
+    override def toSha256(value: Array[Byte]): String = DigestUtils.sha256Hex(value)
 
-  @tailrec
-  private def loop(cond: => Boolean, block: => Unit, closing: => Unit): Unit =
-    if (cond) {
-      block
-      loop(cond, block, closing)
-    } else closing
-
+    override def toMD5(value: Array[Byte]): String = DigestUtils.md5Hex(value)
+  }
 }

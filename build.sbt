@@ -17,6 +17,7 @@ val utilsModuleName       = "utils"
 val queueModuleName       = "queue-manager"
 val cqrsModuleName        = "cqrs"
 val rateLimiterModuleName = "rate-limiter"
+val parserModuleName      = "parser"
 
 cleanFiles += baseDirectory.value / cqrsModuleName / "target"
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
@@ -26,6 +27,7 @@ cleanFiles += baseDirectory.value / rateLimiterModuleName / "target"
 cleanFiles += baseDirectory.value / signerModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
+cleanFiles += baseDirectory.value / parserModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition =
   Seq(scalafmtOnCompile := true, libraryDependencies ++= Dependencies.Jars.commonDependencies)
@@ -109,7 +111,16 @@ lazy val rateLimiter = project
   .dependsOn(utils)
   .setupBuildInfo
 
+lazy val parser = project
+  .in(file(parserModuleName))
+  .settings(
+    name := "interop-commons-parser",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.parserDependencies
+  )
+  .setupBuildInfo
+
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs)
+  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs, parser)
   .settings(name := "interop-commons")
   .enablePlugins(NoPublishPlugin)
