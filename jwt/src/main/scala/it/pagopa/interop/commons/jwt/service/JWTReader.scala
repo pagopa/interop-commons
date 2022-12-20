@@ -3,7 +3,7 @@ package it.pagopa.interop.commons.jwt.service
 import cats.syntax.all._
 import akka.http.scaladsl.model.headers.HttpChallenge
 import akka.http.scaladsl.server.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
-import akka.http.scaladsl.server.Directives.{extractUri, optionalHeaderValueByName, provide, reject}
+import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, provide, reject, extractRequest}
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
 import it.pagopa.interop.commons.jwt.getUserRoles
@@ -25,9 +25,33 @@ trait JWTReader {
 
   def OAuth2JWTValidatorAsContexts(implicit
     logger: LoggerTakingImplicit[ContextFieldsToLog]
-  ): Directive1[Seq[(String, String)]] = authenticationDirective(bearerAsContexts)
+  ): Directive1[Seq[(String, String)]] = for {
+    req       <- extractRequest
+    ctx       <- optionalHeaderValueByName(CORRELATION_ID_HEADER).map(
+      _.fold(Seq.empty[(String, String)])(cid => Seq(CORRELATION_ID_HEADER -> cid))
+    )
+    maybeAuth <- optionalHeaderValueByName("Authorization").map(_.map(_.split(" ").toList))
+    res       <- maybeAuth match {
+      case Some("Bearer" :: payload :: Nil) =>
+        bearerAsContexts(payload) match {
+          case Success(x)  => provide(x)
+          case Failure(ex) =>
+            logger.warn(s"Invalid authentication provided - ${ex.getMessage}")(ctx)
+            reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
+              .toDirective[Tuple1[Seq[(String, String)]]]
+        }
+      case Some(_)                          =>
+        logger.warn(s"No authentication has been provided for this call ${req.method.value} ${req.uri}")(ctx)
+        reject(MalformedHeaderRejection("Authorization", "Illegal header key."))
+          .toDirective[Tuple1[Seq[(String, String)]]]
+      case None                             =>
+        logger.warn(s"No authentication has been provided for this call ${req.method.value} ${req.uri}")(ctx)
+        reject(AuthenticationFailedRejection(CredentialsMissing, HttpChallenge("Bearer", None)))
+          .toDirective[Tuple1[Seq[(String, String)]]]
+    }
+  } yield res
 
-  private def bearerAsContexts(bearer: String): Try[List[(String, String)]] = for {
+  private def bearerAsContexts(bearer: String): Try[Seq[(String, String)]] = for {
     claims         <- getClaims(bearer)
     uid            <- Try(Option(claims.getStringClaim(UID)).getOrElse(""))
     sub            <- Try(Option(claims.getSubject).getOrElse(""))
@@ -38,45 +62,4 @@ trait JWTReader {
     List(BEARER -> bearer, UID -> uid, SUB -> sub, USER_ROLES -> userRoles) ++ orgId
   }
 
-  private def authenticationDirective[T](
-    validation: String => Try[T]
-  )(implicit logger: LoggerTakingImplicit[ContextFieldsToLog]): Directive1[T] = {
-    // for {
-    //   uri       <- extractUri
-    //   maybeCid  <- optionalHeaderValueByName(CORRELATION_ID_HEADER)
-    //   maybeAuth <- optionalHeaderValueByName("Authorization")
-    // } yield {
-    //   implicit val cftl: ContextFieldsToLog = maybeCid.fold(List.empty)(cid => ("cid" -> cid) :: Nil)
-    //   maybeAuth.fold {
-    //     logger.warn("No authentication has been provided for this call")
-    //     reject(AuthenticationFailedRejection(CredentialsMissing, HttpChallenge("Bearer", None)))
-    //   }
-    // }
-
-    extractUri.flatMap { _ =>
-      optionalHeaderValueByName(CORRELATION_ID_HEADER).flatMap { maybeCid =>
-        implicit val cftl: ContextFieldsToLog = maybeCid.fold(List.empty[(String, String)])(cid => List("cid" -> cid))
-        optionalHeaderValueByName("Authorization").flatMap {
-          case Some(header) =>
-            header.split(" ").toList match {
-              case "Bearer" :: payload :: Nil =>
-                validation.andThen(authenticationDirective)(payload)
-              case _                          =>
-                logger.warn(s"No authentication has been provided for this call")
-                reject(MalformedHeaderRejection("Authorization", "Illegal header key."))
-            }
-          case None         =>
-            logger.warn(s"No authentication has been provided for this call")
-            reject(AuthenticationFailedRejection(CredentialsMissing, HttpChallenge("Bearer", None)))
-        }
-      }
-    }
-  }
-
-  private def authenticationDirective[T]: Try[T] => Directive1[T] = {
-    case Success(result) => provide(result)
-    case Failure(_)      =>
-      // logger.warn(s"Invalid authentication provided - ${ex.getMessage}")
-      reject(AuthenticationFailedRejection(CredentialsRejected, HttpChallenge("Bearer", None)))
-  }
 }

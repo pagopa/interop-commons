@@ -65,7 +65,7 @@ package object logging {
     enabled: Boolean
   )(implicit logger: LoggerTakingImplicit[ContextFieldsToLog], contexts: ContextFieldsToLog): Directive0 =
     if (!enabled) Directive.Empty
-    else {
+    else
       extractRequest.flatMap { req: HttpRequest =>
         val header: String = s"Request ${req.method.value} ${req.uri} - Response"
         mapRouteResult {
@@ -73,7 +73,6 @@ package object logging {
           case x @ RouteResult.Rejected(rej) => logger.info(s"$header ${rej}"); x
         }
       }
-    }
 
   def renderBuildInfo(buildInfo: BuildInfo.type): String = buildInfo.toMap
     .collect {
