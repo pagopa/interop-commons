@@ -55,10 +55,10 @@ trait JWTReader {
     claims         <- getClaims(bearer)
     uid            <- Try(Option(claims.getStringClaim(UID)).getOrElse(""))
     sub            <- Try(Option(claims.getSubject).getOrElse(""))
-    organizationId <- Try(claims.getStringClaim(ORGANIZATION_ID_CLAIM))
+    maybeOrganizationId <- Try(Option(claims.getStringClaim(ORGANIZATION_ID_CLAIM)))
     userRoles = getUserRoles(claims).mkString(",")
   } yield {
-    val orgId: List[(String, String)] = Option(organizationId).map(ORGANIZATION_ID_CLAIM -> _).toList
+    val orgId: List[(String, String)] = maybeOrganizationId.map(ORGANIZATION_ID_CLAIM -> _).toList
     List(BEARER -> bearer, UID -> uid, SUB -> sub, USER_ROLES -> userRoles) ++ orgId
   }
 
