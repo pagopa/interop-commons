@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
-trait OpenapiUtils {
+object OpenapiUtils {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
@@ -40,5 +40,3 @@ trait OpenapiUtils {
 
   }
 }
-
-object OpenapiUtils extends OpenapiUtils
