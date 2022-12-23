@@ -52,9 +52,9 @@ trait JWTReader {
   } yield res
 
   private def bearerAsContexts(bearer: String): Try[Seq[(String, String)]] = for {
-    claims         <- getClaims(bearer)
-    uid            <- Try(Option(claims.getStringClaim(UID)).getOrElse(""))
-    sub            <- Try(Option(claims.getSubject).getOrElse(""))
+    claims              <- getClaims(bearer)
+    uid                 <- Try(Option(claims.getStringClaim(UID)).getOrElse(""))
+    sub                 <- Try(Option(claims.getSubject).getOrElse(""))
     maybeOrganizationId <- Try(Option(claims.getStringClaim(ORGANIZATION_ID_CLAIM)))
     userRoles = getUserRoles(claims).mkString(",")
   } yield {
