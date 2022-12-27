@@ -29,7 +29,7 @@ class AkkResponsesSpec extends AnyWordSpecLike with Matchers with ScalatestRoute
     `type` = Problem.defaultProblemType,
     status = statusCode.intValue(),
     title = statusCode.defaultMessage(),
-    requestId = Some(correlationId),
+    correlationId = Some(correlationId),
     detail = None,
     errors = Seq(ProblemError(code = s"${serviceCode.code}-${error.code}", detail = error.msg))
   )

@@ -9,7 +9,7 @@ final case class Problem(
   `type`: String,
   status: Int,
   title: String,
-  requestId: Option[String],
+  correlationId: Option[String],
   detail: Option[String] = None,
   errors: Seq[ProblemError]
 )
@@ -31,7 +31,7 @@ object Problem extends SprayJsonSupport with DefaultJsonProtocol {
       `type` = defaultProblemType,
       status = httpError.intValue,
       title = httpError.defaultMessage,
-      requestId = correlationId,
+      correlationId = correlationId,
       errors = Seq(
         ProblemError(
           code = s"${serviceCode.code}-${error.code}",
@@ -50,7 +50,7 @@ object Problem extends SprayJsonSupport with DefaultJsonProtocol {
       `type` = defaultProblemType,
       status = httpError.intValue,
       title = httpError.defaultMessage,
-      requestId = correlationId,
+      correlationId = correlationId,
       errors = errors.map(error =>
         ProblemError(
           code = s"${serviceCode.code}-${error.code}",
