@@ -6,21 +6,29 @@ import akka.http.scaladsl.server.StandardRoute
 import cats.implicits.toFunctorFilterOps
 import com.typesafe.scalalogging.LoggerTakingImplicit
 import it.pagopa.interop.commons.logging.ContextFieldsToLog
+import it.pagopa.interop.commons.utils.CORRELATION_ID_HEADER
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.GenericError
 
 trait AkkaResponses {
 
   private def completeWithError(statusCode: StatusCode, error: ComponentError)(implicit
+    contexts: Seq[(String, String)],
     serviceCode: ServiceCode
-  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, error, serviceCode))
+  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
 
   private def completeWithErrors(statusCode: StatusCode, errors: List[ComponentError])(implicit
+    contexts: Seq[(String, String)],
     serviceCode: ServiceCode
-  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, errors, serviceCode))
+  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
 
   private def completeWithError(statusCode: StatusCode, headers: List[HttpHeader], error: ComponentError)(implicit
+    contexts: Seq[(String, String)],
     serviceCode: ServiceCode
-  ): StandardRoute = complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode))
+  ): StandardRoute =
+    complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
+
+  @inline private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =
+    contexts.collectFirst { case (k, v) if k == CORRELATION_ID_HEADER => v }
 
   def badRequest(error: ComponentError, logMessage: String)(implicit
     contexts: Seq[(String, String)],
@@ -91,8 +99,7 @@ trait AkkaResponses {
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.error(errorMessage, error)
-    val statusCode = StatusCodes.InternalServerError
-    complete(statusCode.intValue, Problem(statusCode, GenericError(errorMessage), serviceCode))
+    completeWithError(StatusCodes.InternalServerError, GenericError(errorMessage))
   }
 }
 

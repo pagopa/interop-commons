@@ -9,8 +9,8 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import it.pagopa.interop.commons.ratelimiter.akkahttp.Errors.MissingOrganizationIdClaim
 import it.pagopa.interop.commons.ratelimiter.akkahttp.RateLimiterDirective._
 import it.pagopa.interop.commons.ratelimiter.model.RateLimitStatus
-import it.pagopa.interop.commons.utils.ORGANIZATION_ID_CLAIM
 import it.pagopa.interop.commons.utils.errors.{GenericComponentErrors, Problem, ServiceCode}
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, ORGANIZATION_ID_CLAIM}
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json.DefaultJsonProtocol._
@@ -21,7 +21,9 @@ class RateLimiterDirectiveSpec extends AnyWordSpecLike with SpecHelper with Spra
 
   implicit val serviceCode: ServiceCode   = ServiceCode("xxx")
   val organizationId: UUID                = UUID.randomUUID()
-  val validContext: Seq[(String, String)] = Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString)
+  val correlationId                       = "some-correlation-id"
+  val validContext: Seq[(String, String)] =
+    Seq(ORGANIZATION_ID_CLAIM -> organizationId.toString, CORRELATION_ID_HEADER -> correlationId)
 
   "Rate Limiter Directive" should {
     "allow request under rate limit" in {
@@ -64,7 +66,8 @@ class RateLimiterDirectiveSpec extends AnyWordSpecLike with SpecHelper with Spra
         responseAs[Problem] shouldBe Problem(
           StatusCodes.TooManyRequests,
           GenericComponentErrors.TooManyRequests,
-          serviceCode
+          serviceCode,
+          Some(correlationId)
         )
         headers should contain allElementsOf expectedHeaders
       }
