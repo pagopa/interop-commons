@@ -27,7 +27,7 @@ trait AkkaResponses {
   ): StandardRoute =
     complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
 
-  private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =
+  @inline private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =
     contexts.collectFirst { case (k, v) if k == CORRELATION_ID_HEADER => v }
 
   def badRequest(error: ComponentError, logMessage: String)(implicit
