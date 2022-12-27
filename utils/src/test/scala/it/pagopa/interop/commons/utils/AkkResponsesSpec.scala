@@ -25,33 +25,13 @@ class AkkResponsesSpec extends AnyWordSpecLike with Matchers with ScalatestRoute
   implicit val logger: LoggerTakingImplicit[ContextFieldsToLog] =
     Logger.takingImplicit[ContextFieldsToLog](this.getClass)
 
-  def problem(statusCode: StatusCode, error: ComponentError): Problem = Problem(
-    `type` = Problem.defaultProblemType,
-    status = statusCode.intValue(),
-    title = statusCode.defaultMessage(),
-    correlationId = Some(correlationId),
-    detail = None,
-    errors = Seq(ProblemError(code = s"${serviceCode.code}-${error.code}", detail = error.msg))
-  )
-
-//  def verifyResponse(expectedStatusCode: StatusCode): Assertion = {
-//    status shouldEqual expectedStatusCode
-//    responseAs[Problem] shouldEqual problem(expectedStatusCode, error)
-//  }
-
-  def verifyResponse(expectedStatusCode: StatusCode): RouteTestResult => Assertion =
-    check {
-      status shouldEqual expectedStatusCode
-      responseAs[Problem] shouldEqual problem(expectedStatusCode, error)
-    }
-
   "Expected error response" should {
     "be returned in case of Bad Request (single error)" in {
-      Get() ~> badRequest(error, logMessage) ~> verifyResponse(StatusCodes.BadRequest)
+      Get() ~> badRequest(error, logMessage) ~> check(verifyResponse(StatusCodes.BadRequest))
     }
 
     "be returned in case of Bad Request (multiple errors)" in {
-      val otherError                   = NewComponentError("Another error message")
+      val otherError: ComponentError   = NewComponentError("Another error message")
       val errors: List[ComponentError] = List(error, otherError)
 
       Get() ~> badRequest(errors, logMessage) ~> check {
@@ -61,47 +41,61 @@ class AkkResponsesSpec extends AnyWordSpecLike with Matchers with ScalatestRoute
           baseProblem.errors :+ ProblemError(code = s"${serviceCode.code}-${otherError.code}", detail = otherError.msg)
         )
 
-        status shouldEqual expectedStatus
-        responseAs[Problem] shouldEqual expectedProblem
+        verifyResponse(expectedStatus, expectedProblem)
       }
     }
 
     "be returned in case of Unauthorized" in {
-      Get() ~> unauthorized(error, logMessage) ~> verifyResponse(StatusCodes.Unauthorized)
+      Get() ~> unauthorized(error, logMessage) ~> check(verifyResponse(StatusCodes.Unauthorized))
     }
 
     "be returned in case of Forbidden" in {
-      Get() ~> forbidden(error, logMessage) ~> verifyResponse(StatusCodes.Forbidden)
+      Get() ~> forbidden(error, logMessage) ~> check(verifyResponse(StatusCodes.Forbidden))
     }
 
     "be returned in case of Not Found" in {
-      Get() ~> notFound(error, logMessage) ~> verifyResponse(StatusCodes.NotFound)
+      Get() ~> notFound(error, logMessage) ~> check(verifyResponse(StatusCodes.NotFound))
     }
 
     "be returned in case of Conflict" in {
-      Get() ~> conflict(error, logMessage) ~> verifyResponse(StatusCodes.Conflict)
+      Get() ~> conflict(error, logMessage) ~> check(verifyResponse(StatusCodes.Conflict))
     }
 
     "be returned in case of Too Many Requests" in {
       val expectedHeaders = List[HttpHeader](RawHeader("header-1", "value-1"), RawHeader("header-2", "value-2"))
       Get() ~> tooManyRequests(error, logMessage, expectedHeaders) ~> check {
-        val expectedStatusCode = StatusCodes.TooManyRequests
-        status shouldEqual expectedStatusCode
-        responseAs[Problem] shouldEqual problem(expectedStatusCode, error)
+        verifyResponse(StatusCodes.TooManyRequests)
         headers should contain allElementsOf expectedHeaders
       }
     }
 
     "be returned in case of Internal Server Error" in {
-      val exception              = new Throwable("An unexpected exception")
-      val expectedComponentError = GenericError(logMessage)
-      val expectedProblemError   =
+      val exception: Throwable                 = new Throwable("An unexpected exception")
+      val expectedStatusCode                   = StatusCodes.InternalServerError
+      val expectedComponentError: GenericError = GenericError(logMessage)
+      val expectedProblemError: ProblemError   =
         ProblemError(code = s"${serviceCode.code}-${expectedComponentError.code}", detail = expectedComponentError.msg)
-      Get() ~> internalServerError(exception, logMessage) ~> check {
-        val expectedStatusCode = StatusCodes.InternalServerError
-        status shouldEqual expectedStatusCode
-        responseAs[Problem] shouldEqual problem(expectedStatusCode, error).copy(errors = Seq(expectedProblemError))
-      }
+      val expectedProblem = problem(expectedStatusCode, error).copy(errors = Seq(expectedProblemError))
+
+      Get() ~> internalServerError(exception, logMessage) ~> check(verifyResponse(expectedStatusCode, expectedProblem))
     }
   }
+
+  def problem(statusCode: StatusCode, error: ComponentError): Problem = Problem(
+    `type` = Problem.defaultProblemType,
+    status = statusCode.intValue(),
+    title = statusCode.defaultMessage(),
+    correlationId = Some(correlationId),
+    detail = None,
+    errors = Seq(ProblemError(code = s"${serviceCode.code}-${error.code}", detail = error.msg))
+  )
+
+  def verifyResponse(expectedStatusCode: StatusCode, problem: Problem): Assertion = {
+    status shouldEqual expectedStatusCode
+    responseAs[Problem] shouldEqual problem
+  }
+
+  def verifyResponse(expectedStatusCode: StatusCode): Assertion =
+    verifyResponse(expectedStatusCode, problem(expectedStatusCode, error))
+
 }
