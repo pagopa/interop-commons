@@ -32,7 +32,7 @@ final class LoggerLayout extends LayoutBase[ILoggingEvent] {
     sbuf.append(LINE_SEPARATOR)
     throwableProxy
       .map(ThrowableProxyUtil.asString)
-      .map(_.split("\n").map(l => s"${cid} $l").mkString("\n"))
+      .map(_.split("\n").map(l => s"${cid} $l").mkString("", "\n", "\n"))
       .foreach(sbuf.append)
     sbuf.toString()
   }
