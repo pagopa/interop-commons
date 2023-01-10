@@ -13,7 +13,7 @@ import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class ReadModelService(dbConfig: ReadModelConfig) {
+class ReadModelService(dbConfig: ReadModelConfig) {
 
   private val client: MongoClient = MongoClient(
     MongoClientSettings
