@@ -37,6 +37,8 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
       .build()
   )
 
+  def close(): Unit = client.close()
+
   private val db: MongoDatabase = client.getDatabase(dbConfig.dbName)
 
   def findOne[T: JsonReader](collectionName: String, filter: Bson)(implicit ec: ExecutionContext): Future[Option[T]] =
