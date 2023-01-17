@@ -85,7 +85,12 @@ private[ratelimiter] final case class RateLimiterExecutor(
       storeBucket(configs.limiterGroup, organizationId, updatedToken)
         .as(RateLimitStatus(configs.maxRequests, updatedToken.tokens.toInt, configs.rateInterval))
     } else
-      Future.failed(TooManyRequests(status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)))
+      Future.failed(
+        TooManyRequests(
+          tenantId = organizationId,
+          status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)
+        )
+      )
 
   def refillBucket(bucket: TokenBucket, now: OffsetDateTime): TokenBucket = {
     val updatedTokens = releaseTokens(bucket, now)

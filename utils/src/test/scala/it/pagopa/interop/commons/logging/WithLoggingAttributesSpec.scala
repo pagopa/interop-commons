@@ -12,13 +12,10 @@ import java.util.UUID
 class WithLoggingAttributesSpec extends AnyWordSpecLike with Matchers with ScalatestRouteTest {
 
   "Logging attributes directive" should {
-
     val wrappingDirective: Directive1[Seq[(String, String)]] = provide(Seq.empty[(String, String)])
 
     "generate a Correlation Id if the service is internet facing and Correlation Id is not given" in {
-      val directive = withLoggingAttributesGenerator(isInternetFacing = true)
-
-      Get() ~> directive(wrappingDirective) { implicit context =>
+      Get() ~> withLoggingAttributesF(true)(wrappingDirective) { implicit context =>
         complete {
           val correlationId = context.filter(_._1 == CORRELATION_ID_HEADER)
           correlationId.length shouldBe 1
@@ -32,27 +29,24 @@ class WithLoggingAttributesSpec extends AnyWordSpecLike with Matchers with Scala
     }
 
     "generate a new Correlation Id if the service is internet facing and Correlation Id is given" in {
-      val externalCorrelationId = UUID.randomUUID().toString
-      val directive             = withLoggingAttributesGenerator(isInternetFacing = true)
+      val externalCorrelationId: String = UUID.randomUUID().toString
+      Get() ~> addHeader(CORRELATION_ID_HEADER, externalCorrelationId) ~> withLoggingAttributesF(true)(
+        wrappingDirective
+      ) { implicit context =>
+        complete {
+          val correlationId = context.filter(_._1 == CORRELATION_ID_HEADER)
+          correlationId.length shouldBe 1
+          correlationId.head._2 should not be externalCorrelationId
 
-      Get() ~> addHeader(CORRELATION_ID_HEADER, externalCorrelationId) ~> directive(wrappingDirective) {
-        implicit context =>
-          complete {
-            val correlationId = context.filter(_._1 == CORRELATION_ID_HEADER)
-            correlationId.length shouldBe 1
-            correlationId.head._2 should not be externalCorrelationId
-
-            "ok"
-          }
+          "ok"
+        }
       } ~> check {
         responseAs[String] shouldEqual "ok"
       }
     }
 
     "generate a Correlation Id if the service is not internet facing and Correlation Id is not given" in {
-      val directive = withLoggingAttributesGenerator(isInternetFacing = false)
-
-      Get() ~> directive(wrappingDirective) { implicit context =>
+      Get() ~> withLoggingAttributesF(false)(wrappingDirective) { implicit context =>
         complete {
           val correlationId = context.filter(_._1 == CORRELATION_ID_HEADER)
           correlationId.length shouldBe 1
@@ -66,23 +60,21 @@ class WithLoggingAttributesSpec extends AnyWordSpecLike with Matchers with Scala
     }
 
     "use the given Correlation Id if the service is not internet facing" in {
-      val externalCorrelationId = UUID.randomUUID().toString
-      val directive             = withLoggingAttributesGenerator(isInternetFacing = false)
+      val externalCorrelationId: String = UUID.randomUUID().toString
 
-      Get() ~> addHeader(CORRELATION_ID_HEADER, externalCorrelationId) ~> directive(wrappingDirective) {
-        implicit context =>
-          complete {
-            val correlationId = context.filter(_._1 == CORRELATION_ID_HEADER)
-            correlationId.length shouldBe 1
-            correlationId.head._2 shouldBe externalCorrelationId
+      Get() ~> addHeader(CORRELATION_ID_HEADER, externalCorrelationId) ~> withLoggingAttributesF(false)(
+        wrappingDirective
+      ) { implicit context =>
+        complete {
+          val correlationId = context.filter(_._1 == CORRELATION_ID_HEADER)
+          correlationId.length shouldBe 1
+          correlationId.head._2 shouldBe externalCorrelationId
 
-            "ok"
-          }
+          "ok"
+        }
       } ~> check {
         responseAs[String] shouldEqual "ok"
       }
     }
-
   }
-
 }

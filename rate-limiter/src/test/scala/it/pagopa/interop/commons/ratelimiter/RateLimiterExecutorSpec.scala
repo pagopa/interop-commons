@@ -111,7 +111,7 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
 
       val status = RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)
 
-      limiter.useToken(bucket, organizationId).failed.futureValue shouldBe TooManyRequests(status)
+      limiter.useToken(bucket, organizationId).failed.futureValue shouldBe TooManyRequests(organizationId, status)
     }
   }
 
@@ -158,7 +158,7 @@ class RateLimiterExecutorSpec extends AnyWordSpecLike with SpecHelper {
         mockDateTimeSupplierGet(timestamp)
         mockCacheGet(limiter.key(configs.limiterGroup, organizationId), Some(bucket))
 
-        limiter.rateLimiting(organizationId).failed.futureValue shouldBe TooManyRequests(status)
+        limiter.rateLimiting(organizationId).failed.futureValue shouldBe TooManyRequests(organizationId, status)
       }
     }
 

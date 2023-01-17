@@ -9,23 +9,17 @@ import it.pagopa.interop.commons.jwt.service.JWTReader
 
 import scala.util.{Failure, Try}
 
-/** Default implementation for Interop clients JWT reader
-  */
 trait DefaultJWTReader extends JWTReader {
 
   publicKeysHolder: PublicKeysHolder =>
 
   protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
-  override def getClaims(bearer: String): Try[JWTClaimsSet] = {
-    for {
-      jwt <- parseJWT(bearer)
-      _   <- verifyJWTClaims(jwt)
-      _ = logger.debug("Verify bearer")
-      _ <- publicKeysHolder.verify(jwt)
-      _ = logger.debug("Bearer verified")
-    } yield jwt.getJWTClaimsSet
-  }
+  override def getClaims(bearer: String): Try[JWTClaimsSet] = for {
+    jwt <- parseJWT(bearer)
+    _   <- verifyJWTClaims(jwt)
+    _   <- publicKeysHolder.verify(jwt)
+  } yield jwt.getJWTClaimsSet
 
   private def parseJWT(bearer: String): Try[SignedJWT] =
     Try(SignedJWT.parse(bearer)).recoverWith(ex => Failure(UnableToParseJWT(ex.getMessage)))

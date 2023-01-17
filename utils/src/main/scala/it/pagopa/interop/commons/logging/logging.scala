@@ -1,94 +1,78 @@
 package it.pagopa.interop.commons
 
 import buildinfo.BuildInfo
-import akka.event.Logging
-import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
 import akka.http.scaladsl.server._
-import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.CanLog
 import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, ORGANIZATION_ID_CLAIM, SUB, UID}
 
 import java.util.UUID
+import org.slf4j.MDC
+import com.typesafe.scalalogging.LoggerTakingImplicit
+import akka.http.scaladsl.model.HttpRequest
 
 package object logging {
   type ContextFieldsToLog = Seq[(String, String)]
+
+  @inline private def contextOrBlank(cftl: ContextFieldsToLog, key: String): String =
+    cftl.find(_._1 == key).map(_._2).filterNot(_.isBlank()).getOrElse("")
+
+  implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
+    override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
+      MDC.put(IP_ADDRESS, contextOrBlank(fields, IP_ADDRESS))
+      MDC.put(UID, contextOrBlank(fields, UID))
+      MDC.put(SUB, contextOrBlank(fields, SUB))
+      MDC.put(ORGANIZATION_ID_CLAIM, contextOrBlank(fields, ORGANIZATION_ID_CLAIM))
+      MDC.put(CORRELATION_ID_HEADER, contextOrBlank(fields, CORRELATION_ID_HEADER))
+
+      originalMsg
+    }
+
+    override def afterLog(context: ContextFieldsToLog): Unit = {
+      MDC.remove(IP_ADDRESS)
+      MDC.remove(UID)
+      MDC.remove(SUB)
+      MDC.remove(ORGANIZATION_ID_CLAIM)
+      MDC.remove(CORRELATION_ID_HEADER)
+    }
+  }
 
   private val config: Config            = ConfigFactory.load()
   private val isInternetFacing: Boolean =
     if (config.hasPath("interop-commons.isInternetFacing")) config.getBoolean("interop-commons.isInternetFacing")
     else false
 
-  private def createLogContexts(values: Map[String, String]): String = {
-    val ipAddress: String      = values.getOrElse(IP_ADDRESS, "")
-    val uid: String            = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
-    val organizationId: String = values.getOrElse(ORGANIZATION_ID_CLAIM, "")
-    val correlationId: String  = values.getOrElse(CORRELATION_ID_HEADER, "")
-    s"[IP=$ipAddress] [UID=$uid] [OID=$organizationId] [CID=$correlationId]"
-  }
+  def withLoggingAttributes: Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] =
+    withLoggingAttributesF(isInternetFacing)(_)
 
-  /** Defines log message decoration for Interop
-    */
-  implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
-    override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
-      val fieldsMap: Map[String, String] = fields.toMap
-      s"${createLogContexts(fieldsMap)} - $originalMsg"
-    }
-  }
+  def withLoggingAttributesF(
+    changeUUID: Boolean
+  )(wrappingDirective: Directive1[Seq[(String, String)]]): Directive1[Seq[(String, String)]] =
+    for {
+      ip            <- extractClientIP
+      correlationId <- optionalHeaderValueByName(CORRELATION_ID_HEADER)
+      contexts      <- wrappingDirective
+    } yield {
+      val ipAddress: String           = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
+      def uuid: String                = UUID.randomUUID().toString
+      val actualCorrelationId: String = if (changeUUID) uuid else correlationId.getOrElse(uuid)
 
-  /** Returns a directive to decorate HTTP requests with logging
-    *
-    * @param ctxs contexts to be logged
-    * @return logging directive
-    */
-  def logHttp(enabled: Boolean)(implicit ctxs: Seq[(String, String)]): Directive0 = if (enabled) {
-    val contextStr: String = createLogContexts(ctxs.toMap)
-
-    def logWithoutBody(req: HttpRequest): RouteResult => Option[LogEntry] = {
-      case RouteResult.Complete(res) =>
-        Some(
-          LogEntry(s"$contextStr - Request ${req.method.value} ${req.uri} - Response ${res.status}", Logging.InfoLevel)
-        )
-      case RouteResult.Rejected(rej) =>
-        Some(LogEntry(s"$contextStr - Request ${req.method.value} ${req.uri} - Response ${rej}", Logging.InfoLevel))
+      contexts.prependedAll(List(CORRELATION_ID_HEADER -> actualCorrelationId, IP_ADDRESS -> ipAddress))
     }
 
-    DebuggingDirectives.logRequestResult(logWithoutBody _)
-  } else Directive.Empty
-
-  /** Generates a wrapping directive with logging context attributes with given configurations
-    *
-    * @param wrappingDirective directive to be decorated
-    * @return directive with contexts enriched with logging attributes
-    */
-  def withLoggingAttributesGenerator(
-    isInternetFacing: Boolean
-  ): Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] = { wrappingDirective =>
-    extractClientIP.flatMap(ip => {
-      val ipAddress = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
-
-      optionalHeaderValueByName(CORRELATION_ID_HEADER).flatMap(correlationId => {
-        // Exclude headers for security reason if the service is internet facing
-        val actualCorrelationId =
-          if (isInternetFacing) UUID.randomUUID().toString else correlationId.getOrElse(UUID.randomUUID().toString)
-        wrappingDirective.map(contexts =>
-          contexts
-            .prepended((CORRELATION_ID_HEADER, actualCorrelationId))
-            .prepended((IP_ADDRESS, ipAddress))
-        )
-      })
-    })
-  }
-
-  /** Enriches a wrapping directive with logging context attributes
-    *
-    * @param wrappingDirective directive to be decorated
-    * @return directive with contexts enriched with logging attributes
-    */
-  val withLoggingAttributes: Directive1[Seq[(String, String)]] => Directive1[Seq[(String, String)]] =
-    (wrappingDirective: Directive1[Seq[(String, String)]]) =>
-      withLoggingAttributesGenerator(isInternetFacing)(wrappingDirective)
+  def logHttp(
+    enabled: Boolean
+  )(implicit logger: LoggerTakingImplicit[ContextFieldsToLog], contexts: ContextFieldsToLog): Directive0 =
+    if (!enabled) Directive.Empty
+    else
+      extractRequest.flatMap { req: HttpRequest =>
+        val header: String = s"Request ${req.method.value} ${req.uri} - Response"
+        mapRouteResult {
+          case x @ RouteResult.Complete(res) => logger.info(s"$header ${res.status}"); x
+          case x @ RouteResult.Rejected(rej) => logger.info(s"$header ${rej}"); x
+        }
+      }
 
   def renderBuildInfo(buildInfo: BuildInfo.type): String = buildInfo.toMap
     .collect {

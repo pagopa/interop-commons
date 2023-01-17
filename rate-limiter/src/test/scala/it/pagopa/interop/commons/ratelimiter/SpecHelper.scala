@@ -104,5 +104,7 @@ trait SpecHelper extends MockFactory {
       ))
       .expects(organizationId, *, *, *)
       .once()
-      .returns(Future.failed(TooManyRequests(RateLimitStatus(configs.maxRequests, 0, configs.rateInterval))))
+      .returns(
+        Future.failed(TooManyRequests(organizationId, RateLimitStatus(configs.maxRequests, 0, configs.rateInterval)))
+      )
 }
