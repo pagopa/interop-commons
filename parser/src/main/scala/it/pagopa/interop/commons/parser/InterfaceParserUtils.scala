@@ -1,7 +1,7 @@
 package it.pagopa.interop.commons.parser
 
 import cats.implicits.toTraverseOps
-import io.circe.Json
+import io.circe.{DecodingFailure, Json}
 import it.pagopa.interop.commons.parser.errors.Errors
 
 import scala.xml.Elem
@@ -20,8 +20,17 @@ object InterfaceParserUtils {
     implicitly[InterfaceParserUtils[A]].getEndpoints(serviceInterface)
 
   implicit val openApiInterfaceExtractor: InterfaceParserUtils[Json] = new InterfaceParserUtils[Json] {
-    override def getUrls(serviceInterface: Json): Either[Throwable, List[String]] =
-      serviceInterface.hcursor.downField("servers").as[List[Json]].flatMap(_.traverse(_.hcursor.get[String]("url")))
+    override def getUrls(serviceInterface: Json): Either[Throwable, List[String]] = {
+
+      val urlsFromOpenApi3: Either[DecodingFailure, List[String]] =
+        serviceInterface.hcursor.downField("servers").as[List[Json]].flatMap(_.traverse(_.hcursor.get[String]("url")))
+
+      val urlsFromOpenApi2: Either[DecodingFailure, List[String]] =
+        serviceInterface.hcursor.downField("host").as[String].map(List(_))
+
+      urlsFromOpenApi3 orElse urlsFromOpenApi2
+
+    }
 
     override def getEndpoints(serviceInterface: Json): Either[Throwable, List[String]] = {
       serviceInterface.hcursor.downField("paths").keys.toRight(Errors.InterfaceExtractingInfoError).map(_.toList)
