@@ -40,23 +40,19 @@ object InterfaceParserUtils {
   implicit val openApiInterfaceExtractor: InterfaceParserUtils[Json] = new InterfaceParserUtils[Json] {
     override def getUrls(serviceInterface: Json): Either[Throwable, List[String]] =
       serviceInterface.getVersion.flatMap {
-        case `2.0`                                 => serviceInterface.hcursor.downField("host").as[String].map(List(_))
-        case `3.0.0` | `3.0.1` | `3.0.2` | `3.0.3` =>
+        case `2.0` => serviceInterface.hcursor.downField("host").as[String].map(List(_))
+        case `3.0.0` | `3.0.1` | `3.0.2` | `3.0.3` | `3.1.0` =>
           serviceInterface.hcursor.downField("servers").as[List[Json]].flatMap(_.traverse(_.hcursor.get[String]("url")))
-        case `3.1.0`                               =>
-          serviceInterface.hcursor.downField("servers").as[List[Json]].flatMap(_.traverse(_.hcursor.get[String]("url")))
-        case unknownVersion                        => Left(OpenapiVersionNotRecognized(unknownVersion))
+        case unknownVersion                                  => Left(OpenapiVersionNotRecognized(unknownVersion))
       }
 
     override def getEndpoints(serviceInterface: Json): Either[Throwable, List[String]] =
       serviceInterface.getVersion.flatMap {
-        case `2.0`                                 =>
+        case `2.0`                                           =>
           serviceInterface.hcursor.downField("paths").keys.toRight(Errors.InterfaceExtractingInfoError).map(_.toList)
-        case `3.0.0` | `3.0.1` | `3.0.2` | `3.0.3` =>
+        case `3.0.0` | `3.0.1` | `3.0.2` | `3.0.3` | `3.1.0` =>
           serviceInterface.hcursor.downField("paths").keys.toRight(Errors.InterfaceExtractingInfoError).map(_.toList)
-        case `3.1.0`                               =>
-          serviceInterface.hcursor.downField("paths").keys.toRight(Errors.InterfaceExtractingInfoError).map(_.toList)
-        case unknownVersion                        => Left(OpenapiVersionNotRecognized(unknownVersion))
+        case unknownVersion                                  => Left(OpenapiVersionNotRecognized(unknownVersion))
       }
   }
 
