@@ -9,12 +9,12 @@ class InterfaceParserSpec extends AnyWordSpecLike with Matchers {
 
   "InterfaceParser" should {
     "parse an Openapi JSON correctly" in {
-      val bytes: Array[Byte] = Source.fromResource("api.json").getLines().mkString("\n").getBytes
+      val bytes: Array[Byte] = Source.fromResource("api_3.0.0.json").getLines().mkString("\n").getBytes
       InterfaceParser.parseOpenApi(bytes).isRight shouldBe true
     }
 
     "parse an Openapi YAML correctly" in {
-      val bytes: Array[Byte] = Source.fromResource("api.yaml").getLines().mkString("\n").getBytes
+      val bytes: Array[Byte] = Source.fromResource("api_3.0.0.yaml").getLines().mkString("\n").getBytes
       InterfaceParser.parseOpenApi(bytes).isRight shouldBe true
     }
 
