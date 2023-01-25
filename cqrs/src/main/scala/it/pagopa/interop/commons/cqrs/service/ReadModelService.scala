@@ -13,7 +13,20 @@ import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-final class ReadModelService(dbConfig: ReadModelConfig) {
+trait ReadModelService {
+  def findOne[T: JsonReader](collectionName: String, filter: Bson)(implicit ec: ExecutionContext): Future[Option[T]]
+  def find[T: JsonReader](collectionName: String, filter: Bson, offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]]
+  def find[T: JsonReader](collectionName: String, filter: Bson, projection: Bson, offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]]
+  def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]]
+}
+
+final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModelService {
 
   private val client: MongoClient = MongoClient(
     MongoClientSettings
