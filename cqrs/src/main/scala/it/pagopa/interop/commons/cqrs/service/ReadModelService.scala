@@ -24,6 +24,7 @@ trait ReadModelService {
   def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
     ec: ExecutionContext
   ): Future[Seq[T]]
+  def close(): Unit
 }
 
 final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModelService {
