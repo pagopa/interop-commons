@@ -9,6 +9,8 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
+  override def close(): Unit = ()
+
   implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
   val tmp: Path = Path.of("/tmp")
