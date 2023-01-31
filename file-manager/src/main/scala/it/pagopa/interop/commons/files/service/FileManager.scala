@@ -28,6 +28,8 @@ trait FileManager {
   def get(containerPath: String)(filePath: StorageFilePath): Future[ByteArrayOutputStream]
 
   def delete(containerPath: String)(filePath: StorageFilePath): Future[Boolean]
+
+  def close(): Unit
 }
 
 object FileManager {

@@ -42,6 +42,8 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     .asyncConfiguration(asyncConfiguration)
     .build()
 
+  override def close(): Unit = asyncClient.close()
+
   private def s3Key(path: String, resourceId: String, fileName: String): String =
     s"$path/$resourceId/$fileName"
 
