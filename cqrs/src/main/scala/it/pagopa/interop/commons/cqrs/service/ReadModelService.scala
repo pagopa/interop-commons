@@ -6,7 +6,6 @@ import it.pagopa.interop.commons.cqrs.model.ReadModelConfig
 import it.pagopa.interop.commons.utils.TypeConversions._
 import org.mongodb.scala.MongoClient.DEFAULT_CODEC_REGISTRY
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.connection.NettyStreamFactoryFactory
 import org.mongodb.scala.model.{Aggregates, Projections}
 import org.mongodb.scala.{ConnectionString, Document, MongoClient, MongoClientSettings, MongoDatabase}
 import spray.json._
@@ -34,13 +33,12 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
       .builder()
       .applyConnectionString(new ConnectionString(dbConfig.connectionString))
       .codecRegistry(DEFAULT_CODEC_REGISTRY)
-      .streamFactoryFactory(NettyStreamFactoryFactory())
       .build()
   )
 
   def close(): Unit = client.close()
 
-  private val db: MongoDatabase = client.getDatabase(dbConfig.dbName)
+  private def db: MongoDatabase = client.getDatabase(dbConfig.dbName)
 
   def findOne[T: JsonReader](collectionName: String, filter: Bson)(implicit ec: ExecutionContext): Future[Option[T]] =
     find[T](collectionName, filter, offset = 0, limit = 1).map(_.headOption)
