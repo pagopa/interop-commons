@@ -26,9 +26,11 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
   private val logger: Logger                = LoggerFactory.getLogger(this.getClass)
   private implicit val ec: ExecutionContext = blockingExecutionContext
 
-  private val serviceConf: S3Configuration        = S3Configuration.builder().pathStyleAccessEnabled(true).build()
+  private val serviceConf: S3Configuration = S3Configuration.builder().pathStyleAccessEnabled(true).build()
+
   private val asyncHttpClient: SdkAsyncHttpClient =
     NettyNioAsyncHttpClient.builder().maxConcurrency(StorageConfiguration.maxConcurrency).build()
+
   private val asyncConfiguration: ClientAsyncConfiguration =
     ClientAsyncConfiguration
       .builder()
@@ -41,6 +43,11 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     .httpClient(asyncHttpClient)
     .asyncConfiguration(asyncConfiguration)
     .build()
+
+  override def close(): Unit = {
+    asyncHttpClient.close()
+    asyncClient.close()
+  }
 
   private def s3Key(path: String, resourceId: String, fileName: String): String =
     s"$path/$resourceId/$fileName"
