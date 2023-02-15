@@ -79,7 +79,7 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     val pathF: String       = path.stripMargin('/')
     val resourceIdF: String = resourceId.stripMargin('/')
     val docsHome: Path      =
-      if (resourceIdF.isBlank()) tmp.resolve(s"$pathF")
+      if (resourceIdF.isBlank()) tmp.resolve(pathF)
       else tmp.resolve(s"$pathF/$resourceIdF")
     val pathCreated: Path   = Files.createDirectories(docsHome)
     pathCreated.resolve(fileName.stripMargin('/'))

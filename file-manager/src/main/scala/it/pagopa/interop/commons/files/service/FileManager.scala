@@ -24,11 +24,11 @@ trait FileManager {
     fileContent: Array[Byte]
   ): Future[StorageFilePath]
 
-  def listFiles(container: String)(prefix: String): Future[List[StorageFilePath]]
+  def listFiles(container: String)(path: String): Future[List[StorageFilePath]]
 
   def getFile(container: String)(path: String): Future[Array[Byte]]
 
-  def getAllFiles(container: String)(prefix: String): Future[Map[String, Array[Byte]]]
+  def getAllFiles(container: String)(path: String): Future[Map[String, Array[Byte]]]
 
   def copy(
     containerPath: String,
