@@ -20,8 +20,12 @@ import java.nio.file.Files
 import java.util.concurrent.Executor
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.jdk.FutureConverters._
+import scala.jdk.CollectionConverters._
+import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
 
-final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
+final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
+  confOverride: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
+) extends FileManager {
 
   private val logger: Logger                = LoggerFactory.getLogger(this.getClass)
   private implicit val ec: ExecutionContext = blockingExecutionContext
@@ -37,11 +41,13 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
       .advancedOption[Executor](SdkAdvancedAsyncClientOption.FUTURE_COMPLETION_EXECUTOR, blockingExecutionContext)
       .build()
 
-  private val asyncClient: S3AsyncClient = S3AsyncClient
-    .builder()
-    .serviceConfiguration(serviceConf)
-    .httpClient(asyncHttpClient)
-    .asyncConfiguration(asyncConfiguration)
+  private val asyncClient: S3AsyncClient = confOverride(
+    S3AsyncClient
+      .builder()
+      .serviceConfiguration(serviceConf)
+      .httpClient(asyncHttpClient)
+      .asyncConfiguration(asyncConfiguration)
+  )
     .build()
 
   override def close(): Unit = {
@@ -50,7 +56,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
   }
 
   private def s3Key(path: String, resourceId: String, fileName: String): String =
-    s"$path/$resourceId/$fileName"
+    s"${path}/${resourceId}/${fileName}".replaceAll("//", "/").stripPrefix("/")
 
   override def store(
     containerPath: String,
@@ -75,6 +81,31 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor) ex
     val asyncRequestBody: AsyncRequestBody = AsyncRequestBody.fromBytes(fileContents)
     asyncClient.putObject(putObjectRequest, asyncRequestBody).asScala.as(key)
   }
+
+  override def storeBytes(containerPath: String, path: String, fileName: String)(
+    fileContents: Array[Byte]
+  ): Future[StorageFilePath] = storeBytes(containerPath, path)("", fileName, fileContents)
+
+  override def listFiles(container: String)(prefix: String): Future[List[StorageFilePath]] = {
+    val request: ListObjectsRequest = {
+      val partial = ListObjectsRequest.builder().bucket(container)
+      if (prefix.stripMargin('/').isBlank) partial.build() else partial.prefix(prefix).build()
+    }
+
+    asyncClient.listObjects(request).asScala.map(_.contents().asScala.toList.map(_.key))
+  }
+
+  override def getFile(container: String)(path: String): Future[Array[Byte]] = {
+    val request: GetObjectRequest = GetObjectRequest.builder().bucket(container).key(path).build()
+    asyncClient
+      .getObject[ResponseBytes[GetObjectResponse]](request, AsyncResponseTransformer.toBytes[GetObjectResponse]())
+      .asScala
+      .map(_.asByteArray())
+  }
+
+  override def getAllFiles(container: String)(prefix: String): Future[Map[String, Array[Byte]]] =
+    listFiles(container)(prefix)
+      .flatMap(files => Future.traverse(files)(p => getFile(container)(p).map((p, _))).map(_.toMap))
 
   override def copy(
     container: String,
