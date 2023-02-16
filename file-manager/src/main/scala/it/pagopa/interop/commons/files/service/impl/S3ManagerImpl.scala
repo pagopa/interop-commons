@@ -55,13 +55,8 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     asyncClient.close()
   }
 
-  private def s3Key(path: String, resourceId: String, fileName: String): String = {
-    val pathF: String       = path.stripMargin('/')
-    val resourceIdF: String = resourceId.stripMargin('/')
-    val fileNameF: String   = fileName.stripMargin('/')
-
-    s"$pathF/$resourceIdF/$fileNameF".replaceAll("//", "/").stripPrefix("/")
-  }
+  private def s3Key(path: String, resourceId: String, fileName: String): String =
+    s"${path}/${resourceId}/${fileName}".replaceAll("//", "/").stripPrefix("/")
 
   override def store(
     containerPath: String,
