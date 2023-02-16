@@ -60,8 +60,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     val resourceIdF: String = resourceId.stripMargin('/')
     val fileNameF: String   = fileName.stripMargin('/')
 
-    if (resourceIdF.isBlank) s"$pathF/$fileNameF"
-    else s"$pathF/$resourceIdF/$fileNameF"
+    s"$pathF/$resourceIdF/$fileNameF".replaceAll("//", "/").stripPrefix("/")
   }
 
   override def store(
