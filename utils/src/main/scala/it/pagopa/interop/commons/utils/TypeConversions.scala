@@ -92,6 +92,32 @@ object TypeConversions {
 
       go(list.grouped(n).toList)(Nil)
     }
+
+    def parTraverse[T, V](list: List[T])(f: T => Future[V])(implicit ec: ExecutionContext): Future[List[Option[V]]] =
+      Future
+        .traverse(list)(x =>
+          f(x).transformWith {
+            case Failure(_) => Future.successful(Option.empty[V])
+            case Success(v) => Future.successful(Option(v))
+          }
+        )
+
+    def parCollect[T, V](list: List[T])(f: T => Future[V])(implicit ec: ExecutionContext): Future[List[V]] =
+      parTraverse(list)(f).map(_.collect { case Some(v) => v })
+
+    def parTraverseWithLatch[T, V](
+      n: Int
+    )(list: List[T])(f: T => Future[V])(implicit ec: ExecutionContext): Future[List[Option[V]]] =
+      traverseWithLatch(n)(list)(x =>
+        f(x).transformWith {
+          case Failure(_) => Future.successful(Option.empty[V])
+          case Success(v) => Future.successful(Option(v))
+        }
+      )
+
+    def parCollectWithLatch[T, V](n: Int)(list: List[T])(f: T => Future[V])(implicit
+      ec: ExecutionContext
+    ): Future[List[V]] = parTraverseWithLatch(n)(list)(f).map(_.collect { case Some(v) => v })
   }
 
 }

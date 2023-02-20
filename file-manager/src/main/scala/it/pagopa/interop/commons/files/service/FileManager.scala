@@ -20,6 +20,16 @@ trait FileManager {
     path: String
   )(resourceId: String, fileName: String, fileContent: Array[Byte]): Future[StorageFilePath]
 
+  def storeBytes(containerPath: String, path: String, filename: String)(
+    fileContent: Array[Byte]
+  ): Future[StorageFilePath]
+
+  def listFiles(container: String)(path: String): Future[List[StorageFilePath]]
+
+  def getFile(container: String)(path: String): Future[Array[Byte]]
+
+  def getAllFiles(container: String)(path: String): Future[Map[String, Array[Byte]]]
+
   def copy(
     containerPath: String,
     path: String
@@ -40,6 +50,6 @@ object FileManager {
 
   def get(kind: FileManager.Kind)(blockingExecutionContext: ExecutionContextExecutor): FileManager = kind match {
     case File => new FileManagerImpl(blockingExecutionContext)
-    case S3   => new S3ManagerImpl(blockingExecutionContext)
+    case S3   => new S3ManagerImpl(blockingExecutionContext)(identity)
   }
 }
