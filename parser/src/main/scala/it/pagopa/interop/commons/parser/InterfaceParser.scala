@@ -19,7 +19,7 @@ object InterfaceParser {
   }
 
   def parseWSDL(bytes: Array[Byte]): Either[Throwable, Elem] = {
-    val txt: String        = new String(bytes, StandardCharsets.UTF_8)
+    val txt: String        = new String(bytes, StandardCharsets.UTF_8).trim
     val withoutBOM: String = if (txt.startsWith(UTF8_BOM)) txt.substring(1) else txt
     Try(loadString(withoutBOM)).toEither
   }
