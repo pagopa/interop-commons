@@ -104,6 +104,16 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
   private def rawReceiveNBodyAndHandle(n: Int, visibilityTimeout: Int): Future[List[(String, String)]] =
     rawReceiveN(n, visibilityTimeout).map(_.map(m => (m.body(), m.receiptHandle())))
 
+  def rawReceive(visibilityTimeout: Int): Future[Option[Message]] = {
+    val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
+      .builder()
+      .queueUrl(queueUrl)
+      .maxNumberOfMessages(1)
+      .visibilityTimeout(visibilityTimeout)
+      .build()
+    sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.headOption)
+  }
+
   private def rawReceiveN(n: Int, visibilityTimeout: Int): Future[List[Message]] = {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
