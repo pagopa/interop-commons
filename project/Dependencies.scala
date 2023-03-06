@@ -177,7 +177,12 @@ object Dependencies {
       )
 
     lazy val mailDependencies: Seq[ModuleID] =
-      Seq(courier.mail % Compile, typesafe.config % Compile, courier.testMocking % Test)
+      Seq(
+        courier.mail             % Compile,
+        "org.typelevel"         %% "literally"  % "1.1.0"  % Compile,
+        "com.github.pureconfig" %% "pureconfig" % "0.17.2" % Compile,
+        courier.testMocking      % Test
+      )
 
     lazy val signerDependencies: Seq[ModuleID] =
       Seq(

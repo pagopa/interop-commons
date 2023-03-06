@@ -1,50 +1,29 @@
 package it.pagopa.interop.commons.mail
 
-import com.typesafe.config.{Config, ConfigFactory}
+import pureconfig._
+import pureconfig.generic.auto._
+import pureconfig.error.ConfigReaderException
+import javax.mail.internet.InternetAddress
+import scala.util.Try
 
-/** Models mail configuration data
-  * @param senderAddress address of the mail sender
-  * @param smtp SMTP configuration data
-  */
-case class MailConfigurationInfo(senderAddress: String, smtp: SMTPConfiguration)
+final case class MailConfiguration(sender: InternetAddress, smtp: SMTPConfiguration)
 
-/** Models SMTP configuration data
-  * @param user SMTP user
-  * @param password SMTP password
-  * @param serverAddress SMTP server address
-  * @param serverPort SMTP server port
-  * @param authenticated flag for making SMTP authentication required (default <code>true</code>)
-  * @param withTls flag for making SMTP working with TLS (default <code>true</code>)
-  */
-case class SMTPConfiguration(
+final case class SMTPConfiguration(
   user: String,
   password: String,
   serverAddress: String,
-  serverPort: Integer,
+  serverPort: Int,
   authenticated: Boolean,
   withTls: Boolean,
   ssl: Boolean
 )
 
-/** Defines mail manager configuration
-  */
 object MailConfiguration {
-  lazy val hoconConfig: Config =
-    ConfigFactory.defaultApplication().withFallback(ConfigFactory.defaultReference()).resolve()
+  implicit val inetReader: ConfigReader[InternetAddress] =
+    ConfigReader.fromStringTry(s => Try(new InternetAddress(s)))
 
-  /** Returns currently mail-manager configuration data
-    */
-  val config =
-    MailConfigurationInfo(
-      senderAddress = hoconConfig.getString("interop-commons.mail.sender"),
-      smtp = SMTPConfiguration(
-        user = hoconConfig.getString("interop-commons.mail.smtp.user"),
-        password = hoconConfig.getString("interop-commons.mail.smtp.password"),
-        serverAddress = hoconConfig.getString("interop-commons.mail.smtp.server"),
-        serverPort = hoconConfig.getInt("interop-commons.mail.smtp.port"),
-        authenticated = hoconConfig.getBoolean("interop-commons.mail.smtp.authenticated"),
-        withTls = hoconConfig.getBoolean("interop-commons.mail.smtp.with-tls"),
-        ssl = hoconConfig.getBoolean("interop-commons.mail.smtp.ssl")
-      )
-    )
+  def read(): Either[Throwable, MailConfiguration] = ConfigSource.file("mailer").load[MailConfiguration] match {
+    case Left(errs)    => Left(new ConfigReaderException(errs))
+    case Right(config) => Right(config)
+  }
 }
