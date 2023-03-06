@@ -13,9 +13,9 @@ final case class SMTPConfiguration(
   password: String,
   serverAddress: String,
   serverPort: Int,
-  authenticated: Boolean,
-  withTls: Boolean,
-  ssl: Boolean
+  authenticated: Option[Boolean],
+  withTls: Option[Boolean],
+  withSsl: Option[Boolean]
 )
 
 object MailConfiguration {
