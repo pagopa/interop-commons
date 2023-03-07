@@ -72,6 +72,16 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
       model   <- results.traverse(extractData[T](_).toFuture)
     } yield model
 
+  def aggregateRaw[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]] = for {
+    results <- db
+      .getCollection(collectionName)
+      .aggregate(pipeline ++ Seq(Aggregates.skip(offset), Aggregates.limit(limit)))
+      .toFuture()
+    model   <- Future.traverse(results)(extract[T](_).toFuture)
+  } yield model
+
   private def extractData[T: JsonReader](document: Document): Either[Throwable, T] =
     document
       .toJson()
@@ -81,5 +91,9 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
       .get("data")
       .toRight(ReadModelMissingDataField)
       .flatMap(data => Either.catchNonFatal(data.convertTo[T]))
+
+  private def extract[T: JsonReader](document: Document): Either[Throwable, T] = Either
+    .catchNonFatal(document.toJson().parseJson.asJsObject)
+    .flatMap(data => Either.catchNonFatal(data.convertTo[T]))
 
 }
