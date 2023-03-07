@@ -22,7 +22,7 @@ object MailConfiguration {
   implicit val inetReader: ConfigReader[InternetAddress] =
     ConfigReader.fromStringTry(s => Try(new InternetAddress(s)))
 
-  def read(): Either[Throwable, MailConfiguration] = ConfigSource.file("mailer").load[MailConfiguration] match {
+  def read(): Either[Throwable, MailConfiguration] = ConfigSource.default.at("mailer").load[MailConfiguration] match {
     case Left(errs)    => Left(new ConfigReaderException(errs))
     case Right(config) => Right(config)
   }
