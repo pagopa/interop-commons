@@ -29,17 +29,14 @@ class InteropMailer private (sender: InternetAddress, mailer: Mailer) {
 }
 
 object InteropMailer {
-  def create(): Either[Throwable, InteropMailer] = MailConfiguration
-    .read()
-    .map { config =>
-      val mailer: Mailer = Mailer(config.smtp.serverAddress, config.smtp.serverPort)
-        .auth(config.smtp.authenticated.getOrElse(true))
-        .ssl(config.smtp.withSsl.getOrElse(true))
-        .as(config.smtp.user, config.smtp.password)
-        .startTls(config.smtp.withTls.getOrElse(true))()
-      new InteropMailer(config.sender, mailer)
-    }
+  def create(): Either[Throwable, InteropMailer] = MailConfiguration.read().map { config =>
+    val mailer: Mailer = Mailer(config.smtp.serverAddress, config.smtp.serverPort)
+      .auth(config.smtp.authenticated.getOrElse(true))
+      .ssl(config.smtp.withSsl.getOrElse(true))
+      .as(config.smtp.user, config.smtp.password)
+      .startTls(config.smtp.withTls.getOrElse(true))()
+    new InteropMailer(config.sender, mailer)
+  }
 
   def unsafeFrom(sender: InternetAddress, mailer: Mailer): InteropMailer = new InteropMailer(sender, mailer)
-
 }
