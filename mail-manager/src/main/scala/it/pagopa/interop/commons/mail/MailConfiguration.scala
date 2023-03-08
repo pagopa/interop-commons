@@ -1,8 +1,6 @@
 package it.pagopa.interop.commons.mail
 
 import pureconfig._
-import pureconfig.generic.auto._
-import pureconfig.error.ConfigReaderException
 import javax.mail.internet.InternetAddress
 import scala.util.Try
 
@@ -19,11 +17,5 @@ final case class SMTPConfiguration(
 )
 
 object MailConfiguration {
-  implicit val inetReader: ConfigReader[InternetAddress] =
-    ConfigReader.fromStringTry(s => Try(new InternetAddress(s)))
-
-  def read(): Either[Throwable, MailConfiguration] = ConfigSource.default.at("mailer").load[MailConfiguration] match {
-    case Left(errs)    => Left(new ConfigReaderException(errs))
-    case Right(config) => Right(config)
-  }
+  implicit val inetReader: ConfigReader[InternetAddress] = ConfigReader.fromStringTry(s => Try(new InternetAddress(s)))
 }

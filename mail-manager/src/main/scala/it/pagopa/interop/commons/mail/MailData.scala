@@ -4,12 +4,26 @@ import javax.mail.internet.InternetAddress
 import org.typelevel.literally.Literally
 import scala.util.Try
 
-final case class Mail(
+sealed trait Mail {
+  val recipients: Seq[InternetAddress]
+  val subject: String
+  val body: String
+  val attachments: Seq[MailAttachment]
+}
+
+final case class TextMail(
   recipients: Seq[InternetAddress],
   subject: String,
   body: String,
   attachments: Seq[MailAttachment] = Seq.empty
-)
+) extends Mail
+
+final case class HttpMail(
+  recipients: Seq[InternetAddress],
+  subject: String,
+  body: String,
+  attachments: Seq[MailAttachment] = Seq.empty
+) extends Mail
 
 final case class MailAttachment(name: String, bytes: Array[Byte], mimeType: String)
 
