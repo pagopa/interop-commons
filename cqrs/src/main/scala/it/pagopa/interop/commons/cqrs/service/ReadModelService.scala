@@ -23,6 +23,9 @@ trait ReadModelService {
   def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
     ec: ExecutionContext
   ): Future[Seq[T]]
+  def aggregateRaw[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]]
   def close(): Unit
 }
 
@@ -63,23 +66,31 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
 
   def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
     ec: ExecutionContext
-  ): Future[Seq[T]] =
-    for {
-      results <- db
-        .getCollection(collectionName)
-        .aggregate(pipeline ++ Seq(Aggregates.skip(offset), Aggregates.limit(limit)))
-        .toFuture()
-      model   <- results.traverse(extractData[T](_).toFuture)
-    } yield model
+  ): Future[Seq[T]] = aggregator(collectionName, pipeline, offset, limit)(extractData[T])
 
-  private def extractData[T: JsonReader](document: Document): Either[Throwable, T] =
-    document
-      .toJson()
-      .parseJson
-      .asJsObject
-      .fields
-      .get("data")
-      .toRight(ReadModelMissingDataField)
-      .flatMap(data => Either.catchNonFatal(data.convertTo[T]))
+  def aggregateRaw[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
+    ec: ExecutionContext
+  ): Future[Seq[T]] = aggregator(collectionName, pipeline, offset, limit)(extract[T])
+
+  private def aggregator[T](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(
+    f: Document => Either[Throwable, T]
+  )(implicit ec: ExecutionContext) = db
+    .getCollection(collectionName)
+    .aggregate(pipeline ++ Seq(Aggregates.skip(offset), Aggregates.limit(limit)))
+    .toFuture()
+    .flatMap(Future.traverse(_)(f(_).toFuture))
+
+  private def extractData[T: JsonReader](document: Document): Either[Throwable, T] = document
+    .toJson()
+    .parseJson
+    .asJsObject
+    .fields
+    .get("data")
+    .toRight(ReadModelMissingDataField)
+    .flatMap(data => Either.catchNonFatal(data.convertTo[T]))
+
+  private def extract[T: JsonReader](document: Document): Either[Throwable, T] = Either
+    .catchNonFatal(document.toJson().parseJson.asJsObject)
+    .flatMap(data => Either.catchNonFatal(data.convertTo[T]))
 
 }
