@@ -7,22 +7,12 @@ import scala.concurrent.Future
 
 class InteropMailer private (sender: InternetAddress, mailer: Mailer) {
 
-  def send(mail: Mail): Future[Unit] = sendMail(mail.recipients, mail.subject, renderMailContent(mail))
-
-  private def renderMailContent(mail: Mail): Content = mail match {
-    case TextMail(_, _, body, Nil) => Text(body)
-    case TextMail(_, _, body, as)  =>
-      as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
-    case HttpMail(_, _, body, as)  =>
-      as.foldLeft(Multipart().html(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
-  }
-
-  private def sendMail(recipients: Seq[InternetAddress], mailSubject: String, mailContent: Content) = mailer(
+  def send(mail: Mail): Future[Unit] = mailer(
     Envelope
       .from(sender)
-      .to(recipients: _*)
-      .subject(mailSubject)
-      .content(mailContent)
+      .to(mail.recipients: _*)
+      .subject(mail.subject)
+      .content(mail.renderContent)
   )
 }
 

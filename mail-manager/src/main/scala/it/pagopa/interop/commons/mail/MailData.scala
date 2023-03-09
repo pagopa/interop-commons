@@ -3,12 +3,19 @@ package it.pagopa.interop.commons.mail
 import javax.mail.internet.InternetAddress
 import org.typelevel.literally.Literally
 import scala.util.Try
+import courier._
 
 sealed trait Mail {
   val recipients: Seq[InternetAddress]
   val subject: String
-  val body: String
-  val attachments: Seq[MailAttachment]
+
+  def renderContent: Content = this match {
+    case TextMail(_, _, body, Nil) => Text(body)
+    case TextMail(_, _, body, as)  =>
+      as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
+    case HttpMail(_, _, body, as)  =>
+      as.foldLeft(Multipart().html(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
+  }
 }
 
 final case class TextMail(
