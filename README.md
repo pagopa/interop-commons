@@ -63,19 +63,18 @@ Where:
 This is the HOCON configuration object for the module:
 
 ```
- interop-commons {
-   mail {
-     sender = ${MAIL_SENDER_ADDRESS}
-     smtp {
-       user = ${SMTP_USR}
-       password = ${SMTP_PSW}
-       server = ${SMTP_SERVER}
-       port = ${SMTP_PORT}
-       authenticated = ${SMTP_AUTHENTICATED}
-       with-tls = ${SMTP_WITH_TLS}
-     }
-   }
- }
+mailer {
+  sender = ${MAIL_SENDER_ADDRESS}
+  smtp {
+    user = ${SMTP_USR}
+    password = ${SMTP_PSW}
+    server-address = ${SMTP_SERVER}
+    server-port = ${SMTP_PORT}
+    authenticated = ${SMTP_AUTHENTICATED}
+    with-tls = ${SMTP_WITH_TLS}
+    with-ssl = ${SMTP_WITH_SSL}
+  }
+}
 ```
 Where:
 
@@ -88,6 +87,8 @@ Where:
 | **SMTP_PORT**           | Integer               | SMTP server port                                            |
 | **SMTP_AUTHENTICATED**  | Boolean, default true | Flag stating if this mailer must be authenticated           |
 | **SMTP_WITH_TLS**       | Boolean, default true | Flag stating if the mailer MUST work through TLS            |
+| **SMTP_WITH_SSL**       | Boolean, default true | Flag stating if the mailer MUST work through SSL            |
+
 
 ### Vault Module
 This is the HOCON configuration object for the module:
