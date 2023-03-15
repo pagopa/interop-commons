@@ -142,53 +142,54 @@ object Dependencies {
 
   object Jars {
 
-    lazy val utilsDependencies: Seq[ModuleID] =
-      Seq(
-        akka.http                  % Compile,
-        akka.slf4j                 % Compile,
-        akka.httpJson              % Compile,
-        akka.httpJson4s            % Compile,
-        akka.stream                % Compile,
-        spray.spray                % Compile,
-        typesafe.config            % Compile,
-        cats.core                  % Compile,
-        apacheCommons.text         % Compile,
-        apacheCommons.codec        % Compile,
-        logback.classic            % Compile,
-        atlassian.swaggerValidator % Compile,
-        lightbend.logging          % Compile,
-        akka.httpTestkit           % Test,
-        akka.streamTestkit         % Test
-      )
+    lazy val utilsDependencies: Seq[ModuleID] = Seq(
+      akka.http                  % Compile,
+      akka.slf4j                 % Compile,
+      akka.httpJson              % Compile,
+      akka.httpJson4s            % Compile,
+      akka.stream                % Compile,
+      spray.spray                % Compile,
+      typesafe.config            % Compile,
+      cats.core                  % Compile,
+      apacheCommons.text         % Compile,
+      apacheCommons.codec        % Compile,
+      logback.classic            % Compile,
+      atlassian.swaggerValidator % Compile,
+      lightbend.logging          % Compile,
+      akka.httpTestkit           % Test,
+      akka.streamTestkit         % Test
+    )
 
-    lazy val fileDependencies: Seq[ModuleID] =
-      Seq(
-        aws.s3               % Compile,
-        aws.sts              % Runtime,
-        typesafe.config      % Compile,
-        jsoup.jsoup          % Compile,
-        openhtmltopdf.core   % Compile,
-        openhtmltopdf.pdfbox % Compile,
-        openhtmltopdf.slf4j  % Runtime,
-        openhtmltopdf.svg    % Compile,
-        pdfbox.lib           % Compile,
-        cats.core            % Compile,
-        pdfcompare.lib       % Test
-      )
+    lazy val fileDependencies: Seq[ModuleID] = Seq(
+      aws.s3               % Compile,
+      aws.sts              % Runtime,
+      typesafe.config      % Compile,
+      jsoup.jsoup          % Compile,
+      openhtmltopdf.core   % Compile,
+      openhtmltopdf.pdfbox % Compile,
+      openhtmltopdf.slf4j  % Runtime,
+      openhtmltopdf.svg    % Compile,
+      pdfbox.lib           % Compile,
+      cats.core            % Compile,
+      pdfcompare.lib       % Test
+    )
 
-    lazy val mailDependencies: Seq[ModuleID] =
-      Seq(courier.mail % Compile, typesafe.config % Compile, courier.testMocking % Test)
+    lazy val mailDependencies: Seq[ModuleID] = Seq(
+      courier.mail             % Compile,
+      "org.typelevel"         %% "literally"  % "1.1.0"  % Compile,
+      "com.github.pureconfig" %% "pureconfig" % "0.17.2" % Compile,
+      courier.testMocking      % Test
+    )
 
-    lazy val signerDependencies: Seq[ModuleID] =
-      Seq(
-        akka.stream              % Compile,
-        aws.kms                  % Compile,
-        aws.sts                  % Runtime,
-        vault.driver             % Compile,
-        typesafe.config          % Compile,
-        testContainers.scalatest % Test,
-        testContainers.vault     % Test
-      )
+    lazy val signerDependencies: Seq[ModuleID] = Seq(
+      akka.stream              % Compile,
+      aws.kms                  % Compile,
+      aws.sts                  % Runtime,
+      vault.driver             % Compile,
+      typesafe.config          % Compile,
+      testContainers.scalatest % Test,
+      testContainers.vault     % Test
+    )
 
     lazy val jwtDependencies: Seq[ModuleID] = Seq(
       nimbus.joseJwt     % Compile,
@@ -212,21 +213,19 @@ object Dependencies {
       cats.core                   % Compile
     )
 
-    lazy val rateLimiterDependencies: Seq[ModuleID] =
-      Seq(
-        redis.jedis        % Compile,
-        akka.stream        % Compile,
-        spray.spray        % Compile,
-        cats.core          % Compile,
-        scalamock.core     % Test,
-        akka.httpTestkit   % Test,
-        akka.streamTestkit % Test
-      )
+    lazy val rateLimiterDependencies: Seq[ModuleID] = Seq(
+      redis.jedis        % Compile,
+      akka.stream        % Compile,
+      spray.spray        % Compile,
+      cats.core          % Compile,
+      scalamock.core     % Test,
+      akka.httpTestkit   % Test,
+      akka.streamTestkit % Test
+    )
 
     lazy val parserDependencies: Seq[ModuleID] =
       Seq(cats.core % Compile, circe.core % Compile, circe.parser % Compile, circe.yaml % Compile, scala.xml % Compile)
 
-    lazy val commonDependencies: Seq[ModuleID] =
-      Seq(logback.classic % Runtime, scalatest.core % Test)
+    lazy val commonDependencies: Seq[ModuleID] = Seq(logback.classic % Runtime, scalatest.core % Test)
   }
 }
