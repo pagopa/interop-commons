@@ -12,10 +12,17 @@ import scala.jdk.CollectionConverters.SeqHasAsJava
 trait JWTMockHelper {
   val expirationTime: Date = Date.from(OffsetDateTime.of(2099, 12, 31, 23, 59, 59, 59, ZoneOffset.UTC).toInstant)
 
-  def createMockJWT(key: JWK, issuer: String, clientId: String, audience: List[String], algorithm: String): String = {
+  def createMockJWT(
+    key: JWK,
+    issuer: String,
+    clientId: String,
+    audience: List[String],
+    algorithm: String,
+    customClaims: Map[String, String] = Map.empty
+  ): String = {
     val rsaKid        = key.computeThumbprint().toJSONString
     val privateRsaKey = key.toJSONString
-    makeJWT(issuer, clientId, audience, expirationTime, algorithm, rsaKid, privateRsaKey)
+    makeJWT(issuer, clientId, audience, expirationTime, algorithm, rsaKid, privateRsaKey, customClaims)
   }
 
   def makeJWT(
@@ -25,7 +32,8 @@ trait JWTMockHelper {
     expirationTime: Date,
     algo: String,
     kid: String,
-    privateKeyPEM: String
+    privateKeyPEM: String,
+    customClaims: Map[String, String] = Map.empty
   ): String = {
     val now = new Date()
     val jwk = JWK.parse(privateKeyPEM)
@@ -33,7 +41,7 @@ trait JWTMockHelper {
     // Create signer with the private key
     val signer = if (algo == "RSA") new RSASSASigner(jwk.toRSAKey.toPrivateKey) else new ECDSASigner(jwk.toECKey)
 
-    val claimsSet = new JWTClaimsSet.Builder()
+    val tempClaimsSet = new JWTClaimsSet.Builder()
       .issuer(issuer)
       .subject(clientId)
       .jwtID(UUID.randomUUID.toString)
@@ -41,7 +49,10 @@ trait JWTMockHelper {
       .expirationTime(expirationTime)
       .issueTime(now)
       .notBeforeTime(now)
-      .build()
+
+    customClaims.map { case (k, v) => tempClaimsSet.claim(k, v) }
+
+    val claimsSet = tempClaimsSet.build()
 
     // Prepare JWS object with simple string as payload
     val algorithm = if (algo == "RSA") JWSAlgorithm.RS256 else JWSAlgorithm.ES256

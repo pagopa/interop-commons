@@ -8,6 +8,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import it.pagopa.interop.commons.jwt.errors._
 import it.pagopa.interop.commons.jwt.model.ValidClientAssertionRequest
 import it.pagopa.interop.commons.jwt.service.impl.{DefaultClientAssertionValidator, getClaimsVerifier}
+import it.pagopa.interop.commons.utils.PURPOSE_ID_CLAIM
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.TryValues._
@@ -34,10 +35,18 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
   "a Client Assertion Validator" should {
 
     "validate a proper client assertion" in {
-      val issuerUUID = UUID.randomUUID().toString
-      val clientUUID = UUID.randomUUID()
+      val issuerUUID  = UUID.randomUUID().toString
+      val clientUUID  = UUID.randomUUID()
+      val purposeUUID = UUID.randomUUID()
 
-      val assertion = createMockJWT(rsaKey, issuerUUID, clientUUID.toString, List("test"), "RSA")
+      val assertion = createMockJWT(
+        rsaKey,
+        issuerUUID,
+        clientUUID.toString,
+        List("test"),
+        "RSA",
+        Map(PURPOSE_ID_CLAIM -> purposeUUID.toString)
+      )
 
       val request = ValidClientAssertionRequest.from(
         clientAssertion = assertion,
@@ -173,6 +182,55 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       } yield ()
 
       validation.failure.exception shouldBe a[InvalidAccessTokenRequest]
+    }
+
+    "fail claims extraction if client id is not in expected format" in {
+      val issuerUUID = UUID.randomUUID().toString
+      val clientUUID = UUID.randomUUID()
+
+      val assertion = createMockJWT(rsaKey, issuerUUID, "not-a-uuid", List("test"), "RSA")
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        _            <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+      } yield ()
+
+      validation.failure.exception shouldBe a[InvalidSubjectFormat]
+    }
+
+    "fail claims extraction if purpose id is not in expected format" in {
+      val issuerUUID = UUID.randomUUID().toString
+      val clientUUID = UUID.randomUUID()
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuerUUID,
+        clientUUID.toString,
+        List("test"),
+        "RSA",
+        Map(PURPOSE_ID_CLAIM -> "not-a-uuid")
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientUUID)
+      )
+
+      val validation = for {
+        validRequest <- request
+        _            <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+      } yield ()
+
+      validation.failure.exception shouldBe a[InvalidPurposeIdFormat]
     }
 
     "fail validation when assertion is expired" in {
