@@ -47,6 +47,14 @@ object Mail {
     def make(c: Context)(args: c.Expr[Any]*): c.Expr[InternetAddress] = apply(c)(args: _*)
   }
 
+  /**
+    *
+    * @param text comma separated emails list
+    * @return
+    */
+  def from(text: String): Either[Throwable, List[InternetAddress]] =
+    Try(InternetAddress.parse(text, true)).map(_.toList).toEither
+
   implicit class MailSyntax(val sc: StringContext) extends AnyVal {
     def mail(args: Any*): InternetAddress = macro MailLiteral.make
   }
