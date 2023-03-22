@@ -48,9 +48,13 @@ object Mail {
   }
 
   /**
+    * Convert a comma-separated email text to a list of InternetAddress
     *
-    * @param text comma separated emails list
-    * @return
+    * Usage:
+    * {{{
+    *   val commaSeparatedEmails: String = "a@mail.com,b@mail.com,c@mail.com"
+    *   val emails: Either[Throwable, List[InternetAddress]] = from(commaSeparatedEmails)
+    * }}}
     */
   def from(text: String): Either[Throwable, List[InternetAddress]] =
     Try(InternetAddress.parse(text, true)).map(_.toList).toEither
