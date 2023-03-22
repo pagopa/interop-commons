@@ -53,10 +53,10 @@ object Mail {
     * Usage:
     * {{{
     *   val commaSeparatedEmails: String = "a@mail.com,b@mail.com,c@mail.com"
-    *   val emails: Either[Throwable, List[InternetAddress]] = from(commaSeparatedEmails)
+    *   val emails: Either[Throwable, List[InternetAddress]] = addresses(commaSeparatedEmails)
     * }}}
     */
-  def from(text: String): Either[Throwable, List[InternetAddress]] =
+  def addresses(text: String): Either[Throwable, List[InternetAddress]] =
     Try(InternetAddress.parse(text, true)).map(_.toList).toEither
 
   implicit class MailSyntax(val sc: StringContext) extends AnyVal {
