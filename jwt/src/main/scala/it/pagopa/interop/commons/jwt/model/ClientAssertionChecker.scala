@@ -6,13 +6,14 @@ import it.pagopa.interop.commons.jwt.errors.{InvalidJWTSignature, JWSSignerNotAv
 import it.pagopa.interop.commons.jwt.{ecVerifier, rsaVerifier}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.util.UUID
 import scala.util.{Failure, Try}
 
 final class ClientAssertionChecker private (
   val jwt: SignedJWT,
   val kid: String,
-  val subject: String,
-  val purposeId: Option[String]
+  val subject: UUID,
+  val purposeId: Option[UUID]
 ) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -33,11 +34,6 @@ final class ClientAssertionChecker private (
 
 object ClientAssertionChecker {
 
-  private[jwt] def apply(
-    jwt: SignedJWT,
-    kid: String,
-    subject: String,
-    purposeId: Option[String]
-  ): ClientAssertionChecker =
+  private[jwt] def apply(jwt: SignedJWT, kid: String, subject: UUID, purposeId: Option[UUID]): ClientAssertionChecker =
     new ClientAssertionChecker(jwt, kid, subject, purposeId)
 }
