@@ -47,6 +47,18 @@ object Mail {
     def make(c: Context)(args: c.Expr[Any]*): c.Expr[InternetAddress] = apply(c)(args: _*)
   }
 
+  /**
+    * Convert a comma-separated email text to a list of InternetAddress
+    *
+    * Usage:
+    * {{{
+    *   val commaSeparatedEmails: String = "a@mail.com,b@mail.com,c@mail.com"
+    *   val emails: Either[Throwable, List[InternetAddress]] = addresses(commaSeparatedEmails)
+    * }}}
+    */
+  def addresses(text: String): Either[Throwable, List[InternetAddress]] =
+    Try(InternetAddress.parse(text, true)).map(_.toList).toEither
+
   implicit class MailSyntax(val sc: StringContext) extends AnyVal {
     def mail(args: Any*): InternetAddress = macro MailLiteral.make
   }
