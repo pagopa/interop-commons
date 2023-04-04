@@ -30,7 +30,6 @@ class SignerServiceSpec extends AnyWordSpecLike with MockFactory {
         .signData("keyId", RSAPkcs1Sha256)("data")
         .map(_ shouldEqual data)
 
-      succeed
     }
 
     "fail with exception " in {
@@ -42,7 +41,7 @@ class SignerServiceSpec extends AnyWordSpecLike with MockFactory {
         .returns(Future.failed(ThirdPartyCallError("KMS", "message")))
 
       mockSignerService
-        .signData("keyId", RSAPkcs1Sha256)("yadayada")
+        .signData("keyId", RSAPkcs1Sha256)("data")
         .failed
         .futureValue shouldBe ThirdPartyCallError("KMS", "message")
 
