@@ -98,17 +98,6 @@ object Dependencies {
     lazy val core      = namespace %% "cats-core" % catsVersion
   }
 
-  private[this] object vault {
-    lazy val namespace = "com.bettercloud"
-    lazy val driver    = namespace % "vault-java-driver" % vaultDriverVersion
-  }
-
-  private[this] object testContainers {
-    lazy val namespace = "com.dimafeng"
-    lazy val scalatest = namespace %% "testcontainers-scala-scalatest" % testContainersScalaVersion
-    lazy val vault     = namespace %% "testcontainers-scala-vault"     % testContainersScalaVersion
-  }
-
   private[this] object pdfbox {
     lazy val namespace = "org.apache.pdfbox"
     lazy val lib       = namespace % "pdfbox" % pdfBoxVersion
@@ -185,10 +174,8 @@ object Dependencies {
       akka.stream              % Compile,
       aws.kms                  % Compile,
       aws.sts                  % Runtime,
-      vault.driver             % Compile,
       typesafe.config          % Compile,
-      testContainers.scalatest % Test,
-      testContainers.vault     % Test
+      scalamock.core           % Test
     )
 
     lazy val jwtDependencies: Seq[ModuleID] = Seq(
