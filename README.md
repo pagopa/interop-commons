@@ -10,7 +10,7 @@ This implements some modules:
 - `utils` - a module for common operations as type conversions;
 - `file-manager` - a module for file management operations;
 - `mail-manager` - a module for e-mail operations;
-- `vault` - a module for read only accesses to Vault instances;
+- `signer` - a module for read only accesses to AWS KMS;
 - `jwt` - a module for Interop tokens management;
 
 ---
@@ -89,29 +89,20 @@ Where:
 | **SMTP_WITH_TLS**       | Boolean, default true | Flag stating if the mailer MUST work through TLS            |
 | **SMTP_WITH_SSL**       | Boolean, default true | Flag stating if the mailer MUST work through SSL            |
 
-
-### Vault Module
+### AWS KMS Module
 This is the HOCON configuration object for the module:
 
 ```
 interop-commons {
-  vault {
-    address = ${VAULT_ADDR}
-    token = ${VAULT_TOKEN}
-    sslEnabled = ${VAULT_SSL_ENABLED}
-    signature-route = ${VAULT_SIGNATURE_ROUTE}
-    }
-  }
+  max-concurrency = 50
+}
 ```
 
 Where:
 
-| Variable name             | Variable type         | Notes                                                   |
-|---------------------------|-----------------------|---------------------------------------------------------|
-| **VAULT_ADDR**            | String                | URL address of the Vault                                |
-| **VAULT_TOKEN**           | String                | Token for accessing the Vault                           |
-| **VAULT_SSL_ENABLED**     | Boolean, default true | Flag stating if the Vault client MUST use SSL           |
-| **VAULT_SIGNATURE_ROUTE** | String                | Relative path to the Vault endpoint used for signatures |
+| Variable name                  | Variable type | Notes                                  |
+|--------------------------------|---------------|----------------------------------------|
+| **max-concurrency**            | Integer       | Used to apply max concurrency threads  |
 
 ### JWT Module
 This is the HOCON configuration object for the module:
