@@ -95,12 +95,11 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     def list(request: ListObjectsV2Request): Future[ListObjectsV2Response] = asyncClient.listObjectsV2(request).asScala
     def extractKeys(response: ListObjectsV2Response): List[String] = response.contents().asScala.toList.map(_.key)
 
-    def getAll(request: ListObjectsV2Request)(acc: List[String]): Future[List[String]] = {
-      list(request).flatMap { response =>
+    def getAll(request: ListObjectsV2Request)(acc: List[String]): Future[List[String]] = list(request).flatMap {
+      response =>
         val all: List[String] = extractKeys(response) ++ acc
         if (response.isTruncated()) getAll(reqBuilder.continuationToken(response.nextContinuationToken).build())(all)
         else Future.successful(all)
-      }
     }
 
     getAll(reqBuilder.build())(Nil)
