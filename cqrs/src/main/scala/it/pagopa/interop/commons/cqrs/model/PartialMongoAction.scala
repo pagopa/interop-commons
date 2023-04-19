@@ -77,6 +77,8 @@ final case class ActionWithObservable[T](action: Bson => SingleObservable[T], ob
   */
 final case class MultiAction(actions: Seq[PartialMongoAction]) extends PartialMongoAction
 
+final case class ErrorAction(error: Throwable) extends PartialMongoAction
+
 /**
   * Used when no action is required
   */
