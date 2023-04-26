@@ -57,6 +57,7 @@ final case class CqrsProjectionHandler[T](eventHandler: EventHandler[T], dbName:
           } yield result
           r.toFuture()
         case MultiAction(actions)                     => actions.traverse(applyPartialAction)
+        case ErrorAction(error)                       => Future.failed(error)
         case NoOpAction                               => Future.unit
       }
 
