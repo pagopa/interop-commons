@@ -87,12 +87,22 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   ): Future[StorageFilePath] = storeBytes(containerPath, path)("", fileName, fileContents)
 
   override def listFiles(container: String)(prefix: String): Future[List[StorageFilePath]] = {
-    val request: ListObjectsRequest = {
-      val partial = ListObjectsRequest.builder().bucket(container)
-      if (prefix.stripMargin('/').isBlank) partial.build() else partial.prefix(prefix).build()
+    def reqBuilder: ListObjectsV2Request.Builder = {
+      val partial = ListObjectsV2Request.builder().bucket(container)
+      if (prefix.stripMargin('/').isBlank) partial else partial.prefix(prefix)
     }
 
-    asyncClient.listObjects(request).asScala.map(_.contents().asScala.toList.map(_.key))
+    def list(request: ListObjectsV2Request): Future[ListObjectsV2Response] = asyncClient.listObjectsV2(request).asScala
+    def extractKeys(response: ListObjectsV2Response): List[String] = response.contents().asScala.toList.map(_.key)
+
+    def getAll(request: ListObjectsV2Request)(acc: List[String]): Future[List[String]] = list(request).flatMap {
+      response =>
+        val all: List[String] = extractKeys(response) ++ acc
+        if (response.isTruncated()) getAll(reqBuilder.continuationToken(response.nextContinuationToken).build())(all)
+        else Future.successful(all)
+    }
+
+    getAll(reqBuilder.build())(Nil)
   }
 
   override def getFile(container: String)(path: String): Future[Array[Byte]] = {
