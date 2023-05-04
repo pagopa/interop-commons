@@ -3,6 +3,7 @@ package it.pagopa.interop.commons.jwt.model
 import com.nimbusds.jose.{JWSAlgorithm, JWSVerifier}
 import com.nimbusds.jwt.SignedJWT
 import it.pagopa.interop.commons.jwt.errors.{InvalidJWTSignature, JWSSignerNotAvailable}
+import it.pagopa.interop.commons.jwt.service.impl.Digest
 import it.pagopa.interop.commons.jwt.{ecVerifier, rsaVerifier}
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -13,7 +14,8 @@ final class ClientAssertionChecker private (
   val jwt: SignedJWT,
   val kid: String,
   val subject: UUID,
-  val purposeId: Option[UUID]
+  val purposeId: Option[UUID],
+  val digest: Option[Digest]
 ) {
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -34,6 +36,12 @@ final class ClientAssertionChecker private (
 
 object ClientAssertionChecker {
 
-  private[jwt] def apply(jwt: SignedJWT, kid: String, subject: UUID, purposeId: Option[UUID]): ClientAssertionChecker =
-    new ClientAssertionChecker(jwt, kid, subject, purposeId)
+  private[jwt] def apply(
+    jwt: SignedJWT,
+    kid: String,
+    subject: UUID,
+    purposeId: Option[UUID],
+    digest: Option[Digest]
+  ): ClientAssertionChecker =
+    new ClientAssertionChecker(jwt, kid, subject, purposeId, digest)
 }

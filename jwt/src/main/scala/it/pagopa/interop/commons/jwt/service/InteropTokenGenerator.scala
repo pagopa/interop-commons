@@ -20,7 +20,7 @@ trait InteropTokenGenerator {
   def generate(
     clientAssertion: String,
     audience: List[String],
-    customClaims: Map[String, String],
+    customClaims: Map[String, AnyRef],
     tokenIssuer: String,
     validityDurationInSeconds: Long,
     isM2M: Boolean

@@ -4,20 +4,15 @@ import cats.syntax.all._
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import it.pagopa.interop.commons.jwt.errors.{
-  InvalidPurposeIdFormat,
-  InvalidSubject,
-  InvalidSubjectFormat,
-  KidNotFound,
-  SubjectNotFound
-}
+import it.pagopa.interop.commons.jwt.errors._
 import it.pagopa.interop.commons.jwt.model.{ClientAssertionChecker, ValidClientAssertionRequest}
 import it.pagopa.interop.commons.jwt.service.ClientAssertionValidator
-import it.pagopa.interop.commons.utils.{PURPOSE_ID_CLAIM, SUB}
 import it.pagopa.interop.commons.utils.TypeConversions.StringOps
+import it.pagopa.interop.commons.utils.{DIGEST_CLAIM, PURPOSE_ID_CLAIM, SUB}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
+import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.{Failure, Success, Try}
 
 /** Default implementation for Interop consumer's client assertion validations.
@@ -25,6 +20,8 @@ import scala.util.{Failure, Success, Try}
 trait DefaultClientAssertionValidator extends ClientAssertionValidator {
 
   private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  final val SHA_256: String = "SHA256"
 
   protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext]
 
@@ -36,8 +33,9 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
       _           = logger.debug("Getting subject claim")
       subject   <- subjectClaim(clientIdOpt, jwt.getJWTClaimsSet)
       purposeId <- purposeIdClaim(jwt.getJWTClaimsSet)
+      digest    <- digestClaim(jwt.getJWTClaimsSet)
       kid       <- kidHeader(jwt)
-    } yield ClientAssertionChecker(jwt, kid, subject, purposeId)
+    } yield ClientAssertionChecker(jwt, kid, subject, purposeId, digest)
 
   private def subjectClaim(clientId: Option[UUID], claimSet: JWTClaimsSet): Try[UUID] =
     Try(Option(claimSet.getSubject)).flatMap(_.traverse(_.toUUID)) match {
@@ -57,6 +55,21 @@ trait DefaultClientAssertionValidator extends ClientAssertionValidator {
     Try(Option(claimSet.getStringClaim(PURPOSE_ID_CLAIM)))
       .flatMap(_.traverse(_.toUUID))
       .adaptErr { case _ => InvalidPurposeIdFormat(Try(claimSet.getClaim(PURPOSE_ID_CLAIM).toString).getOrElse("")) }
+
+  private def digestClaim(claimSet: JWTClaimsSet): Try[Option[Digest]] = {
+    val found: Option[Map[String, AnyRef]] = Option(claimSet.getJSONObjectClaim(DIGEST_CLAIM)).map(_.asScala.toMap)
+    found.traverse(rawDigest => extractDigestClaimsNumber(rawDigest).flatMap(verifyDigestLength))
+  }
+
+  private def extractDigestClaimsNumber(rawDigest: Map[String, AnyRef]): Try[Digest] =
+    if (rawDigest.keySet.size == 2) Digest.create(rawDigest)
+    else Failure(InvalidDigestClaims)
+
+  private def verifyDigestLength(digest: Digest): Try[Digest] = digest.alg match {
+    case SHA_256 if digest.value.length == 64 => Success(digest)
+    case SHA_256                              => Failure(InvalidHashLength(SHA_256))
+    case _                                    => Failure(InvalidHashAlgorithm)
+  }
 
   private def kidHeader(jwt: SignedJWT): Try[String] =
     Try(Option(jwt.getHeader.getKeyID)) match {

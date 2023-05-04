@@ -7,14 +7,15 @@ import com.nimbusds.jwt.JWTClaimNames
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import it.pagopa.interop.commons.jwt.errors._
 import it.pagopa.interop.commons.jwt.model.ValidClientAssertionRequest
-import it.pagopa.interop.commons.jwt.service.impl.{DefaultClientAssertionValidator, getClaimsVerifier}
-import it.pagopa.interop.commons.utils.PURPOSE_ID_CLAIM
+import it.pagopa.interop.commons.jwt.service.impl.{DefaultClientAssertionValidator, Digest, getClaimsVerifier}
+import it.pagopa.interop.commons.utils.{DIGEST_CLAIM, PURPOSE_ID_CLAIM}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.TryValues._
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.{Date, UUID}
+import scala.jdk.CollectionConverters.MapHasAsJava
 import scala.util.{Failure, Success}
 
 class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JWTMockHelper {
@@ -473,6 +474,220 @@ class ClientAssertionValidatorSpec extends AnyWordSpecLike with Matchers with JW
       } yield ()
 
       validation shouldBe a[Failure[_]]
+    }
+
+    "validate a proper client assertion with digest claim [SHA_256]" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val purposeId = UUID.randomUUID().toString
+
+      val digest: Digest =
+        Digest(
+          DefaultClientAssertionValidator.SHA_256,
+          "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+        )
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuer,
+        clientId.toString,
+        List("test"),
+        "RSA",
+        Map(PURPOSE_ID_CLAIM -> purposeId, DIGEST_CLAIM -> digest.toJavaMap)
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation shouldBe a[Success[_]]
+    }
+
+    "fail validation when digest claim has more than 2 fields" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val purposeId = UUID.randomUUID().toString
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuer,
+        clientId.toString,
+        List("test"),
+        "RSA",
+        Map(
+          PURPOSE_ID_CLAIM -> purposeId,
+          DIGEST_CLAIM     -> Map(
+            Digest.algClaim   -> DefaultClientAssertionValidator.SHA_256,
+            Digest.valueClaim -> "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+            "extra"           -> "extra"
+          ).asJava
+        )
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation shouldBe Failure(InvalidDigestClaims)
+    }
+
+    "fail validation when digest claim miss alg field" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val purposeId = UUID.randomUUID().toString
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuer,
+        clientId.toString,
+        List("test"),
+        "RSA",
+        Map(
+          PURPOSE_ID_CLAIM -> purposeId,
+          DIGEST_CLAIM     -> Map(
+            Digest.valueClaim -> "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+            "extra"           -> "extra"
+          ).asJava
+        )
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation shouldBe Failure(DigestClaimNotFound(Digest.algClaim))
+    }
+
+    "fail validation when digest claim miss value field" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val purposeId = UUID.randomUUID().toString
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuer,
+        clientId.toString,
+        List("test"),
+        "RSA",
+        Map(
+          PURPOSE_ID_CLAIM -> purposeId,
+          DIGEST_CLAIM     -> Map(Digest.algClaim -> DefaultClientAssertionValidator.SHA_256, "extra" -> "extra").asJava
+        )
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation shouldBe Failure(DigestClaimNotFound(Digest.valueClaim))
+    }
+
+    "fail validation when digest alg is not valid" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val purposeId = UUID.randomUUID().toString
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuer,
+        clientId.toString,
+        List("test"),
+        "RSA",
+        Map(
+          PURPOSE_ID_CLAIM -> purposeId,
+          DIGEST_CLAIM     -> Map(
+            Digest.algClaim   -> "InvalidAlg",
+            Digest.valueClaim -> "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22"
+          ).asJava
+        )
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation shouldBe Failure(InvalidHashAlgorithm)
+    }
+
+    "fail validation when digest value has unexpected length [SHA_256]" in {
+      val issuer    = UUID.randomUUID().toString
+      val clientId  = UUID.randomUUID()
+      val purposeId = UUID.randomUUID().toString
+
+      val assertion = createMockJWT(
+        rsaKey,
+        issuer,
+        clientId.toString,
+        List("test"),
+        "RSA",
+        Map(
+          PURPOSE_ID_CLAIM -> purposeId,
+          DIGEST_CLAIM     -> Map(
+            Digest.algClaim   -> DefaultClientAssertionValidator.SHA_256,
+            Digest.valueClaim -> "0"
+          ).asJava
+        )
+      )
+
+      val request = ValidClientAssertionRequest.from(
+        clientAssertion = assertion,
+        clientAssertionType = VALID_ASSERTION_TYPE,
+        grantType = CLIENT_CREDENTIALS,
+        clientId = Some(clientId)
+      )
+
+      val validation = for {
+        validRequest <- request
+        checker      <- DefaultClientAssertionValidator.extractJwtInfo(validRequest)
+        _            <- checker.verify(rsaKey.toPublicJWK.toJSONString)
+      } yield ()
+
+      validation shouldBe Failure(InvalidHashLength(DefaultClientAssertionValidator.SHA_256))
     }
 
   }
