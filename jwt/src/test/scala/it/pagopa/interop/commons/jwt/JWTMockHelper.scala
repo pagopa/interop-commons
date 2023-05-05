@@ -18,7 +18,7 @@ trait JWTMockHelper {
     clientId: String,
     audience: List[String],
     algorithm: String,
-    customClaims: Map[String, String] = Map.empty
+    customClaims: Map[String, AnyRef] = Map.empty
   ): String = {
     val rsaKid        = key.computeThumbprint().toJSONString
     val privateRsaKey = key.toJSONString
@@ -33,7 +33,7 @@ trait JWTMockHelper {
     algo: String,
     kid: String,
     privateKeyPEM: String,
-    customClaims: Map[String, String] = Map.empty
+    customClaims: Map[String, AnyRef] = Map.empty
   ): String = {
     val now = new Date()
     val jwk = JWK.parse(privateKeyPEM)

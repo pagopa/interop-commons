@@ -28,7 +28,7 @@ final case class TokenSeed(
   nbf: Long,
   expireAt: Long,
   audience: List[String],
-  customClaims: Map[String, String]
+  customClaims: Map[String, AnyRef]
 )
 
 /** Singleton for <code>TokenSeed</code> instances constructions.
@@ -63,7 +63,7 @@ object TokenSeed {
     subject: String,
     kid: String,
     audience: List[String],
-    customClaims: Map[String, String],
+    customClaims: Map[String, AnyRef],
     tokenIssuer: String,
     validityDurationSeconds: Long
   ): TokenSeed = {
@@ -79,7 +79,7 @@ object TokenSeed {
       nbf = issuedAt.toEpochMilli,
       expireAt = issuedAt.plus(validityDurationSeconds, ChronoUnit.SECONDS).toEpochMilli,
       audience = audience,
-      customClaims = customClaims + (clientIdClaim -> subject) // assertion.getJWTClaimsSet.getSubject)
+      customClaims = customClaims + (clientIdClaim -> subject)
     )
   }
 }
