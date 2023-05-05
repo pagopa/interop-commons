@@ -1,6 +1,5 @@
 package it.pagopa.interop.commons.queue.impl
 
-import cats.implicits.toFunctorOps
 import software.amazon.awssdk.services.sqs.model.{
   DeleteMessageRequest,
   Message,
@@ -52,7 +51,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
       .queueUrl(queueUrl)
       .receiptHandle(receiptHandle)
       .build()
-    sqsClient.deleteMessage(deleteMessageRequest).asScala.void
+    sqsClient.deleteMessage(deleteMessageRequest).asScala.map(_ => ())
   }
 
   /** Fetches 10 messages at time until it reaches `chunkSize` and gives you back 
@@ -93,7 +92,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
     fn: T => Future[V]
   ): Future[List[(V, String)]] = for {
     messagesAndHandles <- rawReceiveNBodyAndHandle(maxNumberOfMessages, visibilityTimeout)
-    result             <- Future.traverse(messagesAndHandles) { case (m, h) => deserialize(m).flatMap(fn).map((_, h)) }
+    result <- Future.sequence(messagesAndHandles.map { case (m, h) => deserialize(m).flatMap(fn).map((_, h)) })
   } yield result
 
   private def deserialize[T: JsonReader](s: String): Future[T] = Try(s.parseJson) match {

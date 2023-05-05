@@ -1,6 +1,5 @@
 package it.pagopa.interop.commons.queue.impl
 
-import cats.syntax.all._
 import it.pagopa.interop.commons.queue.QueueReader
 import it.pagopa.interop.commons.queue.message.{Message, ProjectableEvent}
 import org.slf4j.{Logger, LoggerFactory}
@@ -41,7 +40,7 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
   private def receiveMessageAndHandleN(n: Int): Future[List[(Message, String)]] = for {
     messages <- rawReceiveN(n)
     bodyAndHandle = messages.map(m => (m.body(), m.receiptHandle()))
-    messagesAndHandles <- Future.traverse(bodyAndHandle) { case (body, handle) => toMessage(body).map((_, handle)) }
+    messagesAndHandles <- Future.sequence(bodyAndHandle.map { case (body, handle) => toMessage(body).map((_, handle)) })
   } yield messagesAndHandles
 
   override def receiveN(n: Int): Future[List[Message]] = for {
@@ -55,16 +54,16 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
       .receiptHandle(handle)
       .build()
     sqsClient.deleteMessage(deleteMessageRequest)
-  }.void
+  }.map(_ => ())
 
   private def handleMessageAndDelete[V](f: Message => Future[V])(m: Message, handle: String): Future[V] =
-    f(m).flatMap(v => deleteMessage(handle).as(v))
+    f(m).flatMap(v => deleteMessage(handle).map(_ => v))
 
   override def handleN[V](n: Int)(f: Message => Future[V]): Future[List[V]] = for {
     messagesAndHandles <- receiveMessageAndHandleN(n)
-    result             <- Future.traverse(messagesAndHandles) { case (message, handle) =>
+    result             <- Future.sequence(messagesAndHandles.map { case (message, handle) =>
       handleMessageAndDelete(f)(message, handle)
-    }
+    })
   } yield result
 
   override def handle[V](f: Message => Future[V]): Future[Unit] = {
@@ -76,7 +75,7 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
         logger.error(s"Error trying to consume a message from SQS - ${ex.getMessage}")
         loop
     }
-    loop.void
+    loop.map(_ => ())
   }
 
 }
