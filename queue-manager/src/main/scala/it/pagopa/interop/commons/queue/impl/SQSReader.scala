@@ -6,7 +6,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, ReceiveMessageRequest, Message => SQSMessage}
 import spray.json._
-
+import it.pagopa.interop.commons.utils.TypeConversions._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -40,7 +40,7 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
   private def receiveMessageAndHandleN(n: Int): Future[List[(Message, String)]] = for {
     messages <- rawReceiveN(n)
     bodyAndHandle = messages.map(m => (m.body(), m.receiptHandle()))
-    messagesAndHandles <- Future.sequence(bodyAndHandle.map { case (body, handle) => toMessage(body).map((_, handle)) })
+    messagesAndHandles <- Future.sequentially(bodyAndHandle) { case (body, handle) => toMessage(body).map((_, handle)) }
   } yield messagesAndHandles
 
   override def receiveN(n: Int): Future[List[Message]] = for {
@@ -61,9 +61,9 @@ final class SQSReader(queueUrl: String, visibilityTimeout: Integer)(
 
   override def handleN[V](n: Int)(f: Message => Future[V]): Future[List[V]] = for {
     messagesAndHandles <- receiveMessageAndHandleN(n)
-    result             <- Future.sequence(messagesAndHandles.map { case (message, handle) =>
+    result             <- Future.sequentially(messagesAndHandles) { case (message, handle) =>
       handleMessageAndDelete(f)(message, handle)
-    })
+    }
   } yield result
 
   override def handle[V](f: Message => Future[V]): Future[Unit] = {
