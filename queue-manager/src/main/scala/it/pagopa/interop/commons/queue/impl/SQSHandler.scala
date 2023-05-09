@@ -1,6 +1,5 @@
 package it.pagopa.interop.commons.queue.impl
 
-import cats.implicits.toFunctorOps
 import software.amazon.awssdk.services.sqs.model.{
   DeleteMessageRequest,
   Message,
@@ -9,6 +8,7 @@ import software.amazon.awssdk.services.sqs.model.{
 }
 import spray.json._
 
+import it.pagopa.interop.commons.utils.TypeConversions._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.{Failure, Success, Try}
@@ -52,7 +52,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
       .queueUrl(queueUrl)
       .receiptHandle(receiptHandle)
       .build()
-    sqsClient.deleteMessage(deleteMessageRequest).asScala.void
+    sqsClient.deleteMessage(deleteMessageRequest).asScala.map(_ => ())
   }
 
   /** Fetches 10 messages at time until it reaches `chunkSize` and gives you back 
@@ -93,7 +93,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
     fn: T => Future[V]
   ): Future[List[(V, String)]] = for {
     messagesAndHandles <- rawReceiveNBodyAndHandle(maxNumberOfMessages, visibilityTimeout)
-    result             <- Future.traverse(messagesAndHandles) { case (m, h) => deserialize(m).flatMap(fn).map((_, h)) }
+    result <- Future.sequentially(messagesAndHandles) { case (m, h) => deserialize(m).flatMap(fn).map((_, h)) }
   } yield result
 
   private def deserialize[T: JsonReader](s: String): Future[T] = Try(s.parseJson) match {
