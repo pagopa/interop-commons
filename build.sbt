@@ -93,6 +93,7 @@ lazy val queue = project
     sharedSettings,
     libraryDependencies ++= Dependencies.Jars.queueDependencies
   )
+  .dependsOn(utils)
   .setupBuildInfo
 
 lazy val cqrs = project

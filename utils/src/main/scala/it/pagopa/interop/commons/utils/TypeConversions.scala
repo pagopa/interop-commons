@@ -118,6 +118,14 @@ object TypeConversions {
     def parCollectWithLatch[T, V](n: Int)(list: List[T])(f: T => Future[V])(implicit
       ec: ExecutionContext
     ): Future[List[V]] = parTraverseWithLatch(n)(list)(f).map(_.collect { case Some(v) => v })
+
+    def sequentially[T, V](list: List[T])(f: T => Future[V])(implicit ec: ExecutionContext): Future[List[V]] = {
+      def go(innerList: List[T])(acc: List[V]): Future[List[V]] = innerList match {
+        case head :: next => f(head).flatMap(v => go(next)(acc :+ v))
+        case Nil          => Future.successful(acc)
+      }
+      go(list)(Nil)
+    }
   }
 
 }
