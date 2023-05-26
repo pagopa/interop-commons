@@ -37,6 +37,7 @@ package object jwt {
   final val API_ROLE      = "api"
   final val M2M_ROLE      = "m2m"
   final val INTERNAL_ROLE = "internal"
+  final val SUPPORT_ROLE  = "support"
 
   final val M2M_ROLES      = Map("role" -> M2M_ROLE)
   final val INTERNAL_ROLES = Map("role" -> INTERNAL_ROLE)
