@@ -1,5 +1,11 @@
 package it.pagopa.interop.commons.queue.impl
 
+import com.typesafe.config.{Config, ConfigFactory}
+import it.pagopa.interop.commons.utils.TypeConversions._
+import software.amazon.awssdk.core.client.config.{ClientAsyncConfiguration, SdkAdvancedAsyncClientOption}
+import software.amazon.awssdk.http.async.SdkAsyncHttpClient
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.{
   DeleteMessageRequest,
   Message,
@@ -8,23 +14,21 @@ import software.amazon.awssdk.services.sqs.model.{
 }
 import spray.json._
 
-import it.pagopa.interop.commons.utils.TypeConversions._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
-import scala.util.{Failure, Success, Try}
-import software.amazon.awssdk.http.async.SdkAsyncHttpClient
-import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
-import software.amazon.awssdk.services.sqs.SqsAsyncClient
-import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration
-import software.amazon.awssdk.core.client.config.SdkAdvancedAsyncClientOption
 import scala.jdk.FutureConverters._
-import com.typesafe.config.ConfigFactory
+import scala.util.{Failure, Success, Try}
 
 final case class SQSHandler(queueUrl: String)(blockingExecutionContext: ExecutionContextExecutor) {
 
   private implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
-  private lazy val concurrency: Int = ConfigFactory.load().getInt("interop-commons.queue-manager.max-concurrency")
+  private val config: Config = ConfigFactory.load()
+
+  private lazy val concurrency: Int       = config.getInt("interop-commons.queue-manager.max-concurrency")
+  private lazy val messageGroupId: Option[String] = Try(
+    config.getString("interop-commons.queue-manager.message-group-id")
+  ).toOption
 
   private val asyncHttpClient: SdkAsyncHttpClient =
     NettyNioAsyncHttpClient.builder().maxConcurrency(concurrency).build()
@@ -38,11 +42,13 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
     SqsAsyncClient.builder().httpClient(asyncHttpClient).asyncConfiguration(asyncConfiguration).build()
 
   def send[T: JsonWriter](message: T): Future[String] = {
-    val sendMsgRequest: SendMessageRequest = SendMessageRequest
+    val requestBuilder = SendMessageRequest
       .builder()
       .queueUrl(queueUrl)
       .messageBody(message.toJson.compactPrint)
-      .build()
+
+    val sendMsgRequest: SendMessageRequest = messageGroupId.fold(requestBuilder)(requestBuilder.messageGroupId).build()
+
     sqsClient.sendMessage(sendMsgRequest).asScala.map(_.messageId())
   }
 
