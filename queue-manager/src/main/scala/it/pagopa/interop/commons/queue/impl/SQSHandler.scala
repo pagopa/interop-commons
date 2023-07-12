@@ -23,6 +23,8 @@ final case class SQSHandler(config: SQSHandlerConfig)(blockingExecutionContext: 
 
   private implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
+  private val maxNumberOfMessages: Int = 10
+
   private val asyncHttpClient: SdkAsyncHttpClient =
     NettyNioAsyncHttpClient.builder().maxConcurrency(config.maxConcurrency).build()
 
@@ -104,7 +106,7 @@ final case class SQSHandler(config: SQSHandlerConfig)(blockingExecutionContext: 
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
       .queueUrl(config.queueUrl)
-      .maxNumberOfMessages(config.maxNumberOfMessages)
+      .maxNumberOfMessages(maxNumberOfMessages)
       .visibilityTimeout(config.visibilityTimeout)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.headOption)
@@ -114,7 +116,7 @@ final case class SQSHandler(config: SQSHandlerConfig)(blockingExecutionContext: 
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
       .queueUrl(config.queueUrl)
-      .maxNumberOfMessages(config.maxNumberOfMessages)
+      .maxNumberOfMessages(maxNumberOfMessages)
       .visibilityTimeout(config.visibilityTimeout)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.toList)
