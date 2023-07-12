@@ -1,6 +1,6 @@
 package it.pagopa.interop.commons.queue.impl
 
-import com.typesafe.config.{Config, ConfigFactory}
+import it.pagopa.interop.commons.queue.config.SQSHandlerConfig
 import it.pagopa.interop.commons.utils.TypeConversions._
 import software.amazon.awssdk.core.client.config.{ClientAsyncConfiguration, SdkAdvancedAsyncClientOption}
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
@@ -19,19 +19,12 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.FutureConverters._
 import scala.util.{Failure, Success, Try}
 
-final case class SQSHandler(queueUrl: String)(blockingExecutionContext: ExecutionContextExecutor) {
+final case class SQSHandler(config: SQSHandlerConfig)(blockingExecutionContext: ExecutionContextExecutor) {
 
   private implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
-  private val config: Config = ConfigFactory.load()
-
-  private lazy val concurrency: Int       = config.getInt("interop-commons.queue-manager.max-concurrency")
-  private lazy val messageGroupId: Option[String] = Try(
-    config.getString("interop-commons.queue-manager.message-group-id")
-  ).toOption
-
   private val asyncHttpClient: SdkAsyncHttpClient =
-    NettyNioAsyncHttpClient.builder().maxConcurrency(concurrency).build()
+    NettyNioAsyncHttpClient.builder().maxConcurrency(config.maxConcurrency).build()
 
   private val asyncConfiguration: ClientAsyncConfiguration = ClientAsyncConfiguration
     .builder()
@@ -44,10 +37,11 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
   def send[T: JsonWriter](message: T): Future[String] = {
     val requestBuilder = SendMessageRequest
       .builder()
-      .queueUrl(queueUrl)
+      .queueUrl(config.queueUrl)
       .messageBody(message.toJson.compactPrint)
 
-    val sendMsgRequest: SendMessageRequest = messageGroupId.fold(requestBuilder)(requestBuilder.messageGroupId).build()
+    val sendMsgRequest: SendMessageRequest =
+      config.messageGroupId.fold(requestBuilder)(requestBuilder.messageGroupId).build()
 
     sqsClient.sendMessage(sendMsgRequest).asScala.map(_.messageId())
   }
@@ -55,7 +49,7 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
   def deleteMessage(receiptHandle: String): Future[Unit] = {
     val deleteMessageRequest: DeleteMessageRequest = DeleteMessageRequest
       .builder()
-      .queueUrl(queueUrl)
+      .queueUrl(config.queueUrl)
       .receiptHandle(receiptHandle)
       .build()
     sqsClient.deleteMessage(deleteMessageRequest).asScala.map(_ => ())
@@ -63,15 +57,13 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
 
   /** Fetches 10 messages at time until it reaches `chunkSize` and gives you back 
     * both the raw messages and the handles. Runs until the queue is empty*/
-  def processAllRawMessages(chunkSize: Int, visibilityTimeout: Int)(
-    fn: (List[String], List[String]) => Future[Unit]
-  ): Future[Unit] = loop(rawReceiveNBodyAndHandle(10, visibilityTimeout))(chunkSize, Nil)(fn)
+  def processAllRawMessages(chunkSize: Int)(fn: (List[String], List[String]) => Future[Unit]): Future[Unit] =
+    loop(rawReceiveNBodyAndHandle())(chunkSize, Nil)(fn)
 
   /** Fetches 10 messages at time until it reaches `chunkSize` and gives you back 
     * both the deserialized messages and the handles. Runs until the queue is empty*/
-  def processAllMessages[T: JsonReader](chunkSize: Int, visibilityTimeout: Int)(
-    fn: (List[T], List[String]) => Future[Unit]
-  ): Future[Unit] = loop(processMessages[T, T](10, visibilityTimeout)(Future.successful))(chunkSize, Nil)(fn)
+  def processAllMessages[T: JsonReader](chunkSize: Int)(fn: (List[T], List[String]) => Future[Unit]): Future[Unit] =
+    loop(processMessages[T, T](Future.successful))(chunkSize, Nil)(fn)
 
   private def loop[T](getMessages: => Future[List[(T, String)]])(chunkSize: Int, acc: List[(T, String)])(
     fn: (List[T], List[String]) => Future[Unit]
@@ -95,10 +87,8 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
       else accumulateMessages(getMessages)(chunkSize, chunk)
     }
 
-  private def processMessages[T: JsonReader, V](maxNumberOfMessages: Int, visibilityTimeout: Int)(
-    fn: T => Future[V]
-  ): Future[List[(V, String)]] = for {
-    messagesAndHandles <- rawReceiveNBodyAndHandle(maxNumberOfMessages, visibilityTimeout)
+  private def processMessages[T: JsonReader, V](fn: T => Future[V]): Future[List[(V, String)]] = for {
+    messagesAndHandles <- rawReceiveNBodyAndHandle()
     result <- Future.sequentially(messagesAndHandles) { case (m, h) => deserialize(m).flatMap(fn).map((_, h)) }
   } yield result
 
@@ -107,25 +97,25 @@ final case class SQSHandler(queueUrl: String)(blockingExecutionContext: Executio
     case Success(json) => Future.fromTry(Try(json.convertTo[T]))
   }
 
-  private def rawReceiveNBodyAndHandle(n: Int, visibilityTimeout: Int): Future[List[(String, String)]] =
-    rawReceiveN(n, visibilityTimeout).map(_.map(m => (m.body(), m.receiptHandle())))
+  private def rawReceiveNBodyAndHandle(): Future[List[(String, String)]] =
+    rawReceiveN().map(_.map(m => (m.body(), m.receiptHandle())))
 
-  def rawReceive(visibilityTimeout: Int): Future[Option[Message]] = {
+  def rawReceive(): Future[Option[Message]] = {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
-      .queueUrl(queueUrl)
-      .maxNumberOfMessages(1)
-      .visibilityTimeout(visibilityTimeout)
+      .queueUrl(config.queueUrl)
+      .maxNumberOfMessages(config.maxNumberOfMessages)
+      .visibilityTimeout(config.visibilityTimeout)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.headOption)
   }
 
-  private def rawReceiveN(n: Int, visibilityTimeout: Int): Future[List[Message]] = {
+  private def rawReceiveN(): Future[List[Message]] = {
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
-      .queueUrl(queueUrl)
-      .maxNumberOfMessages(n)
-      .visibilityTimeout(visibilityTimeout)
+      .queueUrl(config.queueUrl)
+      .maxNumberOfMessages(config.maxNumberOfMessages)
+      .visibilityTimeout(config.visibilityTimeout)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.toList)
   }
