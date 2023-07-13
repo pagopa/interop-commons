@@ -4,5 +4,5 @@ final case class SQSHandlerConfig(
   queueUrl: String,
   maxConcurrency: Int = 50,
   visibilityTimeout: Int = 30,
-  messageGroupId: Option[String]
+  messageGroupId: Option[String] = None
 )
