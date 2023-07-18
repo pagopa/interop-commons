@@ -57,7 +57,6 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
       results <- db
         .getCollection(collectionName)
         .find(filter)
-        .allowDiskUse(true)
         .projection(projection)
         .skip(offset)
         .limit(limit)
@@ -78,7 +77,6 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
   )(implicit ec: ExecutionContext) = db
     .getCollection(collectionName)
     .aggregate(pipeline ++ Seq(Aggregates.skip(offset), Aggregates.limit(limit)))
-    .allowDiskUse(true)
     .toFuture()
     .flatMap(Future.traverse(_)(f(_).toFuture))
 
