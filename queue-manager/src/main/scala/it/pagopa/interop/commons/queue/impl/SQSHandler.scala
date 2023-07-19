@@ -23,6 +23,7 @@ final case class SQSHandler(config: SQSHandlerConfig)(blockingExecutionContext: 
 
   private implicit val ec: ExecutionContextExecutor = blockingExecutionContext
 
+  private val minNumberOfMessages: Int = 1
   private val maxNumberOfMessages: Int = 10
 
   private val asyncHttpClient: SdkAsyncHttpClient =
@@ -106,7 +107,7 @@ final case class SQSHandler(config: SQSHandlerConfig)(blockingExecutionContext: 
     val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest
       .builder()
       .queueUrl(config.queueUrl)
-      .maxNumberOfMessages(maxNumberOfMessages)
+      .maxNumberOfMessages(minNumberOfMessages)
       .visibilityTimeout(config.visibilityTimeout)
       .build()
     sqsClient.receiveMessage(receiveMessageRequest).asScala.map(_.messages().asScala.headOption)
