@@ -20,12 +20,20 @@ trait ReadModelService {
   def find[T: JsonReader](collectionName: String, filter: Bson, projection: Bson, offset: Int, limit: Int)(implicit
     ec: ExecutionContext
   ): Future[Seq[T]]
-  def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
-    ec: ExecutionContext
-  ): Future[Seq[T]]
-  def aggregateRaw[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
-    ec: ExecutionContext
-  ): Future[Seq[T]]
+  def aggregate[T: JsonReader](
+    collectionName: String,
+    pipeline: Seq[Bson],
+    offset: Int,
+    limit: Int,
+    allowDiskUse: Boolean = false
+  )(implicit ec: ExecutionContext): Future[Seq[T]]
+  def aggregateRaw[T: JsonReader](
+    collectionName: String,
+    pipeline: Seq[Bson],
+    offset: Int,
+    limit: Int,
+    allowDiskUse: Boolean = false
+  )(implicit ec: ExecutionContext): Future[Seq[T]]
   def close(): Unit
 }
 
@@ -64,19 +72,34 @@ final class MongoDbReadModelService(dbConfig: ReadModelConfig) extends ReadModel
       model   <- results.traverse(extractData[T](_).toFuture)
     } yield model
 
-  def aggregate[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
-    ec: ExecutionContext
-  ): Future[Seq[T]] = aggregator(collectionName, pipeline, offset, limit)(extractData[T])
+  def aggregate[T: JsonReader](
+    collectionName: String,
+    pipeline: Seq[Bson],
+    offset: Int,
+    limit: Int,
+    allowDiskUse: Boolean = false
+  )(implicit ec: ExecutionContext): Future[Seq[T]] =
+    aggregator(collectionName, pipeline, offset, limit, allowDiskUse)(extractData[T])
 
-  def aggregateRaw[T: JsonReader](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(implicit
-    ec: ExecutionContext
-  ): Future[Seq[T]] = aggregator(collectionName, pipeline, offset, limit)(extract[T])
+  def aggregateRaw[T: JsonReader](
+    collectionName: String,
+    pipeline: Seq[Bson],
+    offset: Int,
+    limit: Int,
+    allowDiskUse: Boolean = false
+  )(implicit ec: ExecutionContext): Future[Seq[T]] =
+    aggregator(collectionName, pipeline, offset, limit, allowDiskUse)(extract[T])
 
-  private def aggregator[T](collectionName: String, pipeline: Seq[Bson], offset: Int, limit: Int)(
-    f: Document => Either[Throwable, T]
-  )(implicit ec: ExecutionContext) = db
+  private def aggregator[T](
+    collectionName: String,
+    pipeline: Seq[Bson],
+    offset: Int,
+    limit: Int,
+    allowDiskUse: Boolean
+  )(f: Document => Either[Throwable, T])(implicit ec: ExecutionContext) = db
     .getCollection(collectionName)
     .aggregate(pipeline ++ Seq(Aggregates.skip(offset), Aggregates.limit(limit)))
+    .allowDiskUse(allowDiskUse)
     .toFuture()
     .flatMap(Future.traverse(_)(f(_).toFuture))
 
