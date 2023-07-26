@@ -244,6 +244,24 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
       result.isLeft shouldBe true
     }
 
+    "fail extracting urls from a w/o service" in {
+      val bytes: Array[Byte] = Source.fromResource("api_without_service.wsdl").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Elem] = InterfaceParser.parseWSDL(bytes)
+
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Elem])
+
+      result.isLeft shouldBe true
+    }
+
+    "fail extracting endpoints from a w/o binding" in {
+      val bytes: Array[Byte] = Source.fromResource("api_without_binding.wsdl").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Elem] = InterfaceParser.parseWSDL(bytes)
+
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getEndpoints[Elem])
+
+      result.isLeft shouldBe true
+    }
+
     "extract endpoints from a WSDL correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api.wsdl").getLines().mkString("\n").getBytes
       val parsed: Either[Throwable, Elem] = InterfaceParser.parseWSDL(bytes)

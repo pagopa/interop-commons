@@ -1,6 +1,6 @@
 package it.pagopa.interop.commons.parser
 
-import cats.implicits.toTraverseOps
+import cats.syntax.all._
 import io.circe.{DecodingFailure, Json}
 import it.pagopa.interop.commons.parser.errors.Errors
 import it.pagopa.interop.commons.parser.errors.Errors.OpenapiVersionNotRecognized
@@ -58,14 +58,18 @@ object InterfaceParserUtils {
 
   implicit val soapInterfaceExtractor: InterfaceParserUtils[Elem] = new InterfaceParserUtils[Elem] {
     override def getUrls(serviceInterface: Elem): Either[Throwable, List[String]] =
-      (serviceInterface \\ "definitions" \ "service" \ "port" \ "address").toList.traverse(node =>
-        node.attribute("location").map(_.text).toRight(Errors.InterfaceExtractingInfoError)
-      )
+      (serviceInterface \\ "definitions" \ "service" \ "port" \ "address").toList
+        .asRight[Throwable]
+        .ensure(Errors.InterfaceExtractingInfoError)(_.nonEmpty)
+        .flatMap(
+          _.traverse(node => node.attribute("location").map(_.text).toRight(Errors.InterfaceExtractingInfoError))
+        )
 
     override def getEndpoints(xml: Elem): Either[Throwable, List[String]] =
       (xml \\ "definitions" \ "binding" \ "operation" \ "operation").toList
-        .traverse(_.attribute("soapAction").map(_.text).toRight(Errors.InterfaceExtractingInfoError))
-
+        .asRight[Throwable]
+        .ensure(Errors.InterfaceExtractingInfoError)(_.nonEmpty)
+        .flatMap(_.traverse(_.attribute("soapAction").map(_.text).toRight(Errors.InterfaceExtractingInfoError)))
   }
 
 }
