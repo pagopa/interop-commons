@@ -5,7 +5,7 @@ import io.circe.{DecodingFailure, Json}
 import it.pagopa.interop.commons.parser.errors.Errors
 import it.pagopa.interop.commons.parser.errors.Errors.OpenapiVersionNotRecognized
 
-import scala.xml.Elem
+import scala.xml.{Elem, Node}
 
 trait InterfaceParserUtils[A] {
   def getUrls(serviceInterface: A): Either[Throwable, List[String]]
@@ -62,14 +62,26 @@ object InterfaceParserUtils {
         .asRight[Throwable]
         .ensure(Errors.InterfaceExtractingInfoError)(_.nonEmpty)
         .flatMap(
-          _.traverse(node => node.attribute("location").map(_.text).toRight(Errors.InterfaceExtractingInfoError))
+          _.traverse(node =>
+            node.attribute("location").map(_.text).filterNot(_.isBlank).toRight(Errors.InterfaceExtractingInfoError)
+          )
         )
 
-    override def getEndpoints(xml: Elem): Either[Throwable, List[String]] =
-      (xml \\ "definitions" \ "binding" \ "operation" \ "operation").toList
+    override def getEndpoints(xml: Elem): Either[Throwable, List[String]] = {
+      val operationNodes: Either[Throwable, List[Node]] = (xml \\ "definitions" \ "binding" \ "operation").toList
         .asRight[Throwable]
         .ensure(Errors.InterfaceExtractingInfoError)(_.nonEmpty)
-        .flatMap(_.traverse(_.attribute("soapAction").map(_.text).toRight(Errors.InterfaceExtractingInfoError)))
+
+      def getSoapActionName(node: Node): Either[Throwable, List[String]] =
+        (node \ "operation").toList.traverse(
+          _.attribute("soapAction").map(_.text).filterNot(_.isBlank).toRight(Errors.InterfaceExtractingInfoError)
+        )
+
+      def getName(node: Node): Either[Throwable, List[String]] =
+        node.attribute("name").map(n => n.text :: Nil).toRight(Errors.InterfaceExtractingInfoError)
+
+      operationNodes.flatMap(nodes => nodes.flatTraverse(getSoapActionName).orElse(nodes.flatTraverse(getName)))
+    }
   }
 
 }
