@@ -270,5 +270,14 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
 
       result shouldBe Right(List("http://host/TestWS/One", "http://host/TestWS/Two"))
     }
+
+    "extract endpoints from a WSDL without soapName attribute" in {
+      val bytes: Array[Byte] = Source.fromResource("api_without_soapAction.wsdl").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Elem] = InterfaceParser.parseWSDL(bytes)
+
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getEndpoints[Elem])
+
+      result shouldBe Right(List("One", "Two"))
+    }
   }
 }

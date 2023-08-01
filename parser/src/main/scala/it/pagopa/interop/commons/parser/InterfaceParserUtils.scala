@@ -62,7 +62,9 @@ object InterfaceParserUtils {
         .asRight[Throwable]
         .ensure(Errors.InterfaceExtractingInfoError)(_.nonEmpty)
         .flatMap(
-          _.traverse(node => node.attribute("location").map(_.text).toRight(Errors.InterfaceExtractingInfoError))
+          _.traverse(node =>
+            node.attribute("location").map(_.text).filterNot(_.isBlank).toRight(Errors.InterfaceExtractingInfoError)
+          )
         )
 
     override def getEndpoints(xml: Elem): Either[Throwable, List[String]] = {
@@ -72,7 +74,7 @@ object InterfaceParserUtils {
 
       def getSoapActionName(node: Node): Either[Throwable, List[String]] =
         (node \ "operation").toList.traverse(
-          _.attribute("soapAction").map(_.text).toRight(Errors.InterfaceExtractingInfoError)
+          _.attribute("soapAction").map(_.text).filterNot(_.isBlank).toRight(Errors.InterfaceExtractingInfoError)
         )
 
       def getName(node: Node): Either[Throwable, List[String]] =
