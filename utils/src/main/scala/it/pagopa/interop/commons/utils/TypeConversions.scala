@@ -126,6 +126,18 @@ object TypeConversions {
       }
       go(list)(Nil)
     }
+
+    def sequentiallyAccumulateLeft[T, V, R](
+      parameters: List[T]
+    )(thunk: T => Future[V])(zero: R)(f: (R, V) => R)(implicit ec: ExecutionContext): Future[R] = {
+
+      def loop(remaining: List[T])(acc: R): Future[R] = remaining match {
+        case Nil          => Future.successful(acc)
+        case head :: next => thunk(head).map(f(acc, _)).flatMap(loop(next)(_))
+      }
+
+      loop(parameters)(zero)
+    }
   }
 
 }
