@@ -149,7 +149,7 @@ object TypeConversions {
 
       def loop(remaining: List[List[T]])(acc: R): Future[R] = remaining match {
         case Nil          => Future.successful(acc)
-        case head :: next => traverseWithLatch(parallelism)(head)(thunk).map(_.foldLeft(acc)(f)).flatMap(loop(next)(_))
+        case head :: next => Future.traverse(head)(thunk).map(_.foldLeft(acc)(f)).flatMap(loop(next)(_))
       }
 
       loop(parameters.grouped(parallelism).toList)(zero)
