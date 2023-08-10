@@ -23,6 +23,9 @@ package object utils {
   val DIGEST_CLAIM: String                                 = "digest"
   val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
   val SELFCARE_ID_CLAIM: String                            = "selfcareId"
+  val EXTERNAL_ID_CLAIM: String                            = "externalId"
+  val ORIGIN: String                                       = "origin"
+  val VALUE: String                                        = "value"
 
   type BearerToken   = String
   type CorrelationId = String
