@@ -19,6 +19,8 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import java.{util => ju}
 import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 package object jwt {
 
@@ -88,6 +90,46 @@ package object jwt {
 
   private def getInteropRoleClaimSafe(claims: JWTClaimsSet): Option[String] =
     Try(claims.getStringClaim(roleClaim)).toOption.flatMap(Option(_))
+
+  def getExternalId(claims: JWTClaimsSet): (Option[String], Option[String]) = {
+
+    def externalIdFromOrganizationClaim(): Try[(Try[String], Try[String])] = for {
+      externalIdFromClaim <- Try(claims.getJSONObjectClaim(ORGANIZATION_EXTERNAL_ID_CLAIM))
+        .flatMap(nullable => Option(nullable).toTry(GenericError("External Id in context is not in valid format")))
+      origin = Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_ORIGIN))
+        .flatMap(nullable =>
+          Option(nullable).toTry(GenericError("External Id origin in context not is in a valid format")).map(_.toString)
+        )
+      value  = Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_VALUE))
+        .flatMap(nullable =>
+          Option(nullable).toTry(GenericError("External Id value in context not is in a valid format")).map(_.toString)
+        )
+    } yield (origin, value)
+
+    externalIdFromOrganizationClaim() match {
+      case Success((origin, value)) =>
+        (
+          origin match {
+            case Success(value) => Some(value)
+            case Failure(e)     => {
+              logger.warn(s"Unable to extract origin from claims: ${e.getMessage()}")
+              None
+            }
+          },
+          value match {
+            case Success(value) => Some(value)
+            case Failure(e)     => {
+              logger.warn(s"Unable to extract value from claims: ${e.getMessage()}")
+              None
+            }
+          }
+        )
+      case Failure(e)               => {
+        logger.warn(s"Unable to extract externalId from claims: ${e.getMessage()}")
+        (None, None)
+      }
+    }
+  }
 
   def getUserRoles(claims: JWTClaimsSet): Set[String] = {
 

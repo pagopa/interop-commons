@@ -26,6 +26,8 @@ package object utils {
   val ORGANIZATION_EXTERNAL_ID_CLAIM: String               = "externalId"
   val ORGANIZATION_EXTERNAL_ID_ORIGIN: String              = "origin"
   val ORGANIZATION_EXTERNAL_ID_VALUE: String               = "value"
+  val ORGANIZATION_EXTERNAL_ID_ORIGIN_CLAIM: String        = "organizationExternalIdOrigin"
+  val ORGANIZATION_EXTERNAL_ID_VALUE_CLAIM: String         = "organizationExternalIdValue"
 
   type BearerToken   = String
   type CorrelationId = String
