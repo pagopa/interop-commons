@@ -91,42 +91,29 @@ package object jwt {
   private def getInteropRoleClaimSafe(claims: JWTClaimsSet): Option[String] =
     Try(claims.getStringClaim(roleClaim)).toOption.flatMap(Option(_))
 
-  def getExternalId(claims: JWTClaimsSet): (Option[String], Option[String]) = {
-
-    def externalIdFromOrganizationClaim(): Try[(Try[String], Try[String])] = for {
+  private[jwt] def getExternalId(claims: JWTClaimsSet): Option[(String, String)] = {
+    def externalIdFromOrganizationClaim(): Try[(String, String)] = for {
       externalIdFromClaim <- Try(claims.getJSONObjectClaim(ORGANIZATION_EXTERNAL_ID_CLAIM))
-        .flatMap(nullable => Option(nullable).toTry(GenericError("External Id in context is not in valid format")))
-      origin = Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_ORIGIN))
+        .flatMap(nullable => Option(nullable).toTry(MissingClaim(ORGANIZATION_EXTERNAL_ID_CLAIM)))
+      origin              <- Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_ORIGIN_CLAIM))
         .flatMap(nullable =>
-          Option(nullable).toTry(GenericError("External Id origin in context not is in a valid format")).map(_.toString)
+          Option(nullable)
+            .toTry(MissingClaim(s"$ORGANIZATION_EXTERNAL_ID_CLAIM.$ORGANIZATION_EXTERNAL_ID_ORIGIN_CLAIM"))
+            .map(_.toString)
         )
-      value  = Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_VALUE))
+      value               <- Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_VALUE_CLAIM))
         .flatMap(nullable =>
-          Option(nullable).toTry(GenericError("External Id value in context not is in a valid format")).map(_.toString)
+          Option(nullable)
+            .toTry(MissingClaim(s"$ORGANIZATION_EXTERNAL_ID_CLAIM.$ORGANIZATION_EXTERNAL_ID_VALUE_CLAIM"))
+            .map(_.toString)
         )
     } yield (origin, value)
 
     externalIdFromOrganizationClaim() match {
-      case Success((origin, value)) =>
-        (
-          origin match {
-            case Success(value) => Some(value)
-            case Failure(e)     => {
-              logger.warn(s"Unable to extract origin from claims: ${e.getMessage()}")
-              None
-            }
-          },
-          value match {
-            case Success(value) => Some(value)
-            case Failure(e)     => {
-              logger.warn(s"Unable to extract value from claims: ${e.getMessage()}")
-              None
-            }
-          }
-        )
+      case Success((origin, value)) => Some((origin, value))
       case Failure(e)               => {
         logger.warn(s"Unable to extract externalId from claims: ${e.getMessage()}")
-        (None, None)
+        None
       }
     }
   }

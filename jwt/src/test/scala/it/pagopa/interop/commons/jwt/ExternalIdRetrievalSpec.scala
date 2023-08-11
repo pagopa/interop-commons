@@ -21,13 +21,13 @@ class ExternalIdRetrievalSpec extends AnyWordSpecLike with Matchers with JWTMock
           |ccCIz-_kq2W-8bu4p7XjK3YqdVD0D1Fk8QhpBWsyRfuMErK82pUW34ukQGUkphkL6DMKbVg4xdr-UQDI9ClxY7NnGdK4I_NhWMKaU4CLQ
           |""".stripMargin
 
-      val parsedJwt                                    = SignedJWT.parse(s)
-      val claims: JWTClaimsSet                         = parsedJwt.getJWTClaimsSet
-      val externalId: (Option[String], Option[String]) = getExternalId(claims)
-
-      externalId shouldBe (Some("IPA"), Some("12345"))
+      val parsedJwt                            = SignedJWT.parse(s)
+      val claims: JWTClaimsSet                 = parsedJwt.getJWTClaimsSet
+      val externalId: Option[(String, String)] = getExternalId(claims)
+      println(claims)
+      externalId shouldBe Some(("IPA", "12345"))
     }
-    "return only origin" in {
+    "return None if only origin" in {
 
       val s =
         """
@@ -40,13 +40,13 @@ class ExternalIdRetrievalSpec extends AnyWordSpecLike with Matchers with JWTMock
           |iwVOSSCIcHc-kknpE7svasFPRRCKOSLMVq5fFnnzr6Iwr4KQ0vRTZcd2XaBkR7NGfVM2Ngzjw
           |""".stripMargin
 
-      val parsedJwt                                    = SignedJWT.parse(s)
-      val claims: JWTClaimsSet                         = parsedJwt.getJWTClaimsSet
-      val externalId: (Option[String], Option[String]) = getExternalId(claims)
+      val parsedJwt                            = SignedJWT.parse(s)
+      val claims: JWTClaimsSet                 = parsedJwt.getJWTClaimsSet
+      val externalId: Option[(String, String)] = getExternalId(claims)
 
-      externalId shouldBe (Some("IPA"), None)
+      externalId shouldBe None
     }
-    "return only value" in {
+    "return None if only value" in {
 
       val s =
         """
@@ -59,13 +59,13 @@ class ExternalIdRetrievalSpec extends AnyWordSpecLike with Matchers with JWTMock
           |MMJ7orfl4kVcXISo11TMKotX_stSuQzne-2wsM5A_0BqNxsj-4UlbzYeSWBacTHW8QvQ
           |""".stripMargin
 
-      val parsedJwt                                    = SignedJWT.parse(s)
-      val claims: JWTClaimsSet                         = parsedJwt.getJWTClaimsSet
-      val externalId: (Option[String], Option[String]) = getExternalId(claims)
+      val parsedJwt                            = SignedJWT.parse(s)
+      val claims: JWTClaimsSet                 = parsedJwt.getJWTClaimsSet
+      val externalId: Option[(String, String)] = getExternalId(claims)
 
-      externalId shouldBe (None, Some("12345"))
+      externalId shouldBe None
     }
-    "return no values" in {
+    "return None if no values" in {
 
       val s =
         """
@@ -78,11 +78,11 @@ class ExternalIdRetrievalSpec extends AnyWordSpecLike with Matchers with JWTMock
           |vebyC59ncWrMDgIjjzLJg
           |""".stripMargin
 
-      val parsedJwt                                    = SignedJWT.parse(s)
-      val claims: JWTClaimsSet                         = parsedJwt.getJWTClaimsSet
-      val externalId: (Option[String], Option[String]) = getExternalId(claims)
+      val parsedJwt                            = SignedJWT.parse(s)
+      val claims: JWTClaimsSet                 = parsedJwt.getJWTClaimsSet
+      val externalId: Option[(String, String)] = getExternalId(claims)
 
-      externalId shouldBe (None, None)
+      externalId shouldBe None
     }
   }
 }
