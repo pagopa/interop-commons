@@ -3,7 +3,7 @@ package it.pagopa.interop.commons.logging
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.{complete, provide}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import it.pagopa.interop.commons.utils.CORRELATION_ID_HEADER
+import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, ACCEPT_LANGUAGE}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -13,6 +13,109 @@ class WithLoggingAttributesSpec extends AnyWordSpecLike with Matchers with Scala
 
   "Logging attributes directive" should {
     val wrappingDirective: Directive1[Seq[(String, String)]] = provide(Seq.empty[(String, String)])
+
+    "get a Accept-Language if nothing is passed" in {
+      Get() ~> withLoggingAttributesF(true)(wrappingDirective) { implicit context =>
+        complete {
+          val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+          acceptLanguage.length shouldBe 1
+          acceptLanguage.head._2 shouldEqual "it-IT"
+          "ok"
+        }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
+
+    "get a Accept-Language if it-IT is passed" in {
+      val acceptLanguage: String = "it-IT"
+      Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
+        implicit context =>
+          complete {
+            val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+            acceptLanguage.length shouldBe 1
+            acceptLanguage.head._2 shouldEqual "it-IT"
+            "ok"
+          }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
+
+    "get a Accept-Language if * is passed" in {
+      val acceptLanguage: String = "*"
+      Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
+        implicit context =>
+          complete {
+            val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+            acceptLanguage.length shouldBe 1
+            acceptLanguage.head._2 shouldEqual "it-IT"
+            "ok"
+          }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
+
+    "get a Accept-Language if en-US is passed" in {
+      val acceptLanguage: String = "en-US"
+      Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
+        implicit context =>
+          complete {
+            val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+            acceptLanguage.length shouldBe 1
+            acceptLanguage.head._2 shouldEqual "en-US"
+            "ok"
+          }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
+
+    "get a Accept-Language if it is passed" in {
+      val acceptLanguage: String = "it"
+      Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
+        implicit context =>
+          complete {
+            val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+            acceptLanguage.length shouldBe 1
+            acceptLanguage.head._2 shouldEqual "it-IT"
+            "ok"
+          }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
+
+    "get a Accept-Language if a not supported language is passed" in {
+      val acceptLanguage: String = "de-DE"
+      Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
+        implicit context =>
+          complete {
+            val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+            acceptLanguage.length shouldBe 1
+            acceptLanguage.head._2 shouldEqual "it-IT"
+            "ok"
+          }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
+
+    "get a Accept-Language if q value is passed1" in {
+      val acceptLanguage: String = "en-US;q=0.5"
+      Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
+        implicit context =>
+          complete {
+            val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
+            acceptLanguage.length shouldBe 1
+            acceptLanguage.head._2 shouldEqual "en-US"
+            "ok"
+          }
+      } ~> check {
+        responseAs[String] shouldEqual "ok"
+      }
+    }
 
     "generate a Correlation Id if the service is internet facing and Correlation Id is not given" in {
       Get() ~> withLoggingAttributesF(true)(wrappingDirective) { implicit context =>

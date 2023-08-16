@@ -3,6 +3,8 @@ package it.pagopa.interop.commons.ratelimiter.model
 import akka.http.scaladsl.model.HttpHeader
 import akka.http.scaladsl.model.headers.RawHeader
 import it.pagopa.interop.commons.utils.AkkaUtils.getClaim
+import it.pagopa.interop.commons.utils.ACCEPT_LANGUAGE
+import it.pagopa.interop.commons.utils.CONTENT_LANGUAGE
 
 object Headers {
 
@@ -21,7 +23,8 @@ object Headers {
     List(
       header(contexts, RATE_LIMITER_HEADER_LIMIT),
       header(contexts, RATE_LIMITER_HEADER_INTERVAL),
-      header(contexts, RATE_LIMITER_HEADER_REMAINING)
+      header(contexts, RATE_LIMITER_HEADER_REMAINING),
+      getClaim(contexts, ACCEPT_LANGUAGE).toOption.map(RawHeader(CONTENT_LANGUAGE, _))
     ).flatten
 
   private def header(contexts: Seq[(String, String)], headerName: String): Option[RawHeader] =
