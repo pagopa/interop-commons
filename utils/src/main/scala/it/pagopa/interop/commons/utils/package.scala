@@ -7,11 +7,13 @@ import akka.http.scaladsl.model.headers.Language
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
 import scala.concurrent.Future
+import java.time.ZoneId
 
 package object utils {
   private[utils] lazy val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
   private[utils] lazy val sha1: MessageDigest              = MessageDigest.getInstance("SHA-1")
   private[utils] lazy val md5: MessageDigest               = MessageDigest.getInstance("MD5")
+  private[utils] val europeRome: ZoneId                    = ZoneId.of("Europe/Rome")
   val SUB: String                                          = "sub"
   val BEARER: String                                       = "bearer"
   val UID: String                                          = "uid"

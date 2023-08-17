@@ -75,7 +75,8 @@ object TypeConversions {
   }
 
   implicit class LongOps(val l: Long) extends AnyVal {
-    def toOffsetDateTime: Try[OffsetDateTime]                     = toOffsetDateTime(ZoneOffset.UTC)
+    def toOffsetDateTime: Try[OffsetDateTime] = toOffsetDateTime(ZoneOffset.UTC)
+    def toEuropeRomeOffsetDateTime            = Try(Instant.ofEpochMilli(l).atZone(europeRome).toOffsetDateTime())
     def toOffsetDateTime(offset: ZoneOffset): Try[OffsetDateTime] = Try(
       OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), offset)
     )
@@ -125,6 +126,34 @@ object TypeConversions {
         case Nil          => Future.successful(acc)
       }
       go(list)(Nil)
+    }
+
+    def sequentiallyAccumulateLeft[T, V, R](
+      parameters: List[T]
+    )(thunk: T => Future[V])(zero: R)(f: (R, V) => R)(implicit ec: ExecutionContext): Future[R] = {
+
+      def loop(remaining: List[T])(acc: R): Future[R] = remaining match {
+        case Nil          => Future.successful(acc)
+        case head :: next => thunk(head).map(f(acc, _)).flatMap(loop(next)(_))
+      }
+
+      loop(parameters)(zero)
+    }
+
+    /** Runs `thunk` over `parameters` with some `parallelism` 
+      * (grouping parameters in chunks of length `parallelism` and then traversing over the list) 
+      * and ONE CHUNK AT A TIME accumulates the result as a `foldLeft(zero)(f)`
+      */
+    def accumulateLeft[T, V, R](
+      parallelism: Int
+    )(parameters: List[T])(thunk: T => Future[V])(zero: R)(f: (R, V) => R)(implicit ec: ExecutionContext): Future[R] = {
+
+      def loop(remaining: List[List[T]])(acc: R): Future[R] = remaining match {
+        case Nil          => Future.successful(acc)
+        case head :: next => Future.traverse(head)(thunk).map(_.foldLeft(acc)(f)).flatMap(loop(next)(_))
+      }
+
+      loop(parameters.grouped(parallelism).toList)(zero)
     }
   }
 
