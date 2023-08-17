@@ -30,7 +30,7 @@ trait CORSSupport {
   private def addAccessControlHeaders: Directive0 = respondWithHeaders(
     `Access-Control-Allow-Origin`.*,
     `Access-Control-Allow-Credentials`(true),
-    `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With", "Content-Language")
+    `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With", "Accept-Language")
   )
 
   private def preflightRequestHandler: Route = options {
