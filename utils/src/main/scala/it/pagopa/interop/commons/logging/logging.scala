@@ -34,7 +34,6 @@ package object logging {
       MDC.put(SUB, contextOrBlank(fields, SUB))
       MDC.put(ORGANIZATION_ID_CLAIM, contextOrBlank(fields, ORGANIZATION_ID_CLAIM))
       MDC.put(CORRELATION_ID_HEADER, contextOrBlank(fields, CORRELATION_ID_HEADER))
-      MDC.put(ACCEPT_LANGUAGE, contextOrBlank(fields, ACCEPT_LANGUAGE))
 
       originalMsg
     }
@@ -45,7 +44,6 @@ package object logging {
       MDC.remove(SUB)
       MDC.remove(ORGANIZATION_ID_CLAIM)
       MDC.remove(CORRELATION_ID_HEADER)
-      MDC.remove(ACCEPT_LANGUAGE)
     }
   }
 

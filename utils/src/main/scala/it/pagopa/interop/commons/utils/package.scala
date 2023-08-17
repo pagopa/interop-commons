@@ -27,7 +27,7 @@ package object utils {
   val ORGANIZATION_ID_CLAIM: String                        = "organizationId"
   val SELFCARE_ID_CLAIM: String                            = "selfcareId"
 
-  val OTHER_LANGUAGES: Seq[Language] = Seq(Language("en-US"), Language("en"))
+  val OTHER_LANGUAGES: Seq[Language] = Seq(Language("en-EN"))
   val DEFAULT_LANGUAGE: Language     = Language("it-IT")
 
   type BearerToken   = String
