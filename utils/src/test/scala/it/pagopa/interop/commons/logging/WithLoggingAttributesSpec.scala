@@ -57,14 +57,14 @@ class WithLoggingAttributesSpec extends AnyWordSpecLike with Matchers with Scala
       }
     }
 
-    "get a Accept-Language if en-US is passed" in {
-      val acceptLanguage: String = "en-US"
+    "get a Accept-Language if en-EN is passed" in {
+      val acceptLanguage: String = "en-EN"
       Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
         implicit context =>
           complete {
             val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
             acceptLanguage.length shouldBe 1
-            acceptLanguage.head._2 shouldEqual "en-US"
+            acceptLanguage.head._2 shouldEqual "en-EN"
             "ok"
           }
       } ~> check {
@@ -103,13 +103,13 @@ class WithLoggingAttributesSpec extends AnyWordSpecLike with Matchers with Scala
     }
 
     "get a Accept-Language if q value is passed1" in {
-      val acceptLanguage: String = "en-US;q=0.5"
+      val acceptLanguage: String = "en-EN;q=0.5"
       Get() ~> addHeader(ACCEPT_LANGUAGE, acceptLanguage) ~> withLoggingAttributesF(true)(wrappingDirective) {
         implicit context =>
           complete {
             val acceptLanguage = context.filter(_._1 == ACCEPT_LANGUAGE)
             acceptLanguage.length shouldBe 1
-            acceptLanguage.head._2 shouldEqual "en-US"
+            acceptLanguage.head._2 shouldEqual "en-EN"
             "ok"
           }
       } ~> check {
