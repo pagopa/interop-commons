@@ -75,7 +75,8 @@ object TypeConversions {
   }
 
   implicit class LongOps(val l: Long) extends AnyVal {
-    def toOffsetDateTime: Try[OffsetDateTime]                     = toOffsetDateTime(ZoneOffset.UTC)
+    def toOffsetDateTime: Try[OffsetDateTime] = toOffsetDateTime(ZoneOffset.UTC)
+    def toEuropeRomeOffsetDateTime            = Try(Instant.ofEpochMilli(l).atZone(europeRome).toOffsetDateTime())
     def toOffsetDateTime(offset: ZoneOffset): Try[OffsetDateTime] = Try(
       OffsetDateTime.ofInstant(Instant.ofEpochMilli(l), offset)
     )
