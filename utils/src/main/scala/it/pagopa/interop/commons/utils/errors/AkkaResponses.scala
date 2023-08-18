@@ -33,7 +33,15 @@ trait AkkaResponses {
   @inline private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =
     contexts.collectFirst { case (k, v) if k == CORRELATION_ID_HEADER => v }
 
-  def badRequest(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
+  def badRequest(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    badRequest(error, logMessage, Nil)
+  }
+
+  def badRequest(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
@@ -47,8 +55,7 @@ trait AkkaResponses {
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
-    logger.warn(s"$logMessage. Reasons: ${errors.mapFilter(e => Option(e.getMessage)).mkString("[", ",", "]")}")
-    completeWithErrors(StatusCodes.BadRequest, Nil, errors)
+    badRequest(errors, logMessage, Nil)
   }
 
   def badRequest(errors: List[ComponentError], logMessage: String, headers: List[HttpHeader])(implicit
@@ -60,7 +67,15 @@ trait AkkaResponses {
     completeWithErrors(StatusCodes.BadRequest, headers, errors)
   }
 
-  def unauthorized(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
+  def unauthorized(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    unauthorized(error, logMessage, Nil)
+  }
+
+  def unauthorized(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
@@ -69,7 +84,15 @@ trait AkkaResponses {
     completeWithError(StatusCodes.Unauthorized, headers, error)
   }
 
-  def notFound(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
+  def notFound(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    notFound(error, logMessage, Nil)
+  }
+
+  def notFound(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
@@ -78,7 +101,15 @@ trait AkkaResponses {
     completeWithError(StatusCodes.NotFound, headers, error)
   }
 
-  def forbidden(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
+  def forbidden(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    forbidden(error, logMessage, Nil)
+  }
+
+  def forbidden(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
@@ -87,7 +118,15 @@ trait AkkaResponses {
     completeWithError(StatusCodes.Forbidden, headers, error)
   }
 
-  def conflict(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
+  def conflict(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    conflict(error, logMessage, Nil)
+  }
+
+  def conflict(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
@@ -105,7 +144,15 @@ trait AkkaResponses {
     completeWithError(StatusCodes.TooManyRequests, headers, error)
   }
 
-  def internalServerError(error: Throwable, errorMessage: String, headers: List[HttpHeader] = Nil)(implicit
+  def internalServerError(error: Throwable, errorMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    internalServerError(error, errorMessage, Nil)
+  }
+
+  def internalServerError(error: Throwable, errorMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
