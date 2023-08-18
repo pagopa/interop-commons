@@ -24,7 +24,6 @@ class ExternalIdRetrievalSpec extends AnyWordSpecLike with Matchers with JWTMock
       val parsedJwt                            = SignedJWT.parse(s)
       val claims: JWTClaimsSet                 = parsedJwt.getJWTClaimsSet
       val externalId: Option[(String, String)] = getExternalId(claims)
-      println(claims)
       externalId shouldBe Some(("IPA", "12345"))
     }
     "return None if only origin" in {

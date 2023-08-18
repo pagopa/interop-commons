@@ -111,10 +111,7 @@ package object jwt {
 
     externalIdFromOrganizationClaim() match {
       case Success((origin, value)) => Some((origin, value))
-      case Failure(e)               => {
-        logger.warn(s"Unable to extract externalId from claims: ${e.getMessage()}")
-        None
-      }
+      case Failure(_)               => None
     }
   }
 
