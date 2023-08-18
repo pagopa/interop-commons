@@ -11,32 +11,35 @@ import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.GenericErro
 
 trait AkkaResponses {
 
-  private def completeWithError(statusCode: StatusCode, error: ComponentError)(implicit
-    contexts: Seq[(String, String)],
-    serviceCode: ServiceCode
-  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
-
-  private def completeWithErrors(statusCode: StatusCode, errors: List[ComponentError])(implicit
-    contexts: Seq[(String, String)],
-    serviceCode: ServiceCode
-  ): StandardRoute = complete(statusCode.intValue, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
-
   private def completeWithError(statusCode: StatusCode, headers: List[HttpHeader], error: ComponentError)(implicit
     contexts: Seq[(String, String)],
     serviceCode: ServiceCode
-  ): StandardRoute =
-    complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
+  ): StandardRoute = headers match {
+    case Nil => complete(statusCode.intValue, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
+    case _   =>
+      complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
+  }
+
+  private def completeWithErrors(
+    statusCode: StatusCode,
+    headers: List[HttpHeader],
+    errors: List[ComponentError]
+  )(implicit contexts: Seq[(String, String)], serviceCode: ServiceCode): StandardRoute = headers match {
+    case Nil => complete(statusCode.intValue, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
+    case _   =>
+      complete(statusCode.intValue, headers, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
+  }
 
   @inline private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =
     contexts.collectFirst { case (k, v) if k == CORRELATION_ID_HEADER => v }
 
-  def badRequest(error: ComponentError, logMessage: String)(implicit
+  def badRequest(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.warn(logMessage, error)
-    completeWithError(StatusCodes.BadRequest, error)
+    completeWithError(StatusCodes.BadRequest, headers, error)
   }
 
   def badRequest(errors: List[ComponentError], logMessage: String)(implicit
@@ -45,43 +48,52 @@ trait AkkaResponses {
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.warn(s"$logMessage. Reasons: ${errors.mapFilter(e => Option(e.getMessage)).mkString("[", ",", "]")}")
-    completeWithErrors(StatusCodes.BadRequest, errors)
+    completeWithErrors(StatusCodes.BadRequest, Nil, errors)
   }
 
-  def unauthorized(error: ComponentError, logMessage: String)(implicit
+  def badRequest(errors: List[ComponentError], logMessage: String, headers: List[HttpHeader])(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    logger.warn(s"$logMessage. Reasons: ${errors.mapFilter(e => Option(e.getMessage)).mkString("[", ",", "]")}")
+    completeWithErrors(StatusCodes.BadRequest, headers, errors)
+  }
+
+  def unauthorized(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.warn(logMessage, error)
-    completeWithError(StatusCodes.Unauthorized, error)
+    completeWithError(StatusCodes.Unauthorized, headers, error)
   }
 
-  def notFound(error: ComponentError, logMessage: String)(implicit
+  def notFound(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.warn(logMessage, error)
-    completeWithError(StatusCodes.NotFound, error)
+    completeWithError(StatusCodes.NotFound, headers, error)
   }
 
-  def forbidden(error: ComponentError, logMessage: String)(implicit
+  def forbidden(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.warn(logMessage, error)
-    completeWithError(StatusCodes.Forbidden, error)
+    completeWithError(StatusCodes.Forbidden, headers, error)
   }
 
-  def conflict(error: ComponentError, logMessage: String)(implicit
+  def conflict(error: ComponentError, logMessage: String, headers: List[HttpHeader] = Nil)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.warn(logMessage, error)
-    completeWithError(StatusCodes.Conflict, error)
+    completeWithError(StatusCodes.Conflict, headers, error)
   }
 
   def tooManyRequests(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
@@ -93,13 +105,13 @@ trait AkkaResponses {
     completeWithError(StatusCodes.TooManyRequests, headers, error)
   }
 
-  def internalServerError(error: Throwable, errorMessage: String)(implicit
+  def internalServerError(error: Throwable, errorMessage: String, headers: List[HttpHeader] = Nil)(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     serviceCode: ServiceCode
   ): StandardRoute = {
     logger.error(errorMessage, error)
-    completeWithError(StatusCodes.InternalServerError, GenericError(errorMessage))
+    completeWithError(StatusCodes.InternalServerError, headers, GenericError(errorMessage))
   }
 }
 
