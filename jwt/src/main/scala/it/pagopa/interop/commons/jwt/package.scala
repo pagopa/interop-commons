@@ -19,6 +19,8 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import java.{util => ju}
 import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 package object jwt {
 
@@ -88,6 +90,30 @@ package object jwt {
 
   private def getInteropRoleClaimSafe(claims: JWTClaimsSet): Option[String] =
     Try(claims.getStringClaim(roleClaim)).toOption.flatMap(Option(_))
+
+  private[jwt] def getExternalId(claims: JWTClaimsSet): Option[(String, String)] = {
+    def externalIdFromOrganizationClaim(): Try[(String, String)] = for {
+      externalIdFromClaim <- Try(claims.getJSONObjectClaim(ORGANIZATION_EXTERNAL_ID_CLAIM))
+        .flatMap(nullable => Option(nullable).toTry(MissingClaim(ORGANIZATION_EXTERNAL_ID_CLAIM)))
+      origin              <- Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_ORIGIN_CLAIM))
+        .flatMap(nullable =>
+          Option(nullable)
+            .toTry(MissingClaim(s"$ORGANIZATION_EXTERNAL_ID_CLAIM.$ORGANIZATION_EXTERNAL_ID_ORIGIN_CLAIM"))
+            .map(_.toString)
+        )
+      value               <- Try(externalIdFromClaim.get(ORGANIZATION_EXTERNAL_ID_VALUE_CLAIM))
+        .flatMap(nullable =>
+          Option(nullable)
+            .toTry(MissingClaim(s"$ORGANIZATION_EXTERNAL_ID_CLAIM.$ORGANIZATION_EXTERNAL_ID_VALUE_CLAIM"))
+            .map(_.toString)
+        )
+    } yield (origin, value)
+
+    externalIdFromOrganizationClaim() match {
+      case Success((origin, value)) => Some((origin, value))
+      case Failure(_)               => None
+    }
+  }
 
   def getUserRoles(claims: JWTClaimsSet): Set[String] = {
 
