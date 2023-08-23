@@ -89,6 +89,15 @@ trait AkkaUtils {
     getUserRoles(contexts).map(_.split(',').toList)
   )
 
+  def getExternalIdOrigin(contexts: Seq[(String, String)]): Either[Throwable, String] =
+    fastGet(contexts)(ORGANIZATION_EXTERNAL_ID_ORIGIN, MissingClaim(ORGANIZATION_EXTERNAL_ID_ORIGIN))
+  def getExternalIdValue(contexts: Seq[(String, String)]): Either[Throwable, String]  =
+    fastGet(contexts)(ORGANIZATION_EXTERNAL_ID_VALUE, MissingClaim(ORGANIZATION_EXTERNAL_ID_VALUE))
+  def getExternalIdOriginFuture(contexts: Seq[(String, String)]): Future[String]      =
+    toFuture(getExternalIdOrigin(contexts))
+  def getExternalIdValueFuture(contexts: Seq[(String, String)]): Future[String]       =
+    toFuture(getExternalIdValue(contexts))
+
   def getPurposeId(contexts: Seq[(String, String)]): Either[Throwable, String]   =
     fastGet(contexts)(PURPOSE_ID_CLAIM, MissingClaim(PURPOSE_ID_CLAIM))
   def getPurposeIdUUID(contexts: Seq[(String, String)]): Either[Throwable, UUID] = toFastUUID(getPurposeId(contexts))

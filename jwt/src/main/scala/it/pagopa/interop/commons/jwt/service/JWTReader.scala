@@ -6,9 +6,18 @@ import akka.http.scaladsl.server.AuthenticationFailedRejection.{CredentialsMissi
 import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, provide, reject, extractRequest}
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
-import it.pagopa.interop.commons.jwt.getUserRoles
+import it.pagopa.interop.commons.jwt.{getUserRoles, getExternalId}
 import it.pagopa.interop.commons.utils.AkkaUtils.getBearer
-import it.pagopa.interop.commons.utils.{BEARER, CORRELATION_ID_HEADER, ORGANIZATION_ID_CLAIM, SUB, UID, USER_ROLES}
+import it.pagopa.interop.commons.utils.{
+  BEARER,
+  CORRELATION_ID_HEADER,
+  ORGANIZATION_ID_CLAIM,
+  SUB,
+  UID,
+  USER_ROLES,
+  ORGANIZATION_EXTERNAL_ID_ORIGIN,
+  ORGANIZATION_EXTERNAL_ID_VALUE
+}
 
 import scala.util.{Failure, Success, Try}
 import com.typesafe.scalalogging.LoggerTakingImplicit
@@ -56,10 +65,16 @@ trait JWTReader {
     uid                 <- Try(Option(claims.getStringClaim(UID)).getOrElse(""))
     sub                 <- Try(Option(claims.getSubject).getOrElse(""))
     maybeOrganizationId <- Try(Option(claims.getStringClaim(ORGANIZATION_ID_CLAIM)))
-    userRoles = getUserRoles(claims).mkString(",")
+    maybeExternalId = getExternalId(claims)
+    userRoles       = getUserRoles(claims).mkString(",")
   } yield {
-    val orgId: List[(String, String)] = maybeOrganizationId.map(ORGANIZATION_ID_CLAIM -> _).toList
-    List(BEARER -> bearer, UID -> uid, SUB -> sub, USER_ROLES -> userRoles) ++ orgId
+    val orgId: List[(String, String)]      = maybeOrganizationId.map(ORGANIZATION_ID_CLAIM -> _).toList
+    val externalId: List[(String, String)] = maybeExternalId match {
+      case Some((origin, value)) =>
+        List(ORGANIZATION_EXTERNAL_ID_ORIGIN -> origin, ORGANIZATION_EXTERNAL_ID_VALUE -> value)
+      case None                  => Nil
+    }
+    List(BEARER -> bearer, UID -> uid, SUB -> sub, USER_ROLES -> userRoles) ++ orgId ++ externalId
   }
 
 }
