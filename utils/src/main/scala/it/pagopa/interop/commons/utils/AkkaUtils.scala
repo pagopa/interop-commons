@@ -110,6 +110,10 @@ trait AkkaUtils {
   def getSelfcareIdFuture(contexts: Seq[(String, String)]): Future[String]        = toFuture(getSelfcareId(contexts))
   def getSelfcareIdFutureUUID(contexts: Seq[(String, String)]): Future[UUID] = toFastFutureUUID(getSelfcareId(contexts))
 
+  def getAcceptLanguage(contexts: Seq[(String, String)]): Either[Throwable, String] =
+    fastGet(contexts)(ACCEPT_LANGUAGE, MissingClaim(ACCEPT_LANGUAGE))
+  def getAcceptLanguageFuture(contexts: Seq[(String, String)]): Future[String] = toFuture(getAcceptLanguage(contexts))
+
   def getClaim(contexts: Seq[(String, String)], claimName: String): Either[Throwable, String] =
     fastGet(contexts)(claimName, MissingClaim(claimName))
   def getClaimFuture(contexts: Seq[(String, String)], claimName: String): Future[String]      =

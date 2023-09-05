@@ -2,6 +2,7 @@ package it.pagopa.interop.commons
 
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.{MissingBearer, MissingHeader}
+import akka.http.scaladsl.model.headers.Language
 
 import java.security.MessageDigest
 import java.time.format.DateTimeFormatter
@@ -20,6 +21,8 @@ package object utils {
   val USER_ROLES: String                                   = "user-roles"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
   val IP_ADDRESS: String                                   = "X-Forwarded-For"
+  val ACCEPT_LANGUAGE: String                              = "Accept-Language"
+  val CONTENT_LANGUAGE: String                             = "Content-Language"
   val INTEROP_PRODUCT_NAME: String                         = "prod-interop"
   val PURPOSE_ID_CLAIM: String                             = "purposeId"
   val DIGEST_CLAIM: String                                 = "digest"
@@ -30,6 +33,9 @@ package object utils {
   val ORGANIZATION_EXTERNAL_ID_VALUE_CLAIM: String         = "value"
   val ORGANIZATION_EXTERNAL_ID_ORIGIN: String              = "organizationExternalIdOrigin"
   val ORGANIZATION_EXTERNAL_ID_VALUE: String               = "organizationExternalIdValue"
+
+  val OTHER_LANGUAGES: Seq[Language] = Seq(Language("en-EN"))
+  val DEFAULT_LANGUAGE: Language     = Language("it-IT")
 
   type BearerToken   = String
   type CorrelationId = String
