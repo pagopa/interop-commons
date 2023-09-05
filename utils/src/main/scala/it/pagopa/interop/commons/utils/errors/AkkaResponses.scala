@@ -14,21 +14,15 @@ trait AkkaResponses {
   private def completeWithError(statusCode: StatusCode, headers: List[HttpHeader], error: ComponentError)(implicit
     contexts: Seq[(String, String)],
     serviceCode: ServiceCode
-  ): StandardRoute = headers match {
-    case Nil => complete(statusCode.intValue, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
-    case _   =>
-      complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
-  }
+  ): StandardRoute =
+    complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
 
   private def completeWithErrors(
     statusCode: StatusCode,
     headers: List[HttpHeader],
     errors: List[ComponentError]
-  )(implicit contexts: Seq[(String, String)], serviceCode: ServiceCode): StandardRoute = headers match {
-    case Nil => complete(statusCode.intValue, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
-    case _   =>
-      complete(statusCode.intValue, headers, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
-  }
+  )(implicit contexts: Seq[(String, String)], serviceCode: ServiceCode): StandardRoute =
+    complete(statusCode.intValue, headers, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
 
   @inline private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =
     contexts.collectFirst { case (k, v) if k == CORRELATION_ID_HEADER => v }
