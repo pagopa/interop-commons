@@ -44,7 +44,7 @@ private[ratelimiter] final case class RateLimiterExecutor(
           logger.warn(s"Rate Limit triggered for organization $organizationId")
           Future.failed(tmr)
         case err                  =>
-          logger.error(s"Unexpected error during rate limiting for organization $organizationId", err)
+          logger.warn(s"Unexpected error during rate limiting for organization $organizationId", err)
           Future.successful(RateLimitStatus(configs.maxRequests, configs.maxRequests, configs.rateInterval))
       }
   }
@@ -70,7 +70,7 @@ private[ratelimiter] final case class RateLimiterExecutor(
     logger: LoggerTakingImplicit[ContextFieldsToLog],
     contexts: Seq[(String, String)]
   ): PartialFunction[Throwable, Future[TokenBucket]] = { case DeserializationFailed(key) =>
-    logger.error(s"Deserialization failed for key $key")
+    logger.warn(s"Deserialization failed for key $key")
     cacheClient.del(key).as(initBucket(now))
   }
 
