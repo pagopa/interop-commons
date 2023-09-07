@@ -36,7 +36,12 @@ final case class HttpMail(
   attachments: Seq[MailAttachment] = Seq.empty
 ) extends Mail
 
-final case class MailAttachment(name: String, bytes: Array[Byte], mimeType: String)
+final case class MailAttachment(name: String, bytes: Array[Byte], mimeType: String){
+  override def equals(obj: Any): Boolean = obj match {
+    case MailAttachment(n, b, m) => name == n && m == mimeType && bytes.sameElements(b)
+    case _                       => false
+  }
+}
 
 object Mail {
   private object MailLiteral extends Literally[InternetAddress] {
