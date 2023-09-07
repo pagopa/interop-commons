@@ -17,11 +17,11 @@ trait AkkaResponses {
   ): StandardRoute =
     complete(statusCode.intValue, headers, Problem(statusCode, error, serviceCode, getCorrelationId(contexts)))
 
-  private def completeWithErrors(
-    statusCode: StatusCode,
-    headers: List[HttpHeader],
-    errors: List[ComponentError]
-  )(implicit contexts: Seq[(String, String)], serviceCode: ServiceCode): StandardRoute =
+  private def completeWithErrors(statusCode: StatusCode, headers: List[HttpHeader], errors: List[ComponentError])(
+    implicit
+    contexts: Seq[(String, String)],
+    serviceCode: ServiceCode
+  ): StandardRoute =
     complete(statusCode.intValue, headers, Problem(statusCode, errors, serviceCode, getCorrelationId(contexts)))
 
   @inline private def getCorrelationId(contexts: Seq[(String, String)]): Option[String] =

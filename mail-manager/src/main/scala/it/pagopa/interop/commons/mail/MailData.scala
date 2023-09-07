@@ -4,21 +4,24 @@ import javax.mail.internet.InternetAddress
 import org.typelevel.literally.Literally
 import scala.util.Try
 import courier._
+import java.util.UUID
 
 sealed trait Mail {
+  val id: UUID
   val recipients: Seq[InternetAddress]
   val subject: String
 
   def renderContent: Content = this match {
-    case TextMail(_, _, body, Nil) => Text(body)
-    case TextMail(_, _, body, as)  =>
+    case TextMail(_, _, _, body, Nil) => Text(body)
+    case TextMail(_, _, _, body, as)  =>
       as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
-    case HttpMail(_, _, body, as)  =>
+    case HttpMail(_, _, _, body, as)  =>
       as.foldLeft(Multipart().html(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
   }
 }
 
 final case class TextMail(
+  id: UUID,
   recipients: Seq[InternetAddress],
   subject: String,
   body: String,
@@ -26,6 +29,7 @@ final case class TextMail(
 ) extends Mail
 
 final case class HttpMail(
+  id: UUID,
   recipients: Seq[InternetAddress],
   subject: String,
   body: String,

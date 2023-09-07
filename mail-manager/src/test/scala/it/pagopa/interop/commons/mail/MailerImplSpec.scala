@@ -10,6 +10,7 @@ import Mail._
 import javax.mail.internet.InternetAddress
 import javax.mail.Message
 import javax.mail.internet.MimeMultipart
+import java.util.UUID
 
 class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
@@ -20,6 +21,7 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
   "a MailSender" should {
     "send a text email" in {
       val mail: Mail = TextMail(
+        id = UUID.randomUUID(),
         recipients = Seq(mail"foo@comune.furlocchio.it"),
         subject = "Hello World",
         body = "That's the mail body",
@@ -39,6 +41,7 @@ class MailerImplSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
       val bytes: Array[Byte] = getClass.getResourceAsStream("/Example.png").readAllBytes()
 
       val mailData = TextMail(
+        id = UUID.randomUUID(),
         recipients = Seq(mail"bar@comune.snasalino.it"),
         subject = "Interop ciao ciao",
         body = "Ci sono allegati",
