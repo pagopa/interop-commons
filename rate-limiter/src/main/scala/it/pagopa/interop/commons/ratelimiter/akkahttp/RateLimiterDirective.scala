@@ -49,12 +49,12 @@ object RateLimiterDirective {
             )
           // Never interrupt execution in case of unexpected rate limiting failure
           case Failure(err)                  =>
-            logger.error(s"Unexpected error during rate limiting for organization $orgId", err)
+            logger.warn(s"Unexpected error during rate limiting for organization $orgId", err)
             provide(contexts)
         }
 
       case Left(_) =>
-        logger.error(s"Missing or not correctly formatted $ORGANIZATION_ID_CLAIM")(contexts)
+        logger.warn(s"Missing or not correctly formatted $ORGANIZATION_ID_CLAIM")(contexts)
         reject(MissingOrganizationIdClaim)
     }
 
