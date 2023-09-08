@@ -1,5 +1,7 @@
 package it.pagopa.interop.commons.mail
 
+import io.circe._
+import io.circe.generic.semiauto._
 import javax.mail.internet.InternetAddress
 import org.typelevel.literally.Literally
 import scala.util.Try
@@ -7,20 +9,22 @@ import courier._
 import java.util.UUID
 
 sealed trait Mail {
-  val id: UUID
   val recipients: Seq[InternetAddress]
   val subject: String
 
   def renderContent: Content = this match {
-    case TextMail(_, _, _, body, Nil) => Text(body)
-    case TextMail(_, _, _, body, as)  =>
+    case TextMail(_, _, body, Nil)           => Text(body)
+    case TextMail(_, _, body, as)            =>
       as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
-    case HttpMail(_, _, _, body, as)  =>
+    case HttpMail(_, _, body, as)            =>
       as.foldLeft(Multipart().html(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
+    case InteropEnvelope(_, _, _, body, Nil) => Text(body)
+    case InteropEnvelope(_, _, _, body, as)  =>
+      as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
   }
 }
 
-final case class TextMail(
+final case class InteropEnvelope(
   id: UUID,
   recipients: Seq[InternetAddress],
   subject: String,
@@ -28,8 +32,14 @@ final case class TextMail(
   attachments: Seq[MailAttachment] = Seq.empty
 ) extends Mail
 
+final case class TextMail(
+  recipients: Seq[InternetAddress],
+  subject: String,
+  body: String,
+  attachments: Seq[MailAttachment] = Seq.empty
+) extends Mail
+
 final case class HttpMail(
-  id: UUID,
   recipients: Seq[InternetAddress],
   subject: String,
   body: String,
@@ -71,4 +81,18 @@ object Mail {
   implicit class MailSyntax(val sc: StringContext) extends AnyVal {
     def mail(args: Any*): InternetAddress = macro MailLiteral.make
   }
+
+  implicit val encodeInternetAddress: Encoder[InternetAddress] =
+    Encoder.encodeString.contramap[InternetAddress](_.getAddress())
+
+  implicit val decodeInstant: Decoder[InternetAddress] = Decoder.decodeString.emapTry { str =>
+    Try(new InternetAddress(str))
+  }
+
+  implicit val mailAttachmentEncoder: Encoder[MailAttachment] = deriveEncoder
+  implicit val mailAttachmentDecoder: Decoder[MailAttachment] = deriveDecoder
+
+  implicit val interopEnvelopEncoder: Encoder[InteropEnvelope] = deriveEncoder
+  implicit val interopEnvelopDecoder: Decoder[InteropEnvelope] = deriveDecoder
+
 }
