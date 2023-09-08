@@ -1,11 +1,20 @@
 package it.pagopa.interop.commons
 
 import buildinfo.BuildInfo
-import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, _}
+import akka.http.scaladsl.server.Directives.{selectPreferredLanguage, optionalHeaderValueByName, _}
 import akka.http.scaladsl.server._
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.CanLog
-import it.pagopa.interop.commons.utils.{CORRELATION_ID_HEADER, IP_ADDRESS, ORGANIZATION_ID_CLAIM, SUB, UID}
+import it.pagopa.interop.commons.utils.{
+  CORRELATION_ID_HEADER,
+  IP_ADDRESS,
+  ORGANIZATION_ID_CLAIM,
+  SUB,
+  UID,
+  ACCEPT_LANGUAGE,
+  DEFAULT_LANGUAGE,
+  OTHER_LANGUAGES
+}
 
 import java.util.UUID
 import org.slf4j.MDC
@@ -52,13 +61,17 @@ package object logging {
     for {
       ip            <- extractClientIP
       correlationId <- optionalHeaderValueByName(CORRELATION_ID_HEADER)
+      language      <- selectPreferredLanguage(DEFAULT_LANGUAGE, OTHER_LANGUAGES: _*)
       contexts      <- wrappingDirective
     } yield {
       val ipAddress: String           = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
       def uuid: String                = UUID.randomUUID().toString
       val actualCorrelationId: String = if (changeUUID) uuid else correlationId.getOrElse(uuid)
+      val acceptLanguage: String      = language.toString
 
-      contexts.prependedAll(List(CORRELATION_ID_HEADER -> actualCorrelationId, IP_ADDRESS -> ipAddress))
+      contexts.prependedAll(
+        List(CORRELATION_ID_HEADER -> actualCorrelationId, IP_ADDRESS -> ipAddress, ACCEPT_LANGUAGE -> acceptLanguage)
+      )
     }
 
   def logHttp(
