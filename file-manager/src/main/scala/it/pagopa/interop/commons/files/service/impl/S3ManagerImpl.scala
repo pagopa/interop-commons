@@ -4,6 +4,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import cats.implicits._
 import it.pagopa.interop.commons.files.StorageConfiguration
 import it.pagopa.interop.commons.files.service.FileManager
+import it.pagopa.interop.commons.utils.service.OffsetDateTimeSupplier
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -22,6 +23,9 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.jdk.FutureConverters._
 import scala.jdk.CollectionConverters._
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
+
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   confOverride: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
@@ -164,4 +168,10 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
 
+  def createJWTPath(): String = {
+    val now               = OffsetDateTimeSupplier.get()
+    val formattedDate     = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+    val formattedDateTime = now.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+    s"token-details/$formattedDate/${formattedDateTime + '_' + UUID.randomUUID()}.ndjson"
+  }
 }
