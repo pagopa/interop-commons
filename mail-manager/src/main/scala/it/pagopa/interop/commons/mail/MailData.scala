@@ -1,8 +1,12 @@
 package it.pagopa.interop.commons.mail
 
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
+import spray.json._
 import io.circe._
 import io.circe.generic.semiauto._
 import javax.mail.internet.InternetAddress
+import it.pagopa.interop.commons.utils.SprayCommonFormats.uuidFormat
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.typelevel.literally.Literally
 import scala.util.Try
 import courier._
@@ -53,7 +57,8 @@ final case class MailAttachment(name: String, bytes: Array[Byte], mimeType: Stri
   }
 }
 
-object Mail {
+object Mail extends SprayJsonSupport with DefaultJsonProtocol {
+
   private object MailLiteral extends Literally[InternetAddress] {
     def validate(c: Context)(s: String): Either[String, c.Expr[InternetAddress]] = {
       import c.universe.{Try => _, _}
@@ -95,4 +100,14 @@ object Mail {
   implicit val interopEnvelopEncoder: Encoder[InteropEnvelope] = deriveEncoder
   implicit val interopEnvelopDecoder: Decoder[InteropEnvelope] = deriveDecoder
 
+  implicit val mailAttachmentFormat: RootJsonFormat[MailAttachment] = jsonFormat3(MailAttachment)
+
+  implicit object InternetAddressFormat extends JsonFormat[InternetAddress] {
+    def write(ia: InternetAddress) = JsString(s"${ia.getAddress()}")
+    def read(json: JsValue)        = json match {
+      case JsString(address) => new InternetAddress(address)
+      case _                 => deserializationError("JString type expected")
+    }
+  }
+  implicit val interopEnvelopFormat: RootJsonFormat[InteropEnvelope] = jsonFormat5(InteropEnvelope)
 }
