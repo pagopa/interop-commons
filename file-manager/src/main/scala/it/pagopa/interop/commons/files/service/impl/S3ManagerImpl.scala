@@ -172,6 +172,6 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     val now               = OffsetDateTimeSupplier.get()
     val formattedDate     = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
     val formattedDateTime = now.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-    s"token-details/$formattedDate/${formattedDateTime + '_' + UUID.randomUUID()}.ndjson"
+    s"token-details/$formattedDate/${formattedDateTime}_${UUID.randomUUID()}.ndjson"
   }
 }
