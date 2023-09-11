@@ -10,10 +10,10 @@ object Dependencies {
 
   private[this] object circe {
     lazy val namespace = "io.circe"
-    lazy val yaml      = namespace %% "circe-yaml"   % circeVersion
-    lazy val core      = namespace %% "circe-core"   % circeVersion
-    lazy val generic   = namespace %% "circe-generic"   % circeVersion
-    lazy val parser    = namespace %% "circe-parser" % circeVersion
+    lazy val yaml      = namespace %% "circe-yaml"    % circeVersion
+    lazy val core      = namespace %% "circe-core"    % circeVersion
+    lazy val generic   = namespace %% "circe-generic" % circeVersion
+    lazy val parser    = namespace %% "circe-parser"  % circeVersion
   }
 
   private[this] object commons {
