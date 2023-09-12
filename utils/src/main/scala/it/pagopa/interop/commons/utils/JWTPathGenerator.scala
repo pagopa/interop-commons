@@ -6,10 +6,12 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 object JWTPathGenerator {
-  def createJWTPath(dateTimeSupplier: OffsetDateTimeSupplier): String = {
+  def generateJWTPathInfo(dateTimeSupplier: OffsetDateTimeSupplier): (String, String) = {
     val now               = dateTimeSupplier.get()
     val formattedDate     = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
     val formattedDateTime = now.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-    s"token-details/$formattedDate/${formattedDateTime}_${UUID.randomUUID()}.ndjson"
+    val path              = s"token-details/$formattedDate/"
+    val filename          = s"${formattedDateTime}_${UUID.randomUUID()}.ndjson"
+    (path, filename)
   }
 }
