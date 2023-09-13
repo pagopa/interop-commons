@@ -10,7 +10,7 @@ object JWTPathGenerator {
     val now               = dateTimeSupplier.get()
     val formattedDate     = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
     val formattedDateTime = now.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-    val path              = s"token-details/$formattedDate/"
+    val path              = s"token-details/$formattedDate"
     val filename          = s"${formattedDateTime}_${UUID.randomUUID()}.ndjson"
     (path, filename)
   }
