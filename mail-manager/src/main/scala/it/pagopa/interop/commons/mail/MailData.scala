@@ -13,30 +13,21 @@ import courier._
 import java.util.UUID
 
 sealed trait Mail {
+  val id: UUID
   val recipients: Seq[InternetAddress]
   val subject: String
 
   def renderContent: Content = this match {
-    case TextMail(_, _, body, Nil)           => Text(body)
-    case TextMail(_, _, body, as)            =>
+    case TextMail(_, _, _, body, Nil) => Text(body)
+    case TextMail(_, _, _, body, as)  =>
       as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
-    case HttpMail(_, _, body, as)            =>
+    case HttpMail(_, _, _, body, as)  =>
       as.foldLeft(Multipart().html(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
-    case InteropEnvelope(_, _, _, body, Nil) => Text(body)
-    case InteropEnvelope(_, _, _, body, as)  =>
-      as.foldLeft(Multipart().text(body)) { (c, a) => c.attachBytes(a.bytes, a.name, a.mimeType) }
   }
 }
 
-final case class InteropEnvelope(
-  id: UUID,
-  recipients: Seq[InternetAddress],
-  subject: String,
-  body: String,
-  attachments: Seq[MailAttachment] = Seq.empty
-) extends Mail
-
 final case class TextMail(
+  id: UUID = UUID.randomUUID(),
   recipients: Seq[InternetAddress],
   subject: String,
   body: String,
@@ -44,6 +35,7 @@ final case class TextMail(
 ) extends Mail
 
 final case class HttpMail(
+  id: UUID = UUID.randomUUID(),
   recipients: Seq[InternetAddress],
   subject: String,
   body: String,
@@ -97,8 +89,11 @@ object Mail extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val mailAttachmentEncoder: Encoder[MailAttachment] = deriveEncoder
   implicit val mailAttachmentDecoder: Decoder[MailAttachment] = deriveDecoder
 
-  implicit val interopEnvelopEncoder: Encoder[InteropEnvelope] = deriveEncoder
-  implicit val interopEnvelopDecoder: Decoder[InteropEnvelope] = deriveDecoder
+  implicit val textMailEncoder: Encoder[TextMail] = deriveEncoder
+  implicit val textMailDecoder: Decoder[TextMail] = deriveDecoder
+
+  implicit val httpMailEncoder: Encoder[HttpMail] = deriveEncoder
+  implicit val httpMailDecoder: Decoder[HttpMail] = deriveDecoder
 
   implicit val mailAttachmentFormat: RootJsonFormat[MailAttachment] = jsonFormat3(MailAttachment)
 
@@ -109,5 +104,6 @@ object Mail extends SprayJsonSupport with DefaultJsonProtocol {
       case _                 => deserializationError("JString type expected")
     }
   }
-  implicit val interopEnvelopFormat: RootJsonFormat[InteropEnvelope] = jsonFormat5(InteropEnvelope)
+  implicit val textMailFormat: RootJsonFormat[TextMail] = jsonFormat5(TextMail)
+  implicit val httpMailFormat: RootJsonFormat[HttpMail] = jsonFormat5(HttpMail)
 }
