@@ -2,7 +2,6 @@ package it.pagopa.interop.purposeprocess
 
 import it.pagopa.interop.commons.riskanalysis.model._
 import java.time.{OffsetDateTime, ZoneOffset}
-import it.pagopa.interop.commons.riskanalysis.api.impl.RiskAnalysisValidation
 
 object SpecData {
 
@@ -81,13 +80,4 @@ object SpecData {
       "usesConfidentialData"       -> Nil
     )
   )
-
-  def validOnlySchemaManagementRiskAnalysisSeed(tenantKind: RiskAnalysisTenantKind): RiskAnalysisFormSeed = {
-    val validOnlySchemaRiskAnalysis =
-      if (tenantKind == RiskAnalysisTenantKind.PA) validOnlySchemaRiskAnalysis2_0 else validOnlySchemaRiskAnalysis1_0
-    RiskAnalysisValidation
-      .validate(validOnlySchemaRiskAnalysis, true)(tenantKind)
-      .toOption
-      .get
-  }
 }
