@@ -7,6 +7,7 @@ import it.pagopa.interop.commons.riskanalysis.error._
 import it.pagopa.interop.commons.riskanalysis.model._
 import it.pagopa.interop.commons.riskanalysis.model.riskAnalysisRules.{DependencyEntry, ValidationEntry}
 import it.pagopa.interop.commons.riskanalysis.model.riskAnalysisTemplate._
+import it.pagopa.interop.commons.riskanalysis.model.RiskAnalysis._
 import it.pagopa.interop.commons.riskanalysis.service.RiskAnalysisService
 import spray.json._
 
