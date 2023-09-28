@@ -10,9 +10,10 @@ object Dependencies {
 
   private[this] object circe {
     lazy val namespace = "io.circe"
-    lazy val yaml      = namespace %% "circe-yaml"   % circeVersion
-    lazy val core      = namespace %% "circe-core"   % circeVersion
-    lazy val parser    = namespace %% "circe-parser" % circeVersion
+    lazy val yaml      = namespace %% "circe-yaml"    % circeVersion
+    lazy val core      = namespace %% "circe-core"    % circeVersion
+    lazy val generic   = namespace %% "circe-generic" % circeVersion
+    lazy val parser    = namespace %% "circe-parser"  % circeVersion
   }
 
   private[this] object commons {
@@ -167,6 +168,9 @@ object Dependencies {
       courier.mail             % Compile,
       "org.typelevel"         %% "literally"  % "1.1.0"  % Compile,
       "com.github.pureconfig" %% "pureconfig" % "0.17.2" % Compile,
+      circe.core               % Compile, 
+      circe.generic            % Compile, 
+      circe.parser             % Compile,
       courier.testMocking      % Test
     )
 
