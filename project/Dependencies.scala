@@ -217,6 +217,17 @@ object Dependencies {
     lazy val parserDependencies: Seq[ModuleID] =
       Seq(cats.core % Compile, circe.core % Compile, circe.parser % Compile, circe.yaml % Compile, scala.xml % Compile)
 
+    lazy val riskAnalysisDependencies: Seq[ModuleID] =
+      Seq(
+        cats.core                 % Compile, 
+        spray.spray               % Compile, 
+        akka.http                 % Compile,
+        akka.slf4j                % Compile,
+        akka.httpJson             % Compile,
+        akka.httpJson4s           % Compile,
+        akka.stream               % Compile
+      )
+  
     lazy val commonDependencies: Seq[ModuleID] = Seq(logback.classic % Runtime, scalatest.core % Test)
   }
 }

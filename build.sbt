@@ -9,15 +9,16 @@ ThisBuild / githubOwner       := "pagopa"
 ThisBuild / githubRepository  := "interop-commons"
 ThisBuild / resolvers += Resolver.githubPackages("pagopa")
 
-val fileManagerModuleName = "file-manager"
-val mailManagerModuleName = "mail-manager"
-val jwtModuleName         = "jwt"
-val signerModuleName      = "signer"
-val utilsModuleName       = "utils"
-val queueModuleName       = "queue-manager"
-val cqrsModuleName        = "cqrs"
-val rateLimiterModuleName = "rate-limiter"
-val parserModuleName      = "parser"
+val fileManagerModuleName   = "file-manager"
+val mailManagerModuleName   = "mail-manager"
+val jwtModuleName           = "jwt"
+val signerModuleName        = "signer"
+val utilsModuleName         = "utils"
+val queueModuleName         = "queue-manager"
+val cqrsModuleName          = "cqrs"
+val rateLimiterModuleName   = "rate-limiter"
+val parserModuleName        = "parser"
+val riskAnalysisModuleName  = "risk-analysis"
 
 cleanFiles += baseDirectory.value / cqrsModuleName / "target"
 cleanFiles += baseDirectory.value / fileManagerModuleName / "target"
@@ -28,6 +29,7 @@ cleanFiles += baseDirectory.value / signerModuleName / "target"
 cleanFiles += baseDirectory.value / utilsModuleName / "target"
 cleanFiles += baseDirectory.value / queueModuleName / "target"
 cleanFiles += baseDirectory.value / parserModuleName / "target"
+cleanFiles += baseDirectory.value / riskAnalysisModuleName / "target"
 
 lazy val sharedSettings: SettingsDefinition =
   Seq(scalafmtOnCompile := true, libraryDependencies ++= Dependencies.Jars.commonDependencies)
@@ -121,7 +123,16 @@ lazy val parser = project
   )
   .setupBuildInfo
 
+  lazy val riskAnalysis = project
+  .in(file(riskAnalysisModuleName))
+  .settings(
+    name := "interop-commons-risk-analysis",
+    sharedSettings,
+    libraryDependencies ++= Dependencies.Jars.riskAnalysisDependencies
+  )
+  .setupBuildInfo
+
 lazy val commons = (project in file("."))
-  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs, parser)
+  .aggregate(utils, fileManager, mailManager, rateLimiter, signer, jwtModule, queue, cqrs, parser, riskAnalysis)
   .settings(name := "interop-commons")
   .enablePlugins(NoPublishPlugin)
