@@ -13,15 +13,14 @@ import software.amazon.awssdk.core.client.config.{ClientAsyncConfiguration, SdkA
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.s3.model._
-import software.amazon.awssdk.services.s3.{S3AsyncClient, S3Configuration}
+import software.amazon.awssdk.services.s3.{S3AsyncClient, S3AsyncClientBuilder, S3Configuration}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Files
 import java.util.concurrent.Executor
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
-import scala.jdk.FutureConverters._
 import scala.jdk.CollectionConverters._
-import software.amazon.awssdk.services.s3.S3AsyncClientBuilder
+import scala.jdk.FutureConverters._
 
 final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   confOverride: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
@@ -163,5 +162,4 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   def calcContentMd5(file: File): String = calcContentMd5(Files.readAllBytes(file.toPath))
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
-
 }
