@@ -24,7 +24,11 @@ final class KMSSignerService(blockingEc: ExecutionContextExecutor) extends Signe
   implicit val ec: ExecutionContext = blockingEc
 
   private val asyncHttpClient: SdkAsyncHttpClient          =
-    NettyNioAsyncHttpClient.builder().maxConcurrency(SignerConfiguration.maxConcurrency).build()
+    NettyNioAsyncHttpClient
+      .builder()
+      .connectionAcquisitionTimeout(SignerConfiguration.maxAcquisitionTimeout)
+      .maxConcurrency(SignerConfiguration.maxConcurrency)
+      .build()
   private val asyncConfiguration: ClientAsyncConfiguration =
     ClientAsyncConfiguration
       .builder()
