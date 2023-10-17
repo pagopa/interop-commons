@@ -29,7 +29,6 @@ package object logging {
 
   implicit case object CanLogContextFields extends CanLog[ContextFieldsToLog] {
     override def logMessage(originalMsg: String, fields: ContextFieldsToLog): String = {
-      MDC.put(IP_ADDRESS, contextOrBlank(fields, IP_ADDRESS))
       MDC.put(UID, contextOrBlank(fields, UID))
       MDC.put(SUB, contextOrBlank(fields, SUB))
       MDC.put(ORGANIZATION_ID_CLAIM, contextOrBlank(fields, ORGANIZATION_ID_CLAIM))
@@ -39,7 +38,6 @@ package object logging {
     }
 
     override def afterLog(context: ContextFieldsToLog): Unit = {
-      MDC.remove(IP_ADDRESS)
       MDC.remove(UID)
       MDC.remove(SUB)
       MDC.remove(ORGANIZATION_ID_CLAIM)

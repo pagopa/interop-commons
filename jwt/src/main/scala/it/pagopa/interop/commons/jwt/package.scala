@@ -167,11 +167,10 @@ package object jwt {
   )(implicit contexts: Seq[(String, String)], errorMarshaller: ToEntityMarshaller[T]): Route = if (isAuthorized) route
   else {
     val values: Map[String, String] = contexts.toMap
-    val ipAddress: String           = values.getOrElse(IP_ADDRESS, "")
     val uid: String                 = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
     val organizationId: String      = values.getOrElse(ORGANIZATION_ID_CLAIM, "")
     val correlationId: String       = values.getOrElse(CORRELATION_ID_HEADER, "")
-    val header: String              = s"[IP=$ipAddress] [UID=$uid] [OID=$organizationId] [CID=$correlationId]"
+    val header: String              = s"[UID=$uid] [OID=$organizationId] [CID=$correlationId]"
     val body: String                = values
       .get(USER_ROLES)
       .fold(s"No user roles found to execute this request")(roles =>
