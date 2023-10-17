@@ -7,7 +7,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.CanLog
 import it.pagopa.interop.commons.utils.{
   CORRELATION_ID_HEADER,
-  IP_ADDRESS,
   ORGANIZATION_ID_CLAIM,
   SUB,
   UID,
@@ -57,19 +56,15 @@ package object logging {
     changeUUID: Boolean
   )(wrappingDirective: Directive1[Seq[(String, String)]]): Directive1[Seq[(String, String)]] =
     for {
-      ip            <- extractClientIP
       correlationId <- optionalHeaderValueByName(CORRELATION_ID_HEADER)
       language      <- selectPreferredLanguage(DEFAULT_LANGUAGE, OTHER_LANGUAGES: _*)
       contexts      <- wrappingDirective
     } yield {
-      val ipAddress: String           = ip.toOption.map(_.getHostAddress).getOrElse("unknown")
       def uuid: String                = UUID.randomUUID().toString
       val actualCorrelationId: String = if (changeUUID) uuid else correlationId.getOrElse(uuid)
       val acceptLanguage: String      = language.toString
 
-      contexts.prependedAll(
-        List(CORRELATION_ID_HEADER -> actualCorrelationId, IP_ADDRESS -> ipAddress, ACCEPT_LANGUAGE -> acceptLanguage)
-      )
+      contexts.prependedAll(List(CORRELATION_ID_HEADER -> actualCorrelationId, ACCEPT_LANGUAGE -> acceptLanguage))
     }
 
   def logHttp(

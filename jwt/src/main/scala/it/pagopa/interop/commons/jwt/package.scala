@@ -1,8 +1,5 @@
 package it.pagopa.interop.commons
 
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Route
 import cats.syntax.all._
 import com.nimbusds.jose.crypto.{ECDSAVerifier, RSASSAVerifier}
@@ -159,25 +156,4 @@ package object jwt {
 
       AkkaResponses.forbidden(OperationForbidden, logMessage)
     }
-
-  // TODO Kept for backward compatibility.
-  //      To be removed as soon as all services have been migrated to the new authorize function
-  def authorizeInterop[T](isAuthorized: => Boolean, errorMessage: => T)(
-    route: => Route
-  )(implicit contexts: Seq[(String, String)], errorMarshaller: ToEntityMarshaller[T]): Route = if (isAuthorized) route
-  else {
-    val values: Map[String, String] = contexts.toMap
-    val uid: String                 = values.get(UID).filterNot(_.isBlank).orElse(values.get(SUB)).getOrElse("")
-    val organizationId: String      = values.getOrElse(ORGANIZATION_ID_CLAIM, "")
-    val correlationId: String       = values.getOrElse(CORRELATION_ID_HEADER, "")
-    val header: String              = s"[UID=$uid] [OID=$organizationId] [CID=$correlationId]"
-    val body: String                = values
-      .get(USER_ROLES)
-      .fold(s"No user roles found to execute this request")(roles =>
-        s"Invalid user roles ($roles) to execute this request"
-      )
-
-    logger.error(s"$header $body")
-    complete(StatusCodes.Forbidden, errorMessage)
-  }
 }

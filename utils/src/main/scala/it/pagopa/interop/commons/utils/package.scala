@@ -20,7 +20,6 @@ package object utils {
   val ORGANIZATION: String                                 = "organization"
   val USER_ROLES: String                                   = "user-roles"
   val CORRELATION_ID_HEADER: String                        = "X-Correlation-Id"
-  val IP_ADDRESS: String                                   = "X-Forwarded-For"
   val ACCEPT_LANGUAGE: String                              = "Accept-Language"
   val CONTENT_LANGUAGE: String                             = "Content-Language"
   val INTEROP_PRODUCT_NAME: String                         = "prod-interop"
@@ -39,21 +38,17 @@ package object utils {
 
   type BearerToken   = String
   type CorrelationId = String
-  type IpAddress     = String
 
-  def extractHeaders(
-    contexts: Seq[(String, String)]
-  ): Either[ComponentError, (BearerToken, CorrelationId, Option[IpAddress])] = {
+  def extractHeaders(contexts: Seq[(String, String)]): Either[ComponentError, (BearerToken, CorrelationId)] = {
     val contextsMap = contexts.toMap
     for {
       bearerToken   <- contextsMap.get(BEARER).toRight(MissingBearer)
       correlationId <- contextsMap.get(CORRELATION_ID_HEADER).toRight(MissingHeader(CORRELATION_ID_HEADER))
-      ip = contextsMap.get(IP_ADDRESS)
-    } yield (bearerToken, correlationId, ip)
+    } yield (bearerToken, correlationId)
   }
 
   def withHeaders[T](
-    f: (BearerToken, CorrelationId, Option[IpAddress]) => Future[T]
+    f: (BearerToken, CorrelationId) => Future[T]
   )(implicit contexts: Seq[(String, String)]): Future[T] = extractHeaders(contexts) match {
     case Left(ex) => Future.failed(ex)
     case Right(x) => f.tupled(x)
