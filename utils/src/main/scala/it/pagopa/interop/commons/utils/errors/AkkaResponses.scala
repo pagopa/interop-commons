@@ -129,6 +129,14 @@ trait AkkaResponses {
     completeWithError(StatusCodes.Conflict, headers, error)
   }
 
+  def tooManyRequests(error: ComponentError, logMessage: String)(implicit
+    contexts: Seq[(String, String)],
+    logger: LoggerTakingImplicit[ContextFieldsToLog],
+    serviceCode: ServiceCode
+  ): StandardRoute = {
+    tooManyRequests(error, logMessage, Nil)
+  }
+
   def tooManyRequests(error: ComponentError, logMessage: String, headers: List[HttpHeader])(implicit
     contexts: Seq[(String, String)],
     logger: LoggerTakingImplicit[ContextFieldsToLog],
