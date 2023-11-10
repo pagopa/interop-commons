@@ -3,20 +3,21 @@ package it.pagopa.interop.commons.jwt.service
 import cats.syntax.all._
 import akka.http.scaladsl.model.headers.HttpChallenge
 import akka.http.scaladsl.server.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
-import akka.http.scaladsl.server.Directives.{optionalHeaderValueByName, provide, reject, extractRequest}
+import akka.http.scaladsl.server.Directives.{extractRequest, optionalHeaderValueByName, provide, reject}
 import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, MalformedHeaderRejection}
 import com.nimbusds.jwt.JWTClaimsSet
-import it.pagopa.interop.commons.jwt.{getUserRoles, getExternalId}
+import it.pagopa.interop.commons.jwt.{getExternalId, getUserRoles}
 import it.pagopa.interop.commons.utils.AkkaUtils.getBearer
 import it.pagopa.interop.commons.utils.{
   BEARER,
   CORRELATION_ID_HEADER,
+  ORGANIZATION_EXTERNAL_ID_ORIGIN,
+  ORGANIZATION_EXTERNAL_ID_VALUE,
   ORGANIZATION_ID_CLAIM,
+  SELFCARE_ID_CLAIM,
   SUB,
   UID,
-  USER_ROLES,
-  ORGANIZATION_EXTERNAL_ID_ORIGIN,
-  ORGANIZATION_EXTERNAL_ID_VALUE
+  USER_ROLES
 }
 
 import scala.util.{Failure, Success, Try}
@@ -65,16 +66,18 @@ trait JWTReader {
     uid                 <- Try(Option(claims.getStringClaim(UID)).getOrElse(""))
     sub                 <- Try(Option(claims.getSubject).getOrElse(""))
     maybeOrganizationId <- Try(Option(claims.getStringClaim(ORGANIZATION_ID_CLAIM)))
+    maybeSelfcareId     <- Try(Option(claims.getStringClaim(SELFCARE_ID_CLAIM)))
     maybeExternalId = getExternalId(claims)
     userRoles       = getUserRoles(claims).mkString(",")
   } yield {
     val orgId: List[(String, String)]      = maybeOrganizationId.map(ORGANIZATION_ID_CLAIM -> _).toList
+    val selfcareId: List[(String, String)] = maybeSelfcareId.map(SELFCARE_ID_CLAIM -> _).toList
     val externalId: List[(String, String)] = maybeExternalId match {
       case Some((origin, value)) =>
         List(ORGANIZATION_EXTERNAL_ID_ORIGIN -> origin, ORGANIZATION_EXTERNAL_ID_VALUE -> value)
       case None                  => Nil
     }
-    List(BEARER -> bearer, UID -> uid, SUB -> sub, USER_ROLES -> userRoles) ++ orgId ++ externalId
+    List(BEARER -> bearer, UID -> uid, SUB -> sub, USER_ROLES -> userRoles) ++ orgId ++ externalId ++ selfcareId
   }
 
 }
