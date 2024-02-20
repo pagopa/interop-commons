@@ -33,10 +33,11 @@ package object utils {
   val ORGANIZATION_EXTERNAL_ID_ORIGIN: String              = "organizationExternalIdOrigin"
   val ORGANIZATION_EXTERNAL_ID_VALUE: String               = "organizationExternalIdValue"
 
-  val IPA: String                         = "IPA"
-  val ANAC: String                        = "ANAC"
-  val IVASS: String                       = "IVASS"
-  val TENANT_ALLOWED_ORIGINS: Set[String] = Set(IPA, ANAC, IVASS)
+  val IPA: String                           = "IPA"
+  val ANAC: String                          = "ANAC"
+  val IVASS: String                         = "IVASS"
+  val TENANT_ALLOWED_ORIGINS: Set[String]   = Set(IPA, ANAC, IVASS)
+  val PRODUCER_ALLOWED_ORIGINS: Set[String] = Set(IPA)
 
   val OTHER_LANGUAGES: Seq[Language] = Seq(Language("en-EN"))
   val DEFAULT_LANGUAGE: Language     = Language("it-IT")
