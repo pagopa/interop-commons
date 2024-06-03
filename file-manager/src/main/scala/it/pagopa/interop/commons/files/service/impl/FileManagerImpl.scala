@@ -9,6 +9,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import java.nio.file.FileVisitOption
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
@@ -85,4 +86,5 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     pathCreated.resolve(fileName.stripMargin('/'))
   }
 
+  override def generatePresignedUrl(containerPath: String, path: String): Try[String] = Try(path)
 }

@@ -5,6 +5,7 @@ import it.pagopa.interop.commons.files.service.impl.{FileManagerImpl, S3ManagerI
 
 import java.io.{ByteArrayOutputStream, File}
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.util.Try
 
 trait FileManager {
 
@@ -40,6 +41,8 @@ trait FileManager {
   def delete(containerPath: String)(filePath: StorageFilePath): Future[Boolean]
 
   def close(): Unit
+
+  def generatePresignedUrl(containerPath: String, path: String): Try[String]
 }
 
 object FileManager {

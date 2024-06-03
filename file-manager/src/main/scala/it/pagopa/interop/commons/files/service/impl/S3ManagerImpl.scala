@@ -13,14 +13,18 @@ import software.amazon.awssdk.core.client.config.{ClientAsyncConfiguration, SdkA
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
 import software.amazon.awssdk.services.s3.{S3AsyncClient, S3AsyncClientBuilder, S3Configuration}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Files
+import java.time.Duration
 import java.util.concurrent.Executor
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters._
 import scala.jdk.FutureConverters._
+import scala.util.{Try, Using}
 
 final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   confOverride: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
@@ -162,4 +166,23 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   def calcContentMd5(file: File): String = calcContentMd5(Files.readAllBytes(file.toPath))
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
+
+  override def generatePresignedUrl(containerPath: String, path: String): Try[String] = {
+    Using(S3Presigner.create()) { s3Presigner =>
+      val getObjectRequest = GetObjectRequest
+        .builder()
+        .bucket(containerPath)
+        .key(path)
+        .build()
+
+      val presignRequest = GetObjectPresignRequest
+        .builder()
+        .signatureDuration(Duration.ofMinutes(1))
+        .getObjectRequest(getObjectRequest)
+        .build()
+
+      val presignedGetObjectRequest = s3Presigner.presignGetObject(presignRequest)
+      presignedGetObjectRequest.url().toString
+    }
+  }
 }

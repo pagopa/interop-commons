@@ -55,7 +55,7 @@ class S3FileManagerTest
     ex.shutdown()
   }
 
-  "S3" ignore {
+  "S3" should {
     "have no files if no interaction was done" in {
       assert(fileManager.listFiles("testBucket")("").futureValue.isEmpty)
     }
@@ -102,6 +102,10 @@ class S3FileManagerTest
         "testFolder/nestedFolder/nestedFile" -> "nestedFile"
       )
       assert(contentMap == expected)
+    }
+    "get a presigned url for upload" in {
+      val urlF: String = fileManager.generatePresignedUrl("testBucket", "testFolder/testFile").get
+      assert(urlF.startsWith("https://s3.amazonaws.com/testBucket/testFolder/testFile"))
     }
   }
 
