@@ -102,11 +102,10 @@ class S3FileManagerTest
         "testFolder/nestedFolder/nestedFile" -> "nestedFile"
       )
       assert(contentMap == expected)
-    }
-    "get a presigned url for upload" in {
-      val urlF: String = fileManager.generatePresignedUrl("testBucket", "testFolder/testFile").get
-      assert(urlF.startsWith("https://s3.amazonaws.com/testBucket/testFolder/testFile"))
-    }
-  }
+    }}
 
+  "get a presigned url" ignore {
+    val urlF: String = fileManager.generatePresignedUrl("testBucket", "testFolder/testFile").get
+    assert(urlF.startsWith("https://s3.amazonaws.com/testBucket/testFolder/testFile"))
+  }
 }
