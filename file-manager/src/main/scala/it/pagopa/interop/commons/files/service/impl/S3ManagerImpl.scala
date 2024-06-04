@@ -14,7 +14,7 @@ import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.s3.model._
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
+import software.amazon.awssdk.services.s3.presigner.model.{GetObjectPresignRequest, PutObjectPresignRequest}
 import software.amazon.awssdk.services.s3.{S3AsyncClient, S3AsyncClientBuilder, S3Configuration}
 
 import java.io.{ByteArrayOutputStream, File}
@@ -167,21 +167,40 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
 
-  override def generatePresignedUrl(containerPath: String, path: String): Try[String] = {
+  override def generateGetPresignedUrl(containerPath: String, path: String): Try[String] = {
     Using(S3Presigner.create()) { s3Presigner =>
-      val getObjectRequest = GetObjectRequest
+      val objectRequest: GetObjectRequest = GetObjectRequest
         .builder()
         .bucket(containerPath)
         .key(path)
         .build()
 
-      val presignRequest = GetObjectPresignRequest
+      val presignRequest: GetObjectPresignRequest = GetObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(1))
-        .getObjectRequest(getObjectRequest)
+        .signatureDuration(Duration.ofMinutes(StorageConfiguration.getUrlDurationMinutes.toLong))
+        .getObjectRequest(objectRequest)
         .build()
 
       val presignedGetObjectRequest = s3Presigner.presignGetObject(presignRequest)
+      presignedGetObjectRequest.url().toString
+    }
+  }
+
+  override def generatePutPresignedUrl(containerPath: String, path: String): Try[String] = {
+    Using(S3Presigner.create()) { s3Presigner =>
+      val objectRequest: PutObjectRequest = PutObjectRequest
+        .builder()
+        .bucket(containerPath)
+        .key(path)
+        .build()
+
+      val presignRequest: PutObjectPresignRequest = PutObjectPresignRequest
+        .builder()
+        .signatureDuration(Duration.ofMinutes(StorageConfiguration.putUrlDurationMinutes.toLong))
+        .putObjectRequest(objectRequest)
+        .build()
+
+      val presignedGetObjectRequest = s3Presigner.presignPutObject(presignRequest)
       presignedGetObjectRequest.url().toString
     }
   }

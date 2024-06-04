@@ -86,5 +86,7 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     pathCreated.resolve(fileName.stripMargin('/'))
   }
 
-  override def generatePresignedUrl(containerPath: String, path: String): Try[String] = Try(path)
+  override def generateGetPresignedUrl(containerPath: String, path: String): Try[String] = Try(path)
+
+  override def generatePutPresignedUrl(containerPath: String, path: String): Try[String] = Try(path)
 }
