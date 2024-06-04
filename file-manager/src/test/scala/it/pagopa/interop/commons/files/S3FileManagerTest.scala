@@ -97,9 +97,9 @@ class S3FileManagerTest
         files <- fileManager.getAllFiles("testBucket")("")
       } yield files
 
-      val files = filesF.futureValue
+      val files      = filesF.futureValue
       val contentMap = files.map { case (k, v) => (k, new String(v)) }
-      val expected = Map(
+      val expected   = Map(
         "rootFile"                           -> "rootFile",
         "testFolder/testFile"                -> "testFile",
         "testFolder/nestedFolder/nestedFile" -> "nestedFile"
