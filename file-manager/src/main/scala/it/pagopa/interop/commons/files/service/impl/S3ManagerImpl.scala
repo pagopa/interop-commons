@@ -167,12 +167,14 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
 
-  override def generateGetPresignedUrl(bucketName: String, keyName: String): Try[String] = {
+  override def generateGetPresignedUrl(bucketName: String, path: String, fileName: String): Try[String] = {
+    val key: String                        = s3Key(path, "", fileName)
+
     Using(S3Presigner.create()) { s3Presigner =>
       val objectRequest: GetObjectRequest = GetObjectRequest
         .builder()
         .bucket(bucketName)
-        .key(keyName)
+        .key(key)
         .build()
 
       val presignRequest: GetObjectPresignRequest = GetObjectPresignRequest
@@ -186,12 +188,14 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     }
   }
 
-  override def generatePutPresignedUrl(bucketName: String, keyName: String): Try[String] = {
+  override def generatePutPresignedUrl(bucketName: String, path: String, fileName: String): Try[String] = {
+    val key: String                        = s3Key(path, "", fileName)
+
     Using(S3Presigner.create()) { s3Presigner =>
       val objectRequest: PutObjectRequest = PutObjectRequest
         .builder()
         .bucket(bucketName)
-        .key(keyName)
+        .key(key)
         .build()
 
       val presignRequest: PutObjectPresignRequest = PutObjectPresignRequest
