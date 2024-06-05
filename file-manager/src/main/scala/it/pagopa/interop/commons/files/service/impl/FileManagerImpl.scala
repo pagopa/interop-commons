@@ -87,12 +87,12 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
   }
 
   override def generateGetPresignedUrl(bucketName: String, path: String, fileName: String): Try[String] = {
-    val path: String = createPath(path, "", fileName).toAbsolutePath.toString
-    Try(path)
+    val destPath: String = createPath(path, "", fileName).toAbsolutePath.toString
+    Try(destPath)
   }
 
   override def generatePutPresignedUrl(bucketName: String, path: String, fileName: String): Try[String] = {
-    val path: String = createPath(path, "", fileName).toAbsolutePath.toString
-    Try(path)
+    val destPath: String = createPath(path, "", fileName).toAbsolutePath.toString
+    Try(destPath)
   }
 }
