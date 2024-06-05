@@ -12,7 +12,7 @@ import scala.io.Source
 import scala.util.Success
 import de.redsix.pdfcompare.CompareResultImpl
 
-class PDFManagerSpec extends AnyWordSpecLike with Matchers {
+class PDFManagerSpec extends AnyWordSpecLike with Matchers with SpecHelper {
 
   val path        = getClass.getResource(s"/pdf-template-html.txt").getPath
   val pdfTemplate = Source.fromFile(new File(path)).mkString
