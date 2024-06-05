@@ -107,11 +107,11 @@ class S3FileManagerTest
       assert(contentMap == expected)
     }
     "Get presigned url" in {
-      val url = fileManager.generateGetPresignedUrl("testBucket", "testFolder/testFile").get
+      val url = fileManager.generateGetPresignedUrl("testBucket", "testFolder", "testFile").get
       assert(url.nonEmpty)
     }
     "Put presigned url" in {
-      val url = fileManager.generatePutPresignedUrl("testBucket", "testFolder/testFile").get
+      val url = fileManager.generatePutPresignedUrl("testBucket", "testFolder", "testFile").get
       assert(url.nonEmpty)
     }
   }
