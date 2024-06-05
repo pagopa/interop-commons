@@ -27,8 +27,7 @@ class S3FileManagerTest
     with Matchers
     with ScalaFutures
     with BeforeAndAfterAll
-    with BeforeAndAfterEach
-    with SpecHelper {
+    with BeforeAndAfterEach {
 
   override implicit val patienceConfig: PatienceConfig = new PatienceConfig(Span(1, Seconds))
 
