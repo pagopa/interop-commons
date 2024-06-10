@@ -185,7 +185,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
       val presignRequest: GetObjectPresignRequest = GetObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(durationInMinutes.length))
+        .signatureDuration(Duration.ofMinutes(durationInMinutes.toMinutes))
         .getObjectRequest(objectRequest)
         .build()
 
@@ -211,7 +211,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
       val presignRequest: PutObjectPresignRequest = PutObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(durationInMinutes.length))
+        .signatureDuration(Duration.ofMinutes(durationInMinutes.toMinutes))
         .putObjectRequest(objectRequest)
         .build()
 
