@@ -13,14 +13,19 @@ import software.amazon.awssdk.core.client.config.{ClientAsyncConfiguration, SdkA
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
 import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.{GetObjectPresignRequest, PutObjectPresignRequest}
 import software.amazon.awssdk.services.s3.{S3AsyncClient, S3AsyncClientBuilder, S3Configuration}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Files
+import java.time.Duration
 import java.util.concurrent.Executor
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters._
 import scala.jdk.FutureConverters._
+import scala.util.{Try, Using}
 
 final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   confOverride: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
@@ -162,4 +167,56 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
   def calcContentMd5(file: File): String = calcContentMd5(Files.readAllBytes(file.toPath))
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
+
+  override def generateGetPresignedUrl(
+    bucketName: String,
+    path: String,
+    fileName: String,
+    durationInMinutes: FiniteDuration
+  ): Try[String] = {
+    val key: String = s3Key(path, "", fileName)
+
+    Using(S3Presigner.create()) { s3Presigner =>
+      val objectRequest: GetObjectRequest = GetObjectRequest
+        .builder()
+        .bucket(bucketName)
+        .key(key)
+        .build()
+
+      val presignRequest: GetObjectPresignRequest = GetObjectPresignRequest
+        .builder()
+        .signatureDuration(Duration.ofMinutes(durationInMinutes.toMinutes))
+        .getObjectRequest(objectRequest)
+        .build()
+
+      val presignedGetObjectRequest = s3Presigner.presignGetObject(presignRequest)
+      presignedGetObjectRequest.url().toString
+    }
+  }
+
+  override def generatePutPresignedUrl(
+    bucketName: String,
+    path: String,
+    fileName: String,
+    durationInMinutes: FiniteDuration
+  ): Try[String] = {
+    val key: String = s3Key(path, "", fileName)
+
+    Using(S3Presigner.create()) { s3Presigner =>
+      val objectRequest: PutObjectRequest = PutObjectRequest
+        .builder()
+        .bucket(bucketName)
+        .key(key)
+        .build()
+
+      val presignRequest: PutObjectPresignRequest = PutObjectPresignRequest
+        .builder()
+        .signatureDuration(Duration.ofMinutes(durationInMinutes.toMinutes))
+        .putObjectRequest(objectRequest)
+        .build()
+
+      val presignedGetObjectRequest = s3Presigner.presignPutObject(presignRequest)
+      presignedGetObjectRequest.url().toString
+    }
+  }
 }

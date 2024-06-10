@@ -8,7 +8,9 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import java.nio.file.FileVisitOption
 import java.util.stream.Collectors
+import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) extends FileManager {
 
@@ -85,4 +87,23 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     pathCreated.resolve(fileName.stripMargin('/'))
   }
 
+  override def generateGetPresignedUrl(
+    bucketName: String,
+    path: String,
+    fileName: String,
+    duration: FiniteDuration
+  ): Try[String] = {
+    val destPath: String = createPath(path, "", fileName).toAbsolutePath.toString
+    Try(destPath)
+  }
+
+  override def generatePutPresignedUrl(
+    bucketName: String,
+    path: String,
+    fileName: String,
+    durationInMinutes: FiniteDuration
+  ): Try[String] = {
+    val destPath: String = createPath(path, "", fileName).toAbsolutePath.toString
+    Try(destPath)
+  }
 }

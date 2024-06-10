@@ -6,13 +6,16 @@ import org.scalatest.concurrent.ScalaFutures
 
 import java.util.concurrent.Executors
 import it.pagopa.interop.commons.files.service.FileManager
+
 import scala.concurrent.ExecutionContext
 import org.scalatest.time._
 import org.scalatest.BeforeAndAfterAll
+
 import java.util.concurrent.ExecutorService
 import java.net.URI
 import it.pagopa.interop.commons.files.service.impl.S3ManagerImpl
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContextExecutor
 import org.scalatest.BeforeAndAfterEach
@@ -94,15 +97,22 @@ class S3FileManagerTest
         files <- fileManager.getAllFiles("testBucket")("")
       } yield files
 
-      val files      = filesF.futureValue
+      val files = filesF.futureValue
       val contentMap = files.map { case (k, v) => (k, new String(v)) }
-      val expected   = Map(
+      val expected = Map(
         "rootFile"                           -> "rootFile",
         "testFolder/testFile"                -> "testFile",
         "testFolder/nestedFolder/nestedFile" -> "nestedFile"
       )
       assert(contentMap == expected)
     }
+    "Get presigned url" in {
+      val url = fileManager.generateGetPresignedUrl("testBucket", "testFolder", "testFile", FiniteDuration(5, MINUTES)).get
+      assert(url.nonEmpty)
+    }
+    "Put presigned url" in {
+      val url = fileManager.generatePutPresignedUrl("testBucket", "testFolder", "testFile", FiniteDuration(1, MINUTES)).get
+      assert(url.nonEmpty)
+    }
   }
-
 }
