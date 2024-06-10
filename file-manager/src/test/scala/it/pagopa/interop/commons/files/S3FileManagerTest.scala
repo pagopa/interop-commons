@@ -65,8 +65,8 @@ class S3FileManagerTest
 
     "have a single file with just one is written" in {
       val filesAndContent: Future[(List[String], String)] = for {
-        _       <- fileManager.storeBytes("testBucket", "testFolder", "testFile")("testFile".getBytes())
-        files   <- fileManager.listFiles("testBucket")("/testFolder")
+        _ <- fileManager.storeBytes("testBucket", "testFolder", "testFile")("testFile".getBytes())
+        files <- fileManager.listFiles("testBucket")("/testFolder")
         content <- fileManager.getFile("testBucket")("/testFolder/testFile").map(new String(_))
       } yield (files, content)
 
@@ -77,10 +77,10 @@ class S3FileManagerTest
 
     "have two files, one of whom in the root dir" in {
       val filesAndContent: Future[(List[String], String, String)] = for {
-        _           <- fileManager.storeBytes("testBucket", "", "rootFile")("rootFile".getBytes())
-        _           <- fileManager.storeBytes("testBucket", "testFolder", "testFile")("testFile".getBytes())
-        files       <- fileManager.listFiles("testBucket")("")
-        content     <- fileManager.getFile("testBucket")("/testFolder/testFile").map(new String(_))
+        _ <- fileManager.storeBytes("testBucket", "", "rootFile")("rootFile".getBytes())
+        _ <- fileManager.storeBytes("testBucket", "testFolder", "testFile")("testFile".getBytes())
+        files <- fileManager.listFiles("testBucket")("")
+        content <- fileManager.getFile("testBucket")("/testFolder/testFile").map(new String(_))
         rootContent <- fileManager.getFile("testBucket")("/rootFile").map(new String(_))
       } yield (files, content, rootContent)
 
@@ -91,27 +91,27 @@ class S3FileManagerTest
     }
     "get all the files" in {
       val filesF: Future[Map[String, Array[Byte]]] = for {
-        _     <- fileManager.storeBytes("testBucket", "", "rootFile")("rootFile".getBytes())
-        _     <- fileManager.storeBytes("testBucket", "testFolder", "testFile")("testFile".getBytes())
-        _     <- fileManager.storeBytes("testBucket", "testFolder/nestedFolder", "nestedFile")("nestedFile".getBytes())
+        _ <- fileManager.storeBytes("testBucket", "", "rootFile")("rootFile".getBytes())
+        _ <- fileManager.storeBytes("testBucket", "testFolder", "testFile")("testFile".getBytes())
+        _ <- fileManager.storeBytes("testBucket", "testFolder/nestedFolder", "nestedFile")("nestedFile".getBytes())
         files <- fileManager.getAllFiles("testBucket")("")
       } yield files
 
-      val files      = filesF.futureValue
+      val files = filesF.futureValue
       val contentMap = files.map { case (k, v) => (k, new String(v)) }
-      val expected   = Map(
-        "rootFile"                           -> "rootFile",
-        "testFolder/testFile"                -> "testFile",
+      val expected = Map(
+        "rootFile" -> "rootFile",
+        "testFolder/testFile" -> "testFile",
         "testFolder/nestedFolder/nestedFile" -> "nestedFile"
       )
       assert(contentMap == expected)
     }
     "Get presigned url" in {
-      val url = fileManager.generateGetPresignedUrl("testBucket", "testFolder", "testFile").get
+      val url = fileManager.generateGetPresignedUrl("testBucket", "testFolder", "testFile", 5).get
       assert(url.nonEmpty)
     }
     "Put presigned url" in {
-      val url = fileManager.generatePutPresignedUrl("testBucket", "testFolder", "testFile").get
+      val url = fileManager.generatePutPresignedUrl("testBucket", "testFolder", "testFile", 1).get
       assert(url.nonEmpty)
     }
   }

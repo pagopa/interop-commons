@@ -49,9 +49,7 @@ lazy val fileManager = project
   .settings(
     name := "interop-commons-file-manager",
     sharedSettings,
-    libraryDependencies ++= Dependencies.Jars.fileDependencies,
-    Test / fork := true,
-    Test / javaOptions += "-Dconfig.file=src/test/resources/application-test.conf"
+    libraryDependencies ++= Dependencies.Jars.fileDependencies
   )
   .dependsOn(utils)
   .setupBuildInfo

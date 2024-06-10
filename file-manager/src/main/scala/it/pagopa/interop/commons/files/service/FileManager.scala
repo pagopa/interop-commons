@@ -42,9 +42,9 @@ trait FileManager {
 
   def close(): Unit
 
-  def generateGetPresignedUrl(bucketName: String, path: String, fileName: String): Try[String]
+  def generateGetPresignedUrl(bucketName: String, path: String, fileName: String, duration: Int): Try[String]
 
-  def generatePutPresignedUrl(bucketName: String, path: String, fileName: String): Try[String]
+  def generatePutPresignedUrl(bucketName: String, path: String, fileName: String, duration: Int): Try[String]
 }
 
 object FileManager {

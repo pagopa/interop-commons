@@ -167,8 +167,13 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
   def calcContentMd5(byteArray: Array[Byte]): String = new String(Base64.encodeBase64(DigestUtils.md5(byteArray)))
 
-  override def generateGetPresignedUrl(bucketName: String, path: String, fileName: String): Try[String] = {
-    val key: String                        = s3Key(path, "", fileName)
+  override def generateGetPresignedUrl(
+    bucketName: String,
+    path: String,
+    fileName: String,
+    duration: Int
+  ): Try[String] = {
+    val key: String = s3Key(path, "", fileName)
 
     Using(S3Presigner.create()) { s3Presigner =>
       val objectRequest: GetObjectRequest = GetObjectRequest
@@ -179,7 +184,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
       val presignRequest: GetObjectPresignRequest = GetObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(StorageConfiguration.getUrlDurationMinutes.toLong))
+        .signatureDuration(Duration.ofMinutes(duration.toLong))
         .getObjectRequest(objectRequest)
         .build()
 
@@ -188,8 +193,13 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     }
   }
 
-  override def generatePutPresignedUrl(bucketName: String, path: String, fileName: String): Try[String] = {
-    val key: String                        = s3Key(path, "", fileName)
+  override def generatePutPresignedUrl(
+    bucketName: String,
+    path: String,
+    fileName: String,
+    duration: Int
+  ): Try[String] = {
+    val key: String = s3Key(path, "", fileName)
 
     Using(S3Presigner.create()) { s3Presigner =>
       val objectRequest: PutObjectRequest = PutObjectRequest
@@ -200,7 +210,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
       val presignRequest: PutObjectPresignRequest = PutObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(StorageConfiguration.putUrlDurationMinutes.toLong))
+        .signatureDuration(Duration.ofMinutes(duration.toLong))
         .putObjectRequest(objectRequest)
         .build()
 
