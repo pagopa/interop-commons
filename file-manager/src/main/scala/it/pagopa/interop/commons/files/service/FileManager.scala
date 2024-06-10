@@ -4,6 +4,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.commons.files.service.impl.{FileManagerImpl, S3ManagerImpl}
 
 import java.io.{ByteArrayOutputStream, File}
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
 
@@ -42,9 +43,9 @@ trait FileManager {
 
   def close(): Unit
 
-  def generateGetPresignedUrl(bucketName: String, path: String, fileName: String, duration: Int): Try[String]
+  def generateGetPresignedUrl(bucketName: String, path: String, fileName: String, durationInMinutes: FiniteDuration): Try[String]
 
-  def generatePutPresignedUrl(bucketName: String, path: String, fileName: String, duration: Int): Try[String]
+  def generatePutPresignedUrl(bucketName: String, path: String, fileName: String, durationInMinutes: FiniteDuration): Try[String]
 }
 
 object FileManager {

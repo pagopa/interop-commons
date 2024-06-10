@@ -21,6 +21,7 @@ import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Files
 import java.time.Duration
 import java.util.concurrent.Executor
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.jdk.CollectionConverters._
 import scala.jdk.FutureConverters._
@@ -171,7 +172,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     bucketName: String,
     path: String,
     fileName: String,
-    duration: Int
+    durationInMinutes: FiniteDuration
   ): Try[String] = {
     val key: String = s3Key(path, "", fileName)
 
@@ -184,7 +185,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
       val presignRequest: GetObjectPresignRequest = GetObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(duration.toLong))
+        .signatureDuration(Duration.ofMinutes(durationInMinutes.length))
         .getObjectRequest(objectRequest)
         .build()
 
@@ -197,7 +198,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
     bucketName: String,
     path: String,
     fileName: String,
-    duration: Int
+    durationInMinutes: FiniteDuration
   ): Try[String] = {
     val key: String = s3Key(path, "", fileName)
 
@@ -210,7 +211,7 @@ final class S3ManagerImpl(blockingExecutionContext: ExecutionContextExecutor)(
 
       val presignRequest: PutObjectPresignRequest = PutObjectPresignRequest
         .builder()
-        .signatureDuration(Duration.ofMinutes(duration.toLong))
+        .signatureDuration(Duration.ofMinutes(durationInMinutes.length))
         .putObjectRequest(objectRequest)
         .build()
 

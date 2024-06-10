@@ -8,6 +8,7 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import java.nio.file.FileVisitOption
 import java.util.stream.Collectors
+import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -90,7 +91,7 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     bucketName: String,
     path: String,
     fileName: String,
-    duration: Int
+    duration: FiniteDuration
   ): Try[String] = {
     val destPath: String = createPath(path, "", fileName).toAbsolutePath.toString
     Try(destPath)
@@ -100,7 +101,7 @@ final class FileManagerImpl(blockingExecutionContext: ExecutionContextExecutor) 
     bucketName: String,
     path: String,
     fileName: String,
-    duration: Int
+    durationInMinutes: FiniteDuration
   ): Try[String] = {
     val destPath: String = createPath(path, "", fileName).toAbsolutePath.toString
     Try(destPath)
