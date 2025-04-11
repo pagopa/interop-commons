@@ -19,6 +19,14 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
       result shouldBe Right(List("http://petstore.swagger.io/api/v1", "http://petstore.swagger.io/api/v2"))
     }
 
+    "extract urls from an Openapi 3.0.4 JSON correctly" in {
+      val bytes: Array[Byte]              = Source.fromResource("api_3.0.4.json").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Json])
+
+      result shouldBe Right(List("http://petstore.swagger.io/api/v1", "http://petstore.swagger.io/api/v2"))
+    }
+
     "extract urls from an Openapi 3.0.3 JSON correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api_3.0.3.json").getLines().mkString("\n").getBytes
       val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
@@ -69,6 +77,14 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
 
     "extract urls from an Openapi 3.1.0 YAML correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api_3.1.0.yaml").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Json])
+
+      result shouldBe Right(List("http://petstore.swagger.io/api/v1", "http://petstore.swagger.io/api/v2"))
+    }
+
+    "extract urls from an Openapi 3.0.4 YAML correctly" in {
+      val bytes: Array[Byte]              = Source.fromResource("api_3.0.4.yaml").getLines().mkString("\n").getBytes
       val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
       val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getUrls[Json])
 
@@ -140,6 +156,14 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
       result shouldBe Right(List("/pets", "/pets/{id}"))
     }
 
+    "extract endpoints from an Openapi 3.0.4 JSON correctly" in {
+      val bytes: Array[Byte]              = Source.fromResource("api_3.0.4.json").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getEndpoints[Json])
+
+      result shouldBe Right(List("/pets", "/pets/{id}"))
+    }
+
     "extract endpoints from an Openapi 3.0.3 JSON correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api_3.0.3.json").getLines().mkString("\n").getBytes
       val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
@@ -190,6 +214,14 @@ class InterfaceParserUtilsSpec extends AnyWordSpecLike with Matchers {
 
     "extract endpoints from an Openapi 3.1.0 YAML correctly" in {
       val bytes: Array[Byte]              = Source.fromResource("api_3.1.0.yaml").getLines().mkString("\n").getBytes
+      val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
+      val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getEndpoints[Json])
+
+      result shouldBe Right(List("/pets", "/pets/{id}"))
+    }
+
+    "extract endpoints from an Openapi 3.0.4 YAML correctly" in {
+      val bytes: Array[Byte]              = Source.fromResource("api_3.0.4.yaml").getLines().mkString("\n").getBytes
       val parsed: Either[Throwable, Json] = InterfaceParser.parseOpenApi(bytes)
       val result: Either[Throwable, List[String]] = parsed.flatMap(InterfaceParserUtils.getEndpoints[Json])
 
